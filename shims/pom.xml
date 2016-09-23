@@ -1,0 +1,37 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.amazon.emr</groupId>
+        <artifactId>emr-dynamodb-connector</artifactId>
+        <version>4.2.0-SNAPSHOT</version>
+        <relativePath>../</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>shims</artifactId>
+    <packaging>pom</packaging>
+
+    <name>EMRDynamoDBConnectorShims</name>
+    <description>Shims for Hive 1.x/2.x compatibility</description>
+
+    <modules>
+        <module>common</module>
+        <module>hive1-shims</module>
+        <module>hive2-shims</module>
+        <module>loader</module>
+    </modules>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
