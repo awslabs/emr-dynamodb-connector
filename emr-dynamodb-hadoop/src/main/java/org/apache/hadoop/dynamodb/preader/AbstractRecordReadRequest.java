@@ -39,22 +39,46 @@ public abstract class AbstractRecordReadRequest {
   }
 
   public void read(RequestLimit lim) {
-    // Signal progress
+    signalProgress();
+    PageResults<Map<String, AttributeValue>> pageResults = readNextPage(lim);
+    addPageToMultiplexer(pageResults);
+    reportMetrics(lim, pageResults);
+    enqueueNextPageOrCompleteSegment(pageResults);
+  }
+
+  private void reportMetrics(RequestLimit lim,
+      PageResults<Map<String, AttributeValue>> pageResults) {
+    if (!pageResults.isFailed()) {
+      readMgr.report(lim.readCapacityUnits, pageResults.consumedRcu, pageResults.items.size(),
+          pageResults.retries);
+    }
+  }
+
+  private void signalProgress() {
     context.getReporter().progress();
+  }
 
-    // Read from DynamoDB
-    PageResults<Map<String, AttributeValue>> pageResults = fetchPage(lim);
+  protected abstract AbstractRecordReadRequest buildNextReadRequest(
+      PageResults<Map<String, AttributeValue>> pageResults);
 
-    // Push results to multiplexer
-    boolean added = context.getPageResultMultiplexer().addPageResults(pageResults);
-    if (!added) {
+  protected abstract PageResults<Map<String, AttributeValue>> fetchPage(RequestLimit lim);
+
+  private PageResults<Map<String, AttributeValue>> readNextPage(RequestLimit lim) {
+    try {
+      return fetchPage(lim);
+    } catch (Exception e) {
+      return new PageResults<>(e);
+    }
+  }
+
+  private void addPageToMultiplexer(PageResults<Map<String, AttributeValue>> pageResults) {
+    if (!context.getPageResultMultiplexer().addPageResults(pageResults)) {
       throw new RuntimeException("Interrupted while adding to the page mux. Aborting.");
     }
+  }
 
-    // Report consumption metrics to rate controller
-    readMgr.report(lim.readCapacityUnits, pageResults.consumedRcu, pageResults.items.size(),
-        pageResults.retries);
-
+  private void enqueueNextPageOrCompleteSegment(
+      PageResults<Map<String, AttributeValue>> pageResults) {
     if (pageResults.lastEvaluatedKey != null) {
       // Schedule the next page read for this segment
       readMgr.enqueueReadRequestToTail(buildNextReadRequest(pageResults));
@@ -63,10 +87,4 @@ public abstract class AbstractRecordReadRequest {
       readMgr.markSegmentComplete(segment);
     }
   }
-
-  protected abstract AbstractRecordReadRequest buildNextReadRequest(
-      PageResults<Map<String, AttributeValue>> pageResults);
-
-  protected abstract PageResults<Map<String, AttributeValue>> fetchPage(RequestLimit lim);
-
 }

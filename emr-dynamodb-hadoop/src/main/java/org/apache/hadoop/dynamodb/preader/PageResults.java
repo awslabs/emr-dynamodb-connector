@@ -64,4 +64,8 @@ public class PageResults<V> {
   public boolean hasMore() {
     return pos < items.size();
   }
+
+  public boolean isFailed() {
+    return exception != null;
+  }
 }
