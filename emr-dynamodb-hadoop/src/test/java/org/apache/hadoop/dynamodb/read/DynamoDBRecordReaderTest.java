@@ -243,6 +243,32 @@ public class DynamoDBRecordReaderTest {
     }
   }
 
+  @Test(expected = IOException.class, timeout = 10000)
+  public void testExceptionInDbClient() throws IOException {
+    DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, new
+        DynamoDBQueryFilter());
+    DynamoDBRecordReaderContext context = buildContext();
+    context.setSplit(split);
+    context.setClient(new DynamoDBClient() {
+      @Override
+      public TableDescription describeTable(String tableName) {
+        return getTableDescription("S", null);
+      }
+
+      @Override
+      public RetryResult<ScanResult> scanTable(String tableName, DynamoDBQueryFilter
+          dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
+          AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
+        throw new RuntimeException("Unrecoverable Exception");
+      }
+    });
+
+    DefaultDynamoDBRecordReader reader = new DefaultDynamoDBRecordReader(context);
+
+    DynamoDBItemWritable value = reader.createValue();
+    reader.next(reader.createKey(), value);
+  }
+
   private DynamoDBRecordReaderContext buildContext() {
     DynamoDBRecordReaderContext context = new DynamoDBRecordReaderContext();
     context.setAttributes(null);
