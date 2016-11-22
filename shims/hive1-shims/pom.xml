@@ -22,6 +22,11 @@
             <version>${hive1.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>${hadoop.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.amazon.emr</groupId>
             <artifactId>shims-common</artifactId>
             <version>${project.parent.version}</version>

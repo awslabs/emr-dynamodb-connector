@@ -13,10 +13,14 @@
 
 package org.apache.hadoop.hive.dynamodb.shims;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.exec.SerializationUtilities;
 import org.apache.hadoop.hive.ql.index.IndexSearchCondition;
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
+import org.apache.hadoop.hive.serde2.SerDeException;
+
+import java.util.Properties;
 
 final class DynamoDbHive2Shims implements DynamoDbHiveShims {
 
@@ -34,6 +38,15 @@ final class DynamoDbHive2Shims implements DynamoDbHiveShims {
   @Override
   public ExprNodeGenericFuncDesc getIndexExpression(IndexSearchCondition condition) {
     return condition.getIndexExpr();
+  }
+
+  /**
+   * Hive 1.2 and Hive 2.x share SerDeParameters implementations, so we can delegate to that shim.
+   */
+  @Override
+  public SerDeParametersShim getSerDeParametersShim(Configuration configuration,
+      Properties properties, String serDeName) throws SerDeException {
+    return new Hive2SerDeParametersShim(configuration, properties, serDeName);
   }
 
 }

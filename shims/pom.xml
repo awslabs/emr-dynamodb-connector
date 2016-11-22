@@ -13,11 +13,12 @@
     <packaging>pom</packaging>
 
     <name>EMRDynamoDBConnectorShims</name>
-    <description>Shims for Hive 1.x/2.x compatibility</description>
+    <description>Shims for Hive 1.0/1.2/2.0 compatibility</description>
 
     <modules>
         <module>common</module>
         <module>hive1-shims</module>
+        <module>hive1.2-shims</module>
         <module>hive2-shims</module>
         <module>loader</module>
     </modules>
