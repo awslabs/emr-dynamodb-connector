@@ -104,7 +104,13 @@
         <dependency>
             <groupId>com.amazon.emr</groupId>
             <artifactId>shims-loader</artifactId>
-            <version>${project.version}</version>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.amazon.emr</groupId>
+            <artifactId>shims-common</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
 
     </dependencies>

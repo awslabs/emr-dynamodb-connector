@@ -23,14 +23,14 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
+import org.apache.hadoop.hive.dynamodb.shims.SerDeParametersShim;
+import org.apache.hadoop.hive.dynamodb.shims.ShimsLoader;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBItemType;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
 import org.apache.hadoop.hive.dynamodb.util.HiveDynamoDBUtil;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.SerDeStats;
-import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
-import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe.SerDeParameters;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.io.Text;
@@ -51,11 +51,12 @@ public class DynamoDBExportSerDe implements SerDe {
 
   private DynamoDBObjectInspector objectInspector;
   private Map<String, String> columnMappings;
-  private SerDeParameters serdeParams;
+  private SerDeParametersShim serdeParams;
 
   @Override
   public void initialize(Configuration conf, Properties tbl) throws SerDeException {
-    serdeParams = LazySimpleSerDe.initSerdeParams(conf, tbl, getClass().getName());
+    serdeParams = ShimsLoader.getHiveShims()
+        .getSerDeParametersShim(conf, tbl, getClass().getName());
     String specifiedColumnMapping = tbl.getProperty(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING);
 
     for (TypeInfo type : serdeParams.getColumnTypes()) {

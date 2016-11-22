@@ -9,24 +9,37 @@
         <relativePath>../</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>shims-common</artifactId>
+    <artifactId>hive1.2-shims</artifactId>
     <packaging>jar</packaging>
 
-    <name>ShimsCommon</name>
-    <description>Common shim interface</description>
+    <name>Hive1.2Shims</name>
+    <description>Shims for Hive-1.2.x compatibility</description>
 
     <dependencies>
-
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-exec</artifactId>
-            <version>${hive.version}</version>
+            <version>${hive1.2.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazon.emr</groupId>
+            <artifactId>shims-common</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazon.emr</groupId>
+            <artifactId>hive1-shims</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazon.emr</groupId>
+            <artifactId>hive2-shims</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 

@@ -21,6 +21,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
+import org.apache.hadoop.hive.dynamodb.shims.SerDeParametersShim;
+import org.apache.hadoop.hive.dynamodb.shims.ShimsLoader;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBItemType;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBType;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
@@ -30,8 +32,6 @@ import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.SerDeStats;
-import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
-import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe.SerDeParameters;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
@@ -53,13 +53,14 @@ public class DynamoDBSerDe implements SerDe {
   // user is warned exactly once
   private static boolean warningPrinted;
   private DynamoDBObjectInspector objectInspector;
-  private SerDeParameters serdeParams;
+  private SerDeParametersShim serdeParams;
   private Map<String, String> columnMappings;
   private List<String> columnNames;
 
   @Override
   public void initialize(Configuration conf, Properties tbl) throws SerDeException {
-    serdeParams = LazySimpleSerDe.initSerdeParams(conf, tbl, getClass().getName());
+    serdeParams = ShimsLoader.getHiveShims()
+        .getSerDeParametersShim(conf, tbl, getClass().getName());
     columnMappings = HiveDynamoDBUtil.getHiveToDynamoDBSchemaMapping(
         tbl.getProperty(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING)
     );

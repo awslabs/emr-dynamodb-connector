@@ -32,6 +32,8 @@ public class ShimsLoaderTest {
 
   private static final String HIVE_1_VERSION = "1.0.0";
 
+  private static final String HIVE_1_2_VERSION = "1.2.0";
+
   private static final String HIVE_2_VERSION = "2.1.0";
 
   @Before
@@ -45,24 +47,28 @@ public class ShimsLoaderTest {
   }
 
   @Test
+  public void hive1Dot2ShimsClassSupportsCorrectVersion() {
+    assertTrue(DynamoDbHive1Dot2Shims.supportsVersion(HIVE_1_2_VERSION));
+  }
+
+  @Test
   public void hive1ShimsClassSupportsCorrectVersion() {
     assertTrue(DynamoDbHive1Shims.supportsVersion(HIVE_1_VERSION));
   }
 
   @Test
   public void returnsCorrectShimsImplementationForHive2() {
-    when(HiveVersionInfo.getShortVersion()).thenReturn(HIVE_2_VERSION);
-    DynamoDbHiveShims shims = ShimsLoader.getHiveShims();
-    assertTrue(shims instanceof DynamoDbHive2Shims);
-    ShimsLoader.clearShimClass();
+    assertGetsCorrectShimsClassForVersion(DynamoDbHive2Shims.class, HIVE_2_VERSION);
+  }
+
+  @Test
+  public void returnsCorrectShimsImplementationForHive1Dot2() {
+    assertGetsCorrectShimsClassForVersion(DynamoDbHive1Dot2Shims.class, HIVE_1_2_VERSION);
   }
 
   @Test
   public void returnsCorrectShimsImplementationForHive1() {
-    when(HiveVersionInfo.getShortVersion()).thenReturn(HIVE_1_VERSION);
-    DynamoDbHiveShims shims = ShimsLoader.getHiveShims();
-    assertTrue(shims instanceof DynamoDbHive1Shims);
-    ShimsLoader.clearShimClass();
+    assertGetsCorrectShimsClassForVersion(DynamoDbHive1Shims.class, HIVE_1_VERSION);
   }
 
   @Test(expected = RuntimeException.class)
@@ -70,6 +76,13 @@ public class ShimsLoaderTest {
     when(HiveVersionInfo.getShortVersion()).thenReturn("this.is.not.a.real.hive.version");
     ShimsLoader.clearShimClass();
     ShimsLoader.getHiveShims();
+  }
+
+  private void assertGetsCorrectShimsClassForVersion(Class expectedClass, String version) {
+    when(HiveVersionInfo.getShortVersion()).thenReturn(version);
+    DynamoDbHiveShims shims = ShimsLoader.getHiveShims();
+    assertTrue(expectedClass.isInstance(shims));
+    ShimsLoader.clearShimClass();
   }
 
 }

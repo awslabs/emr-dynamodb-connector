@@ -25,6 +25,7 @@
         <aws-java-sdk.version>1.10.66</aws-java-sdk.version>
         <hadoop.version>2.7.2</hadoop.version>
         <hive1.version>1.0.0</hive1.version>
+        <hive1.2.version>1.2.1</hive1.2.version>
         <hive2.version>2.1.0</hive2.version>
         <!-- Use the more recent version as it will be more likely to
         have all the interfaces/classes we need for shims to work -->

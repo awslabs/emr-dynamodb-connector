@@ -40,13 +40,19 @@ public final class ShimsLoader {
       try {
         return DynamoDbHive1Shims.class.newInstance();
       } catch (InstantiationException | IllegalAccessException e) {
-        throw new RuntimeException("unable to get instance of hive 1 shim class");
+        throw new RuntimeException("unable to get instance of Hive 1.x shim class");
+      }
+    } else if (DynamoDbHive1Dot2Shims.supportsVersion(hiveVersion)) {
+      try {
+        return DynamoDbHive1Dot2Shims.class.newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw new RuntimeException("unable to get instance of Hive 1.2.x shim class");
       }
     } else if (DynamoDbHive2Shims.supportsVersion(hiveVersion)) {
       try {
         return DynamoDbHive2Shims.class.newInstance();
       } catch (InstantiationException | IllegalAccessException e) {
-        throw new RuntimeException("unable to get instance of hive 2 shim class");
+        throw new RuntimeException("unable to get instance of Hive 2.x shim class");
       }
     } else {
       throw new RuntimeException("Shim class for Hive version " + hiveVersion + " does not exist");
