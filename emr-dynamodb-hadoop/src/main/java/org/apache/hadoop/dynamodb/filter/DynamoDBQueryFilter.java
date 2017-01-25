@@ -38,6 +38,11 @@ public class DynamoDBQueryFilter implements Serializable, Writable {
     return this;
   }
 
+  public DynamoDBQueryFilter withScanFilter(String key, Condition condition) {
+    scanFilter.put(key, condition);
+    return this;
+  }
+
   public void addKeyCondition(DynamoDBFilter filter) {
     this.keyConditions.put(filter.getColumnName(), filter.getDynamoDBCondition());
   }
