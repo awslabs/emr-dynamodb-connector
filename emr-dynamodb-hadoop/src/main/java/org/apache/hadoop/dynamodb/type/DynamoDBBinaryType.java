@@ -13,10 +13,8 @@
 
 package org.apache.hadoop.dynamodb.type;
 
-import static org.apache.hadoop.dynamodb.DynamoDBUtil.base64StringToByteBuffer;
-
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
+import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.dynamodb.key.DynamoDBBinaryKey;
 import org.apache.hadoop.dynamodb.key.DynamoDBKey;
 
@@ -24,7 +22,7 @@ public class DynamoDBBinaryType implements DynamoDBType {
 
   @Override
   public AttributeValue getAttributeValue(String... values) {
-    return new AttributeValue().withB(base64StringToByteBuffer(values[0]));
+    return new AttributeValue().withB(DynamoDBUtil.base64StringToByteBuffer(values[0]));
   }
 
   @Override

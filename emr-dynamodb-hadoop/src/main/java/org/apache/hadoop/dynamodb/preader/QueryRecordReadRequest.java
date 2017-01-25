@@ -15,8 +15,7 @@ package org.apache.hadoop.dynamodb.preader;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
-
-import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
+import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer;
 import org.apache.hadoop.dynamodb.preader.RateController.RequestLimit;
 
 import java.util.Map;
@@ -24,7 +23,7 @@ import java.util.Map;
 public class QueryRecordReadRequest extends AbstractRecordReadRequest {
 
   public QueryRecordReadRequest(AbstractReadManager readMgr, DynamoDBRecordReaderContext context,
-      Map<String, AttributeValue> lastEvaluatedKey) {
+                                Map<String, AttributeValue> lastEvaluatedKey) {
     super(readMgr, context, 0 /* segment */, lastEvaluatedKey);
   }
 
@@ -37,8 +36,8 @@ public class QueryRecordReadRequest extends AbstractRecordReadRequest {
   @Override
   protected PageResults<Map<String, AttributeValue>> fetchPage(RequestLimit lim) {
     // Read from DynamoDB
-    RetryResult<QueryResult> retryResult = context.getClient().queryTable(tableName, context
-        .getSplit().getFilterPushdown(), lastEvaluatedKey, lim.items, context.getReporter());
+    DynamoDBFibonacciRetryer.RetryResult<QueryResult> retryResult = context.getClient().queryTable(tableName, context
+        .getSplit().getFilter(), lastEvaluatedKey, lim.items, context.getReporter());
 
     QueryResult result = retryResult.result;
     int retries = retryResult.retries;

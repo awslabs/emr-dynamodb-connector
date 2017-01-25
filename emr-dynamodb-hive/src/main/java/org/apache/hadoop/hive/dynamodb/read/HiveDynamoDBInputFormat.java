@@ -79,7 +79,7 @@ public class HiveDynamoDBInputFormat extends DynamoDBInputFormat {
     Map<String, String> hiveTypeMapping = HiveDynamoDBUtil.extractHiveTypeMapping(conf);
     DynamoDBQueryFilter queryFilter = getQueryFilter(conf, columnMapping, hiveTypeMapping);
     DynamoDBSplit bbSplit = (DynamoDBSplit) split;
-    bbSplit.setDynamoDBFilterPushdown(queryFilter);
+    bbSplit.setDynamoDBFilter(queryFilter);
 
     Collection<String> attributes = (columnMapping == null ? null : columnMapping.values());
     DynamoDBRecordReaderContext context = buildHiveDynamoDBRecordReaderContext(bbSplit, conf,

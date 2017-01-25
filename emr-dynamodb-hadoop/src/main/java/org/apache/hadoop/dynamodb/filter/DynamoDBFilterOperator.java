@@ -13,28 +13,22 @@
 
 package org.apache.hadoop.dynamodb.filter;
 
-import static org.apache.hadoop.dynamodb.filter.DynamoDBFilterOperatorConstants.UDF_OP_PREFIX;
-import static org.apache.hadoop.dynamodb.filter.DynamoDBFilterOperatorConstants.UDF_PREFIX;
-import static org.apache.hadoop.dynamodb.filter.DynamoDBFilterOperatorType.BINARY;
-import static org.apache.hadoop.dynamodb.filter.DynamoDBFilterOperatorType.NARY;
-import static org.apache.hadoop.dynamodb.filter.DynamoDBFilterOperatorType.UNARY;
-
 import java.util.HashMap;
 import java.util.Map;
 
 public enum DynamoDBFilterOperator {
   // Operator type    Operator symbol   Operator class    DynamoDB operator    Precedence number
-  EQ(BINARY, "=", UDF_PREFIX + "Equal", "EQ", 1),
-  IN(NARY, "in", UDF_PREFIX + "In", "IN", 2),
+  EQ(DynamoDBFilterOperatorType.BINARY, "=", DynamoDBFilterOperatorConstants.UDF_PREFIX + "Equal", "EQ", 1),
+  IN(DynamoDBFilterOperatorType.NARY, "in", DynamoDBFilterOperatorConstants.UDF_PREFIX + "In", "IN", 2),
   // Between does not map directly to any Hive predicate
-  BETWEEN(NARY, null, null, "BETWEEN", 3),
-  LE(BINARY, "<=", UDF_OP_PREFIX + "OPEqualOrLessThan", "LE", 4),
-  GE(BINARY, ">=", UDF_OP_PREFIX + "OPEqualOrGreaterThan", "GE", 5),
-  LT(BINARY, "<", UDF_OP_PREFIX + "OPLessThan", "LT", 6),
-  GT(BINARY, ">", UDF_OP_PREFIX + "OPGreaterThan", "GT", 7),
-  NE(BINARY, "<>", UDF_OP_PREFIX + "OPNotEqual", "NE", 8),
-  N_NULL(UNARY, "isnull", UDF_OP_PREFIX + "OPNotNull", "NOT_NULL", 9),
-  NULL(UNARY, "isnotnull", UDF_OP_PREFIX + "OPNull", "NULL", 10);
+  BETWEEN(DynamoDBFilterOperatorType.NARY, null, null, "BETWEEN", 3),
+  LE(DynamoDBFilterOperatorType.BINARY, "<=", DynamoDBFilterOperatorConstants.UDF_OP_PREFIX + "OPEqualOrLessThan", "LE", 4),
+  GE(DynamoDBFilterOperatorType.BINARY, ">=", DynamoDBFilterOperatorConstants.UDF_OP_PREFIX + "OPEqualOrGreaterThan", "GE", 5),
+  LT(DynamoDBFilterOperatorType.BINARY, "<", DynamoDBFilterOperatorConstants.UDF_OP_PREFIX + "OPLessThan", "LT", 6),
+  GT(DynamoDBFilterOperatorType.BINARY, ">", DynamoDBFilterOperatorConstants.UDF_OP_PREFIX + "OPGreaterThan", "GT", 7),
+  NE(DynamoDBFilterOperatorType.BINARY, "<>", DynamoDBFilterOperatorConstants.UDF_OP_PREFIX + "OPNotEqual", "NE", 8),
+  N_NULL(DynamoDBFilterOperatorType.UNARY, "isnull", DynamoDBFilterOperatorConstants.UDF_OP_PREFIX + "OPNotNull", "NOT_NULL", 9),
+  NULL(DynamoDBFilterOperatorType.UNARY, "isnotnull", DynamoDBFilterOperatorConstants.UDF_OP_PREFIX + "OPNull", "NULL", 10);
 
   private static final Map<String, DynamoDBFilterOperator> operatorSymbolMap;
   private static final Map<String, DynamoDBFilterOperator> hiveClassMap;

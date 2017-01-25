@@ -14,7 +14,6 @@
 package org.apache.hadoop.dynamodb.key;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
 
 import java.nio.ByteBuffer;

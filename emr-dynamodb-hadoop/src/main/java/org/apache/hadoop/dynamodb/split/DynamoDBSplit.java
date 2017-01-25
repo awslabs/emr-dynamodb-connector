@@ -27,7 +27,7 @@ public interface DynamoDBSplit extends InputSplit {
 
   int getTotalSegments();
 
-  DynamoDBQueryFilter getFilterPushdown();
+  DynamoDBQueryFilter getFilter();
 
-  void setDynamoDBFilterPushdown(DynamoDBQueryFilter filterPushdown);
+  void setDynamoDBFilter(DynamoDBQueryFilter filter);
 }

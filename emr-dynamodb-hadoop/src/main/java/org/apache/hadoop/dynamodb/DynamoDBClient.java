@@ -13,52 +13,25 @@
 
 package org.apache.hadoop.dynamodb;
 
-import static org.apache.hadoop.dynamodb.DynamoDBUtil.getDynamoDBEndpoint;
-
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.*;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.*;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.primitives.Ints;
-
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSCredentialsProviderChain;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
-import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.dynamodbv2.model.ConsumedCapacity;
-import com.amazonaws.services.dynamodbv2.model.DescribeTableRequest;
-import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
-import com.amazonaws.services.dynamodbv2.model.PutRequest;
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
-import com.amazonaws.services.dynamodbv2.model.QueryResult;
-import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
-import com.amazonaws.services.dynamodbv2.model.ScanRequest;
-import com.amazonaws.services.dynamodbv2.model.ScanResult;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
-import com.amazonaws.services.dynamodbv2.model.WriteRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
 import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.joda.time.Duration;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.concurrent.Callable;
 
 public class DynamoDBClient {
@@ -95,14 +68,14 @@ public class DynamoDBClient {
 
   public DynamoDBClient(Configuration conf, String region) {
     dynamoDB = getDynamoDBClient(conf);
-    dynamoDB.setEndpoint(getDynamoDBEndpoint(conf, region));
+    dynamoDB.setEndpoint(DynamoDBUtil.getDynamoDBEndpoint(conf, region));
   }
 
   public TableDescription describeTable(String tableName) {
     final DescribeTableRequest describeTablesRequest = new DescribeTableRequest()
         .withTableName(tableName);
     try {
-      RetryResult<DescribeTableResult> describeResult = getRetryDriver().runWithRetry(
+      DynamoDBFibonacciRetryer.RetryResult<DescribeTableResult> describeResult = getRetryDriver().runWithRetry(
           new Callable<DescribeTableResult>() {
             @Override
             public DescribeTableResult call() {
@@ -117,7 +90,7 @@ public class DynamoDBClient {
     }
   }
 
-  public RetryResult<ScanResult> scanTable(
+  public DynamoDBFibonacciRetryer.RetryResult<ScanResult> scanTable(
       String tableName, DynamoDBQueryFilter dynamoDBQueryFilter, Integer segment, Integer
       totalSegments, Map<String, AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
     final ScanRequest scanRequest = new ScanRequest(tableName)
@@ -134,7 +107,7 @@ public class DynamoDBClient {
       }
     }
 
-    RetryResult<ScanResult> retryResult = getRetryDriver().runWithRetry(new Callable<ScanResult>() {
+    DynamoDBFibonacciRetryer.RetryResult<ScanResult> retryResult = getRetryDriver().runWithRetry(new Callable<ScanResult>() {
       @Override
       public ScanResult call() {
         log.debug("Executing DynamoDB scan: " + scanRequest);
@@ -144,7 +117,7 @@ public class DynamoDBClient {
     return retryResult;
   }
 
-  public RetryResult<QueryResult> queryTable(
+  public DynamoDBFibonacciRetryer.RetryResult<QueryResult> queryTable(
       String tableName, DynamoDBQueryFilter dynamoDBQueryFilter, Map<String, AttributeValue>
       exclusiveStartKey, long limit, Reporter reporter) {
     final QueryRequest queryRequest = new QueryRequest()
@@ -154,7 +127,7 @@ public class DynamoDBClient {
         .withLimit(Ints.checkedCast(limit))
         .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
 
-    RetryResult<QueryResult> retryResult = getRetryDriver().runWithRetry(
+    DynamoDBFibonacciRetryer.RetryResult<QueryResult> retryResult = getRetryDriver().runWithRetry(
         new Callable<QueryResult>() {
           @Override
           public QueryResult call() {
@@ -166,7 +139,7 @@ public class DynamoDBClient {
   }
 
   public BatchWriteItemResult putBatch(String tableName, Map<String, AttributeValue> item,
-      long maxBatchSize, Reporter reporter)
+                                       long maxBatchSize, Reporter reporter)
       throws UnsupportedEncodingException {
     int itemSizeBytes = DynamoDBUtil.getItemSizeBytes(item);
     if (itemSizeBytes > MAX_ALLOWABLE_BYTE_SIZE) {
@@ -219,7 +192,7 @@ public class DynamoDBClient {
         .withRequestItems(writeBatchMap)
         .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
 
-    RetryResult<BatchWriteItemResult> retryResult = getRetryDriver().runWithRetry(
+    DynamoDBFibonacciRetryer.RetryResult<BatchWriteItemResult> retryResult = getRetryDriver().runWithRetry(
         new Callable<BatchWriteItemResult>() {
           @Override
           public BatchWriteItemResult call() throws

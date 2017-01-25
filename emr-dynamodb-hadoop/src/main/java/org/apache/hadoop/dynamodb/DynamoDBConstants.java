@@ -34,6 +34,8 @@ public interface DynamoDBConstants {
   // JobConf constants
   String DYNAMODB_FILTER_PUSHDOWN = "dynamodb.filter.pushdown";
 
+  String DYNAMODB_MULTIPLE_QUERY = "dynamodb.filter.multiple.query";
+
   String ENDPOINT = "dynamodb.endpoint";
 
   String REGION_ID = "dynamodb.regionid";

@@ -15,16 +15,14 @@ package org.apache.hadoop.dynamodb.preader;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
-
-import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
-import org.apache.hadoop.dynamodb.preader.RateController.RequestLimit;
+import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer;
 
 import java.util.Map;
 
 public class ScanRecordReadRequest extends AbstractRecordReadRequest {
 
   public ScanRecordReadRequest(AbstractReadManager readMgr, DynamoDBRecordReaderContext context,
-      int segment, Map<String, AttributeValue> lastEvaluatedKey) {
+                               int segment, Map<String, AttributeValue> lastEvaluatedKey) {
     super(readMgr, context, segment, lastEvaluatedKey);
   }
 
@@ -35,9 +33,9 @@ public class ScanRecordReadRequest extends AbstractRecordReadRequest {
   }
 
   @Override
-  protected PageResults<Map<String, AttributeValue>> fetchPage(RequestLimit lim) {
+  protected PageResults<Map<String, AttributeValue>> fetchPage(RateController.RequestLimit lim) {
     // Read from DynamoDB
-    RetryResult<ScanResult> retryResult = context.getClient().scanTable(tableName, null, segment,
+    DynamoDBFibonacciRetryer.RetryResult<ScanResult> retryResult = context.getClient().scanTable(tableName, null, segment,
         context.getSplit().getTotalSegments(), lastEvaluatedKey, lim.items, context.getReporter());
 
     ScanResult result = retryResult.result;

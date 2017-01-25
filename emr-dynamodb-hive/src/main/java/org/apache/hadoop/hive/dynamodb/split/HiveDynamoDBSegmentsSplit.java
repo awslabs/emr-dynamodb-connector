@@ -42,7 +42,7 @@ public class HiveDynamoDBSegmentsSplit extends FileSplit implements DynamoDBSpli
   private int splitId;
   private List<Integer> segments;
   private int totalSegments;
-  private DynamoDBQueryFilter filterPushdown;
+  private DynamoDBQueryFilter filter;
 
   public HiveDynamoDBSegmentsSplit() {
     super(null, 0, 0, (String[]) null);
@@ -50,13 +50,13 @@ public class HiveDynamoDBSegmentsSplit extends FileSplit implements DynamoDBSpli
   }
 
   public HiveDynamoDBSegmentsSplit(Path path, long approxItemCount, int splitId, List<Integer>
-      segments, int totalSegments, DynamoDBQueryFilter filterPushdown) {
+      segments, int totalSegments, DynamoDBQueryFilter filter) {
     super(path, 0, 0, (String[]) null);
     this.approxItemCount = approxItemCount;
     this.segments = segments;
     this.splitId = splitId;
     this.totalSegments = totalSegments;
-    this.filterPushdown = filterPushdown;
+    this.filter = filter;
   }
 
   @Override
@@ -71,7 +71,7 @@ public class HiveDynamoDBSegmentsSplit extends FileSplit implements DynamoDBSpli
       segments.add(in.readInt());
     }
     totalSegments = in.readInt();
-    filterPushdown = new DynamoDBQueryFilter();
+    filter = new DynamoDBQueryFilter();
   }
 
   @Override
@@ -113,11 +113,13 @@ public class HiveDynamoDBSegmentsSplit extends FileSplit implements DynamoDBSpli
     return totalSegments;
   }
 
-  public DynamoDBQueryFilter getFilterPushdown() {
-    return filterPushdown;
+  @Override
+  public DynamoDBQueryFilter getFilter() {
+    return filter;
   }
 
-  public void setDynamoDBFilterPushdown(DynamoDBQueryFilter filterPushdown) {
-    this.filterPushdown = filterPushdown;
+  @Override
+  public void setDynamoDBFilter(DynamoDBQueryFilter filter) {
+    this.filter = filter;
   }
 }

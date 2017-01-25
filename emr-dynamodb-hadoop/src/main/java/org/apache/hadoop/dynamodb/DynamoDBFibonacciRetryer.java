@@ -15,7 +15,6 @@ package org.apache.hadoop.dynamodb;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapred.Reporter;
@@ -63,7 +62,7 @@ public class DynamoDBFibonacciRetryer {
    * period.
    */
   public <T> RetryResult<T> runWithRetry(Callable<T> callable, Reporter reporter,
-      PrintCounter retryCounter) {
+                                         PrintCounter retryCounter) {
     fib1 = 0;
     fib2 = 1;
     retryCount = 0;
@@ -93,7 +92,7 @@ public class DynamoDBFibonacciRetryer {
   }
 
   private void handleException(DateTime retryEndTime, Exception exception, Reporter reporter,
-      PrintCounter retryCounter) {
+                               PrintCounter retryCounter) {
     DateTime currentTime = new DateTime(DateTimeZone.UTC);
     long maxDelay = retryEndTime.getMillis() - currentTime.getMillis();
 

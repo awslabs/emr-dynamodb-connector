@@ -13,10 +13,8 @@
 
 package org.apache.hadoop.dynamodb.write;
 
-import com.google.common.base.Strings;
-
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
-
+import com.google.common.base.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBClient;

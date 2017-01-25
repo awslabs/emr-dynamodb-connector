@@ -14,7 +14,6 @@
 package org.apache.hadoop.dynamodb.preader;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.split.DynamoDBSplit;
 import org.apache.hadoop.mapred.InputSplit;

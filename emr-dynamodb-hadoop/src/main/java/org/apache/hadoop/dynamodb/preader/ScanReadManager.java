@@ -23,7 +23,7 @@ import java.util.Random;
 public class ScanReadManager extends AbstractReadManager {
 
   public ScanReadManager(RateController rateController, AbstractTimeSource time,
-      DynamoDBRecordReaderContext context) {
+                         DynamoDBRecordReaderContext context) {
     super(rateController, time, context);
   }
 

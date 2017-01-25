@@ -20,11 +20,7 @@ import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.dynamodb.preader.DynamoDBRecordReaderContext;
 import org.apache.hadoop.dynamodb.split.DynamoDBSplitGenerator;
-import org.apache.hadoop.mapred.InputFormat;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.*;
 
 import java.io.IOException;
 
@@ -83,7 +79,7 @@ public abstract class AbstractDynamoDBInputFormat<K, V> implements InputFormat<K
   }
 
   protected DynamoDBRecordReaderContext buildDynamoDBRecordReaderContext(InputSplit split,
-      JobConf conf, Reporter reporter) {
+                                                                         JobConf conf, Reporter reporter) {
     DynamoDBRecordReaderContext context = new DynamoDBRecordReaderContext();
 
     context.setConf(conf);
