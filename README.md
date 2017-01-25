@@ -52,6 +52,54 @@ TBLPROPERTIES (
 );
 ```
 
+## Example: Input/Output with MapReduce
+```
+JobConf conf = new JobConf(new Configuration(), WordCountMapReduce.class);
+conf.setJobName("wordCount");
+conf.set("dynamodb.input.tableName","${tableName}");
+conf.set("dynamodb.endpoint","${endpoint}");
+conf.set("dynamodb.regionid","${regionId}");
+conf.set("dynamodb.awsAccessKeyId", "${accessKey}");
+conf.set("dynamodb.awsSecretAccessKey", "${secretKey}");
+
+conf.setInputFormat(DynamoDBMultitableInputFormat.class);
+// or conf.setInputFormat(DynamoDBInputFormat.class);
+ArrayList<DynamoDBQueryFilter> keyConditionList = new ArrayList<>();
+keyConditionList.add(new DynamoDBQueryFilter()
+    .withKeyCondition("partionKey",
+        new Condition()
+            .withComparisonOperator("EQ")
+            .withAttributeValueList(new AttributeValue("partionKey")))
+    .withKeyCondition("secondKey",
+        new Condition()
+            .withComparisonOperator("BETWEEN")
+            .withAttributeValueList(new AttributeValue("secondKeyBegin"), new AttributeValue("secondKeyEnd")))
+);
+keyConditionList.add(new DynamoDBQueryFilter()
+    .withKeyCondition("partionKey2",
+        new Condition()
+            .withComparisonOperator("EQ")
+            .withAttributeValueList(new AttributeValue("partionKey2")))
+    .withKeyCondition("secondKey2",
+        new Condition()
+            .withComparisonOperator("BETWEEN")
+            .withAttributeValueList(new AttributeValue("secondKeyBegin2"), new AttributeValue("secondKeyEnd2")))
+);
+conf.set(DynamoDBConstants.DYNAMODB_MULTIPLE_QUERY, SerializeUtil.toString(keyConditionList));
+
+conf.setOutputFormat(TextOutputFormat.class);
+conf.setOutputKeyClass(Text.class);
+conf.setOutputValueClass(Text.class);
+conf.setMapperClass(Map.class);
+conf.setReducerClass(Reduce.class);
+
+JobClient jc = new JobClient(job);
+RunningJob rj = jc.submitJob(job);
+if (!jc.monitorAndPrintJob(job, rj)) {
+  throw new IOException("Job failed with info: " + rj.getFailureInfo());
+}
+```
+
 ## Example: Input/Output Formats with Spark
 Using the DynamoDBInputFormat and DynamoDBOutputFormat classes with `spark-shell`:
 ```
