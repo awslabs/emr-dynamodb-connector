@@ -58,6 +58,15 @@ public interface DynamoDBConstants {
   String MAX_MAP_TASKS = "dynamodb.max.map.tasks";
   String DEFAULT_THROUGHPUT_PERCENTAGE = "0.5";
 
+  String MAX_ITEM_SIZE = "dynamodb.max.item.size";
+  String MAX_BATCH_SIZE = "dynamodb.max.batch.size";
+  String MAX_ITEMS_PER_BATCH = "dynamodb.max.batch.items";
+
+  // http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Limits.html
+  long DEFAULT_MAX_ITEM_SIZE = 400 * 1024;
+  long DEFAULT_MAX_BATCH_SIZE = 16 * 1024 * 1024;
+  long DEFAULT_MAX_ITEMS_PER_BATCH = 25;
+
   double READ_EVENTUALLY_TO_STRONGLY_CONSISTENT_FACTOR = 2;
 
   String SCAN_SEGMENTS = "dynamodb.scan.segments";
