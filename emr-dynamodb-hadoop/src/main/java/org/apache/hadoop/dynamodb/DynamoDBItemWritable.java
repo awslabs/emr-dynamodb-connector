@@ -23,11 +23,12 @@ import org.apache.hadoop.io.Writable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DynamoDBItemWritable implements Writable {
+public class DynamoDBItemWritable implements Writable, Serializable {
 
   public static final Type type = new TypeToken<Map<String, AttributeValue>>() {}.getType();
 
