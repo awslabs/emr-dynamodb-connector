@@ -109,7 +109,7 @@ To depend on the specific components in your projects, add one (or both) of the 
 <dependency>
   <groupId>com.amazon.emr</groupId>
   <artifactId>emr-dynamodb-hadoop</artifactId>
-  <version>4.1.0</version>
+  <version>4.2.0</version>
 </dependency>
 ```
 #### Hive SerDes & StorageHandler
@@ -117,7 +117,7 @@ To depend on the specific components in your projects, add one (or both) of the 
 <dependency>
   <groupId>com.amazon.emr</groupId>
   <artifactId>emr-dynamodb-hive</artifactId>
-  <version>4.1.0</version>
+  <version>4.2.0</version>
 </dependency>
 ```
 
