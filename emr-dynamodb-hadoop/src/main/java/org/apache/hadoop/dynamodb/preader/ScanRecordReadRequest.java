@@ -43,7 +43,11 @@ public class ScanRecordReadRequest extends AbstractRecordReadRequest {
     ScanResult result = retryResult.result;
     int retries = retryResult.retries;
 
-    return new PageResults<>(result.getItems(), result.getLastEvaluatedKey(), result
-        .getConsumedCapacity().getCapacityUnits(), retries);
+    double consumedCapacityUnits = 0.0;
+    if (result.getConsumedCapacity() != null) {
+      consumedCapacityUnits = result.getConsumedCapacity().getCapacityUnits();
+    }
+    return new PageResults<>(result.getItems(), result.getLastEvaluatedKey(), consumedCapacityUnits,
+        retries);
   }
 }
