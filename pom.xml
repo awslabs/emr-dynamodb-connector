@@ -22,7 +22,7 @@
 
     <properties>
         <java.version>1.7</java.version>
-        <aws-java-sdk.version>1.10.66</aws-java-sdk.version>
+        <aws-java-sdk.version>1.10.77</aws-java-sdk.version>
         <hadoop.version>2.7.2</hadoop.version>
         <hive1.version>1.0.0</hive1.version>
         <hive1.2.version>1.2.1</hive1.2.version>
@@ -98,6 +98,16 @@
                 <artifactId>hadoop-common</artifactId>
                 <version>${hadoop.version}</version>
                 <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpclient</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpcore</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
