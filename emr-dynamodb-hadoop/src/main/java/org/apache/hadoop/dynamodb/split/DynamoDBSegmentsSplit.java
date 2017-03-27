@@ -29,19 +29,19 @@ public class DynamoDBSegmentsSplit implements DynamoDBSplit {
   private int splitId;
   private List<Integer> segments;
   private int totalSegments;
-  private DynamoDBQueryFilter filterPushdown;
+  private DynamoDBQueryFilter filter;
 
   public DynamoDBSegmentsSplit() {
     this.segments = new ArrayList<>();
   }
 
   public DynamoDBSegmentsSplit(Path path, long approxItemCount, int splitId, List<Integer>
-      segments, int totalSegments, DynamoDBQueryFilter filterPushdown) {
+      segments, int totalSegments, DynamoDBQueryFilter filter) {
     this.approxItemCount = approxItemCount;
     this.segments = segments;
     this.splitId = splitId;
     this.totalSegments = totalSegments;
-    this.filterPushdown = filterPushdown;
+    this.filter = filter;
   }
 
   @Override
@@ -59,7 +59,8 @@ public class DynamoDBSegmentsSplit implements DynamoDBSplit {
       this.segments.add(in.readInt());
     }
     totalSegments = in.readInt();
-    filterPushdown = new DynamoDBQueryFilter();
+    filter = new DynamoDBQueryFilter();
+    filter.readFields(in);
   }
 
   @Override
@@ -71,6 +72,7 @@ public class DynamoDBSegmentsSplit implements DynamoDBSplit {
       out.writeInt(segment);
     }
     out.writeInt(totalSegments);
+    filter.write(out);
   }
 
   @Override
@@ -99,12 +101,12 @@ public class DynamoDBSegmentsSplit implements DynamoDBSplit {
   }
 
   @Override
-  public DynamoDBQueryFilter getFilterPushdown() {
-    return filterPushdown;
+  public DynamoDBQueryFilter getFilter() {
+    return filter;
   }
 
   @Override
-  public void setDynamoDBFilterPushdown(DynamoDBQueryFilter filterPushdown) {
-    this.filterPushdown = filterPushdown;
+  public void setDynamoDBFilter(DynamoDBQueryFilter filter) {
+    this.filter = filter;
   }
 }

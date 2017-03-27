@@ -13,32 +13,18 @@
 
 package org.apache.hadoop.dynamodb;
 
-import com.google.common.base.Strings;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
-
 import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.regions.ServiceAbbreviations;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.amazonaws.util.EC2MetadataUtils;
-
+import com.google.common.base.Strings;
+import com.google.gson.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.dynamodb.util.ClusterTopologyNodeCapacityProvider;
-import org.apache.hadoop.dynamodb.util.NodeCapacityProvider;
-import org.apache.hadoop.dynamodb.util.RoundRobinYarnContainerAllocator;
-import org.apache.hadoop.dynamodb.util.TaskCalculator;
-import org.apache.hadoop.dynamodb.util.YarnContainerAllocator;
+import org.apache.hadoop.dynamodb.util.*;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.joda.time.DateTime;

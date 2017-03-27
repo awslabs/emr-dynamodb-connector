@@ -24,13 +24,13 @@ public class QueryReadManager extends AbstractReadManager {
 
   @Override
   protected void initializeReadRequests() {
-    int totalSegments = context.getSplit().getTotalSegments();
-    if (totalSegments != 1) {
-      String errorMsg = "Expect 1 segment for query (received " + context.getSplit()
-          .getTotalSegments() + ")";
-      log.error(errorMsg);
-      throw new RuntimeException(errorMsg);
-    }
+    int totalSegments = context.getSplit().getSegments().size();
+//    if (totalSegments != 1) {
+//      String errorMsg = "Expect 1 segment for query (received " + context.getSplit()
+//          .getTotalSegments() + ")";
+//      log.error(errorMsg);
+//      throw new RuntimeException(errorMsg);
+//    }
     segmentsRemaining.set(totalSegments);
 
     enqueueReadRequestToTail(new QueryRecordReadRequest(this, context, null /* lastEvaluatedKey

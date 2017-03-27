@@ -27,7 +27,7 @@ public class DynamoDBInputFormat extends AbstractDynamoDBInputFormat<Text, Dynam
 
   @Override
   public RecordReader<Text, DynamoDBItemWritable> getRecordReader(InputSplit split, JobConf conf,
-      Reporter reporter) throws IOException {
+                                                                  Reporter reporter) throws IOException {
     DynamoDBRecordReaderContext context = buildDynamoDBRecordReaderContext(split, conf, reporter);
     return new DefaultDynamoDBRecordReader(context);
   }

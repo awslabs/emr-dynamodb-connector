@@ -13,23 +13,13 @@
 
 package org.apache.hadoop.dynamodb.write;
 
-import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES;
-import static org.apache.hadoop.dynamodb.DynamoDBUtil.createJobClient;
-
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.ConsumedCapacity;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.dynamodb.DynamoDBClient;
-import org.apache.hadoop.dynamodb.DynamoDBConstants;
-import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
-import org.apache.hadoop.dynamodb.DynamoDBOperationType;
-import org.apache.hadoop.dynamodb.DynamoDBUtil;
-import org.apache.hadoop.dynamodb.IopsCalculator;
-import org.apache.hadoop.dynamodb.IopsController;
+import org.apache.hadoop.dynamodb.*;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
@@ -78,9 +68,9 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
       throw new ResourceNotFoundException("No output table name was specified.");
     }
 
-    IopsCalculator iopsCalculator = new WriteIopsCalculator(createJobClient(jobConf), client,
+    IopsCalculator iopsCalculator = new WriteIopsCalculator(DynamoDBUtil.createJobClient(jobConf), client,
         tableName);
-    iopsController = new IopsController(iopsCalculator, DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES,
+    iopsController = new IopsController(iopsCalculator, DynamoDBConstants.DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES,
         DynamoDBOperationType.WRITE);
     permissibleWritesPerSecond = iopsController.getTargetItemsPerSecond();
     log.info("Number of allocated item writes per second: " + permissibleWritesPerSecond);

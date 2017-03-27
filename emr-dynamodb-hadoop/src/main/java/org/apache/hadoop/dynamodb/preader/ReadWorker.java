@@ -15,7 +15,6 @@ package org.apache.hadoop.dynamodb.preader;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.dynamodb.preader.RateController.RequestLimit;
 import org.apache.hadoop.mapred.Reporter;
 
 import java.util.Random;
@@ -72,7 +71,7 @@ public class ReadWorker extends Thread {
     }
 
     // Find the limit for the next request
-    RequestLimit lim = readMgr.rateController.getNextRequestLimit();
+    RateController.RequestLimit lim = readMgr.rateController.getNextRequestLimit();
     if (lim == RateController.RequestLimit.ZERO) {
       log.info("No read token from rate controller. Putting the request back");
       readMgr.enqueueReadRequestToHead(req);

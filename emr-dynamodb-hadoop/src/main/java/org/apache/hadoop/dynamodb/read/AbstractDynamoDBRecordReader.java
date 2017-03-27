@@ -13,22 +13,11 @@
 
 package org.apache.hadoop.dynamodb.read;
 
-import static org.apache.hadoop.dynamodb.DynamoDBUtil.createJobClient;
-
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.dynamodb.DynamoDBClient;
-import org.apache.hadoop.dynamodb.DynamoDBConstants;
-import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
-import org.apache.hadoop.dynamodb.IopsCalculator;
-import org.apache.hadoop.dynamodb.preader.AbstractReadManager;
-import org.apache.hadoop.dynamodb.preader.DynamoDBRecordReaderContext;
-import org.apache.hadoop.dynamodb.preader.PageResultMultiplexer;
-import org.apache.hadoop.dynamodb.preader.QueryReadManager;
-import org.apache.hadoop.dynamodb.preader.RateController;
-import org.apache.hadoop.dynamodb.preader.ScanReadManager;
+import org.apache.hadoop.dynamodb.*;
+import org.apache.hadoop.dynamodb.preader.*;
 import org.apache.hadoop.dynamodb.split.DynamoDBSplit;
 import org.apache.hadoop.dynamodb.util.TimeSource;
 import org.apache.hadoop.mapred.RecordReader;
@@ -148,7 +137,7 @@ public abstract class AbstractDynamoDBRecordReader<K, V> implements RecordReader
     // Calculate target rate. Currently this is only done at task startup
     // time, but we could have this refresh every x minutes so that changes
     // in table provisioning could be reflected.
-    IopsCalculator iopsCalculator = new ReadIopsCalculator(createJobClient(context.getConf()),
+    IopsCalculator iopsCalculator = new ReadIopsCalculator(DynamoDBUtil.createJobClient(context.getConf()),
         client, tableName, split.getTotalSegments(), split.getSegments().size());
     double targetRate = iopsCalculator.calculateTargetIops();
 
@@ -159,13 +148,15 @@ public abstract class AbstractDynamoDBRecordReader<K, V> implements RecordReader
         .RATE_CONTROLLER_WINDOW_SIZE_SEC, context.getAverageItemSize());
 
     if (isQuery()) {
+      log.info("QueryReadManager selected!");
       return new QueryReadManager(rateController, time, context);
     }
+    log.info("ScanReadManager selected!");
     return new ScanReadManager(rateController, time, context);
   }
 
   private boolean isQuery() {
-    return split.getFilterPushdown().getKeyConditions().size() > 0;
+    return split.getFilter().isQuery();
   }
 
   private void printInitInfo() {

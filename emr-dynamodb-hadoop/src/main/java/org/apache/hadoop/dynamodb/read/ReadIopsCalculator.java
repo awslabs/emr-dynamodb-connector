@@ -14,7 +14,6 @@
 package org.apache.hadoop.dynamodb.read;
 
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
@@ -37,7 +36,7 @@ public class ReadIopsCalculator implements IopsCalculator {
   private final int localSegments;
 
   public ReadIopsCalculator(JobClient jobClient, DynamoDBClient dynamoDBClient, String tableName,
-      int totalSegments, int localSegments) {
+                            int totalSegments, int localSegments) {
     this.jobConf = (JobConf) jobClient.getConf();
     this.jobClient = jobClient;
 

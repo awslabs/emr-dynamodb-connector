@@ -13,8 +13,6 @@
 
 package org.apache.hadoop.dynamodb;
 
-import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
@@ -31,7 +29,7 @@ public class IopsController {
   private double targetItemsPerSecond;
 
   public IopsController(IopsCalculator iopsCalculator, double averageItemSizeInBytes,
-      DynamoDBOperationType operationType) {
+                        DynamoDBOperationType operationType) {
     this.iopsCalculator = iopsCalculator;
     this.operationType = operationType;
 
@@ -40,7 +38,7 @@ public class IopsController {
     targetIops = iopsCalculator.calculateTargetIops();
 
     if (averageItemSizeInBytes < 1) {
-      averageItemSizeInBytes = DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES;
+      averageItemSizeInBytes = DynamoDBConstants.DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES;
     }
     double bytesPerIO = (DynamoDBOperationType.READ == operationType) ? DynamoDBConstants
         .BYTES_PER_READ_CAPACITY_UNIT : DynamoDBConstants.BYTES_PER_WRITE_CAPACITY_UNIT;

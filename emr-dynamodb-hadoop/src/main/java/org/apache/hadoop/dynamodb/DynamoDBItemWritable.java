@@ -13,11 +13,9 @@
 
 package org.apache.hadoop.dynamodb;
 
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
