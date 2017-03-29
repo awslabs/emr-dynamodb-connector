@@ -13,6 +13,9 @@
 
 package org.apache.hadoop.dynamodb;
 
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEMS_PER_BATCH;
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_ITEMS_PER_BATCH;
+
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -185,6 +188,11 @@ public final class DynamoDBUtil {
       }
     }
     return byteSize;
+  }
+
+  static long getBoundedBatchLimit(Configuration config, long batchSize) {
+    long maxItemsPerBatch = config.getLong(MAX_ITEMS_PER_BATCH, DEFAULT_MAX_ITEMS_PER_BATCH);
+    return Math.min(Math.max(batchSize, 1), maxItemsPerBatch);
   }
 
   public static String getValueFromConf(Configuration conf, String confKey, String defaultValue) {

@@ -13,6 +13,8 @@
 
 package org.apache.hadoop.dynamodb;
 
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEMS_PER_BATCH;
+import static org.apache.hadoop.dynamodb.DynamoDBUtil.getBoundedBatchLimit;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -129,4 +131,13 @@ public class DynamoDBUtilTest {
     RegionUtils.getRegion(DynamoDBConstants.DEFAULT_AWS_REGION);
   }
 
+  @Test
+  public void testGetBoundedBatchLimit() {
+    assertEquals(1, getBoundedBatchLimit(conf, 0));
+    assertEquals(1, getBoundedBatchLimit(conf, 1));
+    assertEquals(DEFAULT_MAX_ITEMS_PER_BATCH,
+        getBoundedBatchLimit(conf, DEFAULT_MAX_ITEMS_PER_BATCH + 1));
+    assertEquals(DEFAULT_MAX_ITEMS_PER_BATCH,
+        getBoundedBatchLimit(conf, DEFAULT_MAX_ITEMS_PER_BATCH));
+  }
 }

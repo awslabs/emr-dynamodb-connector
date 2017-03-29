@@ -13,12 +13,16 @@
 
 package org.apache.hadoop.dynamodb;
 
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEM_SIZE;
+
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -28,6 +32,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.util.Map;
 
 public class DynamoDBClientTest {
 
@@ -47,7 +53,7 @@ public class DynamoDBClientTest {
   public void setup() {
     conf.clear();
     clientConf = new ClientConfiguration();
-    client = new DynamoDBClient();
+    client = new DynamoDBClient(conf);
   }
 
   @Test
@@ -159,6 +165,20 @@ public class DynamoDBClientTest {
   public void throwsWhenGivenProxyUsernameAndPasswordWithoutProxyHostAndPortAreNotSupplied() {
     setProxyUsernameAndPassword(conf, TEST_USERNAME, TEST_PASSWORD);
     client.applyProxyConfiguration(clientConf, conf);
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testPutBatchThrowsWhenItemIsTooLarge() throws Exception {
+    Map<String, AttributeValue> item = ImmutableMap.of("",
+        new AttributeValue(Strings.repeat("a", (int) (DEFAULT_MAX_ITEM_SIZE + 1))));
+    client.putBatch("dummyTable", item, 1, null);
+  }
+
+  @Test
+  public void testPutBatchDoesNotThrowWhenItemIsNotTooLarge() throws Exception {
+    Map<String, AttributeValue> item = ImmutableMap.of("",
+        new AttributeValue(Strings.repeat("a", (int) DEFAULT_MAX_ITEM_SIZE)));
+    client.putBatch("dummyTable", item, 1, null);
   }
 
   private void setTestProxyHostAndPort(Configuration conf) {

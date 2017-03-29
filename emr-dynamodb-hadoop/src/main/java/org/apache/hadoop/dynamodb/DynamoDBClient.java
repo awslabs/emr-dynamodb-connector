@@ -13,9 +13,16 @@
 
 package org.apache.hadoop.dynamodb;
 
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_BATCH_SIZE;
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEMS_PER_BATCH;
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEM_SIZE;
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_BATCH_SIZE;
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_ITEMS_PER_BATCH;
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_ITEM_SIZE;
 import static org.apache.hadoop.dynamodb.DynamoDBUtil.getDynamoDBEndpoint;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.primitives.Ints;
 
@@ -66,9 +73,7 @@ public class DynamoDBClient {
   private static final Log log = LogFactory.getLog(DynamoDBClient.class);
 
   private static final int DEFAULT_RETRY_DURATION = 10;
-  private static final int MAX_ALLOWABLE_BYTE_SIZE = 512 * 1024;
   private static final long MAX_BACKOFF_IN_MILLISECONDS = 1000 * 3;
-  private static final int MAX_WRITE_BATCH_SIZE = 25;
   private static final CredentialPairName DYNAMODB_CREDENTIAL_PAIR_NAME =
       new CredentialPairName(
           DynamoDBConstants.DYNAMODB_ACCESS_KEY_CONF,
@@ -83,10 +88,16 @@ public class DynamoDBClient {
   private final AmazonDynamoDBClient dynamoDB;
   private int writeBatchMapSizeBytes;
   private int batchWriteRetries;
+  private final Configuration config;
+  private final long maxBatchSize;
+  private final long maxItemByteSize;
 
   // For unit testing only
   public DynamoDBClient() {
     dynamoDB = null;
+    config = null;
+    maxBatchSize = DEFAULT_MAX_BATCH_SIZE;
+    maxItemByteSize = DEFAULT_MAX_ITEM_SIZE;
   }
 
   public DynamoDBClient(Configuration conf) {
@@ -94,8 +105,12 @@ public class DynamoDBClient {
   }
 
   public DynamoDBClient(Configuration conf, String region) {
+    Preconditions.checkNotNull(conf, "conf cannot be null.");
+    config = conf;
     dynamoDB = getDynamoDBClient(conf);
     dynamoDB.setEndpoint(getDynamoDBEndpoint(conf, region));
+    maxBatchSize = config.getLong(MAX_BATCH_SIZE, DEFAULT_MAX_BATCH_SIZE);
+    maxItemByteSize = config.getLong(MAX_ITEM_SIZE, DEFAULT_MAX_ITEM_SIZE);
   }
 
   public TableDescription describeTable(String tableName) {
@@ -166,31 +181,31 @@ public class DynamoDBClient {
   }
 
   public BatchWriteItemResult putBatch(String tableName, Map<String, AttributeValue> item,
-      long maxBatchSize, Reporter reporter)
+      long maxItemsPerBatch, Reporter reporter)
       throws UnsupportedEncodingException {
     int itemSizeBytes = DynamoDBUtil.getItemSizeBytes(item);
-    if (itemSizeBytes > MAX_ALLOWABLE_BYTE_SIZE) {
-      throw new RuntimeException("Cannot pass items with size greater than "
-          + MAX_ALLOWABLE_BYTE_SIZE + " bytes");
+    if (itemSizeBytes > maxItemByteSize) {
+      throw new RuntimeException("Cannot pass items with size greater than " + maxItemByteSize
+          + ". Item with size of " + itemSizeBytes + " was given.");
     }
-
-    long batchLimit = Math.min(maxBatchSize, MAX_WRITE_BATCH_SIZE);
-    if (batchLimit < 1) {
-      batchLimit = 1;
-    }
-
+    maxItemsPerBatch = DynamoDBUtil.getBoundedBatchLimit(config, maxItemsPerBatch);
     BatchWriteItemResult result = null;
     if (writeBatchMap.containsKey(tableName)) {
-      if (writeBatchMap.get(tableName).size() >= batchLimit
-          || (writeBatchMapSizeBytes + itemSizeBytes) > MAX_ALLOWABLE_BYTE_SIZE) {
-        result = writeBatch(reporter, itemSizeBytes);
+
+      boolean writeRequestsForTableAtLimit =
+          writeBatchMap.get(tableName).size() >= maxItemsPerBatch;
+
+      boolean totalSizeOfWriteBatchesOverLimit =
+          writeBatchMapSizeBytes + itemSizeBytes > maxBatchSize;
+
+      if (writeRequestsForTableAtLimit || totalSizeOfWriteBatchesOverLimit) {
+          result = writeBatch(reporter, itemSizeBytes);
       }
     }
-
     // writeBatchMap could be cleared from writeBatch()
     List<WriteRequest> writeBatchList;
     if (!writeBatchMap.containsKey(tableName)) {
-      writeBatchList = new ArrayList<>(MAX_WRITE_BATCH_SIZE);
+      writeBatchList = new ArrayList<>((int) maxItemsPerBatch);
       writeBatchMap.put(tableName, writeBatchList);
     } else {
       writeBatchList = writeBatchMap.get(tableName);
@@ -244,8 +259,12 @@ public class DynamoDBClient {
                       request.getPutRequest().getItem());
                 }
 
-                if (unprocessedWriteRequests.size() >= MAX_WRITE_BATCH_SIZE
-                    || (MAX_ALLOWABLE_BYTE_SIZE - batchSizeBytes) < roomNeeded) {
+                long maxItemsPerBatch =
+                    config.getLong(MAX_ITEMS_PER_BATCH, DEFAULT_MAX_ITEMS_PER_BATCH);
+                long maxBatchSize = config.getLong(MAX_BATCH_SIZE, DEFAULT_MAX_BATCH_SIZE);
+
+                if (unprocessedWriteRequests.size() >= maxItemsPerBatch
+                    || (maxBatchSize - batchSizeBytes) < roomNeeded) {
                   throw new AmazonClientException("Full list of write requests not processed");
                 }
               }
