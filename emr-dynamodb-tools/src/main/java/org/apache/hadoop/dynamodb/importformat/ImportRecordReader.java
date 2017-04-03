@@ -14,10 +14,15 @@
 package org.apache.hadoop.dynamodb.importformat;
 
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.compress.CodecPool;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hadoop.io.compress.Decompressor;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.util.LineReader;
@@ -30,7 +35,15 @@ public class ImportRecordReader implements RecordReader<NullWritable, DynamoDBIt
 
   public ImportRecordReader(JobConf job, Path path) throws IOException {
     FileSystem fs = path.getFileSystem(job);
-    this.lineReader = new LineReader(fs.open(path), job);
+    FSDataInputStream fileIn = fs.open(path);
+    CompressionCodecFactory compressionCodecs = new CompressionCodecFactory(job);
+    CompressionCodec codec = compressionCodecs.getCodec(path);
+    if (null != codec) {
+      Decompressor decompressor = CodecPool.getDecompressor(codec);
+      this.lineReader = new LineReader(codec.createInputStream(fileIn, decompressor), job);
+    } else {
+      this.lineReader = new LineReader(fileIn, job);
+    }
   }
 
   @Override
