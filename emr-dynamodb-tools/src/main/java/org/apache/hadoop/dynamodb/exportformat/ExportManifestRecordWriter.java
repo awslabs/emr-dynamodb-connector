@@ -49,11 +49,14 @@ public class ExportManifestRecordWriter<K> implements RecordWriter<K, Text> {
 
   private final DataOutputStream out;
   private final Path outputFolder;
+  private final String entrySuffix;
   private int itemCount = 0;
 
-  public ExportManifestRecordWriter(DataOutputStream out, Path outputFolder) throws IOException {
+  public ExportManifestRecordWriter(DataOutputStream out, Path outputFolder, String entrySuffix)
+      throws IOException {
     this.out = out;
     this.outputFolder = outputFolder;
+    this.entrySuffix = entrySuffix;
     writeHeader();
   }
 
@@ -76,8 +79,8 @@ public class ExportManifestRecordWriter<K> implements RecordWriter<K, Text> {
   }
 
   private ExportManifestEntry createExportEntry(Text value) {
-    String path = new Path(outputFolder, new String(value.getBytes(), Charsets.UTF_8)).toUri()
-        .toString();
+    String entryName = new String(value.getBytes(), Charsets.UTF_8) + entrySuffix;
+    String path = new Path(outputFolder, entryName).toUri().toString();
 
     if (path.startsWith(S3N_PREFIX)) {
       path = S3_PREFIX + path.substring(S3N_PREFIX.length());
