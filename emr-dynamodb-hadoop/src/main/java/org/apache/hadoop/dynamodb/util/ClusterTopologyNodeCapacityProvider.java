@@ -13,10 +13,8 @@
 
 package org.apache.hadoop.dynamodb.util;
 
-import com.amazonaws.util.json.JSONArray;
-import com.amazonaws.util.json.JSONException;
-import com.amazonaws.util.json.JSONObject;
-
+import com.amazonaws.util.json.Jackson;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapred.JobConf;
@@ -105,16 +103,15 @@ public class ClusterTopologyNodeCapacityProvider implements NodeCapacityProvider
     return new String(Files.readAllBytes(Paths.get("/mnt/var/lib/info/job-flow.json")));
   }
 
-  private String extractInstanceType(String jobFlowJsonString, String targetInstanceRole) throws
-      JSONException {
-    JSONObject jobFlowJson = new JSONObject(jobFlowJsonString);
-    JSONArray instanceGroups = jobFlowJson.getJSONArray("instanceGroups");
+  private String extractInstanceType(String jobFlowJsonString, String targetInstanceRole) {
+    JsonNode jobFlowJson = Jackson.jsonNodeOf(jobFlowJsonString);
+    JsonNode instanceGroups = jobFlowJson.get("instanceGroups");
 
-    for (int i = 0; i < instanceGroups.length(); i++) {
-      JSONObject instanceGroup = instanceGroups.getJSONObject(i);
-      String instanceRole = instanceGroup.getString("instanceRole");
+    for (int i = 0; i < instanceGroups.size(); i++) {
+      JsonNode instanceGroup = instanceGroups.get(i);
+      String instanceRole = instanceGroup.get("instanceRole").asText();
       if (targetInstanceRole.equalsIgnoreCase(instanceRole)) {
-        String instanceType = instanceGroup.getString("instanceType");
+        String instanceType = instanceGroup.get("instanceType").asText();
         log.info(instanceRole + " instance type: " + instanceType);
         return instanceType;
       }
