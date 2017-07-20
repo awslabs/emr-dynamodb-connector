@@ -24,17 +24,17 @@ import java.util.Map;
 
 public enum DynamoDBFilterOperator {
   // Operator type    Operator symbol   Operator class    DynamoDB operator    Precedence number
-  EQ(BINARY, "=", UDF_PREFIX + "Equal", "EQ", 1),
+  EQ(BINARY, "=", UDF_OP_PREFIX + "Equal", "EQ", 1),
   IN(NARY, "in", UDF_PREFIX + "In", "IN", 2),
   // Between does not map directly to any Hive predicate
   BETWEEN(NARY, null, null, "BETWEEN", 3),
-  LE(BINARY, "<=", UDF_OP_PREFIX + "OPEqualOrLessThan", "LE", 4),
-  GE(BINARY, ">=", UDF_OP_PREFIX + "OPEqualOrGreaterThan", "GE", 5),
-  LT(BINARY, "<", UDF_OP_PREFIX + "OPLessThan", "LT", 6),
-  GT(BINARY, ">", UDF_OP_PREFIX + "OPGreaterThan", "GT", 7),
-  NE(BINARY, "<>", UDF_OP_PREFIX + "OPNotEqual", "NE", 8),
-  N_NULL(UNARY, "isnull", UDF_OP_PREFIX + "OPNotNull", "NOT_NULL", 9),
-  NULL(UNARY, "isnotnull", UDF_OP_PREFIX + "OPNull", "NULL", 10);
+  LE(BINARY, "<=", UDF_OP_PREFIX + "EqualOrLessThan", "LE", 4),
+  GE(BINARY, ">=", UDF_OP_PREFIX + "EqualOrGreaterThan", "GE", 5),
+  LT(BINARY, "<", UDF_OP_PREFIX + "LessThan", "LT", 6),
+  GT(BINARY, ">", UDF_OP_PREFIX + "GreaterThan", "GT", 7),
+  NE(BINARY, "<>", UDF_OP_PREFIX + "NotEqual", "NE", 8),
+  N_NULL(UNARY, "isnull", UDF_OP_PREFIX + "NotNull", "NOT_NULL", 9),
+  NULL(UNARY, "isnotnull", UDF_OP_PREFIX + "Null", "NULL", 10);
 
   private static final Map<String, DynamoDBFilterOperator> operatorSymbolMap;
   private static final Map<String, DynamoDBFilterOperator> hiveClassMap;
