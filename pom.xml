@@ -6,7 +6,7 @@
 
     <groupId>com.amazon.emr</groupId>
     <artifactId>emr-dynamodb-connector</artifactId>
-    <version>4.4.0-SNAPSHOT</version>
+    <version>4.5.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>EMRDynamoDBConnector</name>
