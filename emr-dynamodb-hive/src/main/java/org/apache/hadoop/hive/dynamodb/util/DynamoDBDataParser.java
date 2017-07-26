@@ -17,10 +17,7 @@ import org.apache.hadoop.hive.dynamodb.DerivedHiveTypeConstants;
 import org.apache.hadoop.hive.serde.Constants;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.BinaryObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.DoubleObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.LongObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.*;
 import org.apache.hadoop.io.BytesWritable;
 
 import java.nio.ByteBuffer;
@@ -39,6 +36,15 @@ public class DynamoDBDataParser {
           + " Type name: " + objectInspector.getTypeName());
     }
   }
+
+    public Boolean getBoolean(Object data, ObjectInspector objectInspector) {
+        if (objectInspector instanceof BooleanObjectInspector) {
+            return ((BooleanObjectInspector)objectInspector).get(data);
+        }else {
+            throw new RuntimeException("Unknown boolean object inspector type: " + objectInspector.getCategory()
+                    + " Type name: " + objectInspector.getTypeName());
+        }
+    }
 
   public String getString(Object data, ObjectInspector objectInspector) {
     return ((StringObjectInspector) objectInspector).getPrimitiveJavaObject(data);

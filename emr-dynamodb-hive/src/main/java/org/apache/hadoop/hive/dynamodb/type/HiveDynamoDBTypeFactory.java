@@ -30,6 +30,8 @@ public class HiveDynamoDBTypeFactory extends DynamoDBTypeFactory {
   private static final HiveDynamoDBType STRING_TYPE = new HiveDynamoDBStringType();
   private static final HiveDynamoDBType NUMBER_TYPE = new HiveDynamoDBNumberType();
   private static final HiveDynamoDBType BINARY_TYPE = new HiveDynamoDBBinaryType();
+  private static final HiveDynamoDBType BOOLEAN_TYPE = new HiveDynamoDBBooleanType();
+
 
   private static final HiveDynamoDBType NUMBER_SET_TYPE = new HiveDynamoDBNumberSetType();
   private static final HiveDynamoDBType STRING_SET_TYPE = new HiveDynamoDBStringSetType();
@@ -42,6 +44,8 @@ public class HiveDynamoDBTypeFactory extends DynamoDBTypeFactory {
     HIVE_TYPE_MAP.put(serdeConstants.DOUBLE_TYPE_NAME, NUMBER_TYPE);
     HIVE_TYPE_MAP.put(serdeConstants.BIGINT_TYPE_NAME, NUMBER_TYPE);
     HIVE_TYPE_MAP.put(serdeConstants.BINARY_TYPE_NAME, BINARY_TYPE);
+    HIVE_TYPE_MAP.put(serdeConstants.BOOLEAN_TYPE_NAME, BOOLEAN_TYPE); //boolean support added
+
 
     HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.BIGINT_ARRAY_TYPE_NAME, NUMBER_SET_TYPE);
     HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.DOUBLE_ARRAY_TYPE_NAME, NUMBER_SET_TYPE);
