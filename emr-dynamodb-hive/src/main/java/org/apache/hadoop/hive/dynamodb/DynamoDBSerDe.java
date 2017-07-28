@@ -29,7 +29,7 @@ import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
 import org.apache.hadoop.hive.dynamodb.util.HiveDynamoDBUtil;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
-import org.apache.hadoop.hive.serde2.SerDe;
+import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.SerDeStats;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -46,7 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-public class DynamoDBSerDe implements SerDe {
+public class DynamoDBSerDe extends AbstractSerDe {
 
   private static final Log log = LogFactory.getLog(DynamoDBSerDe.class);
   // Hive initializes SerDe multiple times and we need to make sure that the

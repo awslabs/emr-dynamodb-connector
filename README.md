@@ -31,7 +31,7 @@ This simple tool that makes use of the InputFormat and OutputFormat implementati
  way to import to and export data from DynamoDB.
 
 ### Supported Versions
-Currently the project builds against Hive 2.1.1, 1.2.1, and 1.0.0. Set this by using the `hive1.version`,
+Currently the project builds against Hive 2.3.0, 1.2.1, and 1.0.0. Set this by using the `hive1.version`,
 `hive1.2.version and `hive2.version` properties in the root Maven `pom.xml`, respectively.
 
 ## How to Build

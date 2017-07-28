@@ -28,7 +28,7 @@ import org.apache.hadoop.hive.dynamodb.shims.ShimsLoader;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBItemType;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
 import org.apache.hadoop.hive.dynamodb.util.HiveDynamoDBUtil;
-import org.apache.hadoop.hive.serde2.SerDe;
+import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.SerDeStats;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -45,7 +45,7 @@ import java.util.Properties;
  * This class is used to read the DynanmoDB backup format and allow querying individual columns from
  * the schemaless backup.
  */
-public class DynamoDBExportSerDe implements SerDe {
+public class DynamoDBExportSerDe extends AbstractSerDe {
 
   private static final Log log = LogFactory.getLog(DynamoDBExportSerDe.class);
 
