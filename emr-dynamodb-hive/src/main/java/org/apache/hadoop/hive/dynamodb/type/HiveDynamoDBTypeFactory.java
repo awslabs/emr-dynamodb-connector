@@ -44,7 +44,7 @@ public class HiveDynamoDBTypeFactory extends DynamoDBTypeFactory {
     HIVE_TYPE_MAP.put(serdeConstants.DOUBLE_TYPE_NAME, NUMBER_TYPE);
     HIVE_TYPE_MAP.put(serdeConstants.BIGINT_TYPE_NAME, NUMBER_TYPE);
     HIVE_TYPE_MAP.put(serdeConstants.BINARY_TYPE_NAME, BINARY_TYPE);
-    HIVE_TYPE_MAP.put(serdeConstants.BOOLEAN_TYPE_NAME, BOOLEAN_TYPE); //boolean support added
+    HIVE_TYPE_MAP.put(serdeConstants.BOOLEAN_TYPE_NAME, BOOLEAN_TYPE);
 
 
     HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.BIGINT_ARRAY_TYPE_NAME, NUMBER_SET_TYPE);

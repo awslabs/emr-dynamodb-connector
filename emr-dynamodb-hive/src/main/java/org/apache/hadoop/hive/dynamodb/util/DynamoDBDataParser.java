@@ -37,14 +37,9 @@ public class DynamoDBDataParser {
     }
   }
 
-    public Boolean getBoolean(Object data, ObjectInspector objectInspector) {
-        if (objectInspector instanceof BooleanObjectInspector) {
-            return ((BooleanObjectInspector)objectInspector).get(data);
-        }else {
-            throw new RuntimeException("Unknown boolean object inspector type: " + objectInspector.getCategory()
-                    + " Type name: " + objectInspector.getTypeName());
-        }
-    }
+  public Boolean getBoolean(Object data, ObjectInspector objectInspector) {
+            return ((BooleanObjectInspector) objectInspector).get(data);
+  }
 
   public String getString(Object data, ObjectInspector objectInspector) {
     return ((StringObjectInspector) objectInspector).getPrimitiveJavaObject(data);

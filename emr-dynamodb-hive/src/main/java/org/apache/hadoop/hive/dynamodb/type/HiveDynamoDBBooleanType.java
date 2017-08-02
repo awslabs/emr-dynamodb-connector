@@ -6,9 +6,7 @@ import org.apache.hadoop.dynamodb.type.DynamoDBBooleanType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
-/**
- * Created by srramas on 7/26/17.
- */
+
 public class HiveDynamoDBBooleanType extends DynamoDBBooleanType implements HiveDynamoDBType {
 
     private final DynamoDBDataParser parser = new DynamoDBDataParser();
