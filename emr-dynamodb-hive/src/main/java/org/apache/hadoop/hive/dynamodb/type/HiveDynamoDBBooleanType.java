@@ -1,7 +1,7 @@
 package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import org.apache.hadoop.dynamodb.key.DynamoDBKey;
+
 import org.apache.hadoop.dynamodb.type.DynamoDBBooleanType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
