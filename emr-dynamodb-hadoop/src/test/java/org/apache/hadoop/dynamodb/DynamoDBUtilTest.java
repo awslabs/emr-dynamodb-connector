@@ -62,15 +62,15 @@ public class DynamoDBUtilTest {
   }
 
   @Test
-  public void testArrayItemSize() throws UnsupportedEncodingException {
+  public void testNumberSetItemSize() throws UnsupportedEncodingException {
     Map<String, AttributeValue> item = new HashMap<>();
     item.put("id", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
     item.put("payload", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
     item.put("number", new AttributeValue().withN("3592.0001"));
     List<String> numberArray = Lists.newArrayList("2.1474836479", "1.2345248749", "1.7390464369");
-    item.put("numberArray", new AttributeValue().withNS(numberArray));
+    item.put("numberSet", new AttributeValue().withNS(numberArray));
 
-    assertEquals(131, DynamoDBUtil.getItemSizeBytes(item));
+    assertEquals(129, DynamoDBUtil.getItemSizeBytes(item));
   }
 
   @Test
@@ -81,15 +81,38 @@ public class DynamoDBUtilTest {
   }
 
   @Test
-  public void testNumberItemSize() throws UnsupportedEncodingException {
+  public void testListItemSize() throws UnsupportedEncodingException {
     Map<String, AttributeValue> item = new HashMap<>();
     item.put("id", new AttributeValue().withN("1234"));
-    item.put("payload", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
-    item.put("number", new AttributeValue().withN("3592.0001"));
-    List<String> numberArray = Lists.newArrayList("2.1474836479", "1.2345248749", "1.7390464369");
-    item.put("numberArray", new AttributeValue().withNS(numberArray));
+    List<AttributeValue> attributeList = Lists.newArrayList(
+        new AttributeValue().withS("abcd"),
+        new AttributeValue().withN("2.1474836479"),
+        new AttributeValue().withN("1.2345248749"));
+    item.put("list", new AttributeValue().withL(attributeList));
 
-    assertEquals(105, DynamoDBUtil.getItemSizeBytes(item));
+    assertEquals(38, DynamoDBUtil.getItemSizeBytes(item));
+  }
+
+  @Test
+  public void testMapItemSize() throws UnsupportedEncodingException {
+    Map<String, AttributeValue> item = new HashMap<>();
+    item.put("id", new AttributeValue().withN("1234"));
+    Map<String, AttributeValue> attributeMap = new HashMap<>();
+    attributeMap.put("mapString", new AttributeValue().withS("abcd"));
+    attributeMap.put("mapNumber", new AttributeValue().withN("2.1474836479"));
+    attributeMap.put("mapNumber2", new AttributeValue().withN("1.2345248749"));
+    item.put("map", new AttributeValue().withM(attributeMap));
+
+    assertEquals(65, DynamoDBUtil.getItemSizeBytes(item));
+  }
+
+  @Test
+  public void testBooleanItemSize() throws UnsupportedEncodingException {
+    Map<String, AttributeValue> item = new HashMap<>();
+    item.put("id", new AttributeValue().withN("1234"));
+    item.put("bool", new AttributeValue().withBOOL(true));
+
+    assertEquals(11, DynamoDBUtil.getItemSizeBytes(item));
   }
 
   @Test
