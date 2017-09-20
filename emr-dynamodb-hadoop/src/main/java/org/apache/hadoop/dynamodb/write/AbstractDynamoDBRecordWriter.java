@@ -95,7 +95,7 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
   @Override
   public void write(K key, V value) throws IOException {
     if (value == null) {
-      throw new RuntimeException("Null record encoutered. At least the key columns must be "
+      throw new RuntimeException("Null record encountered. At least the key columns must be "
           + "specified.");
     }
 
