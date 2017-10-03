@@ -112,9 +112,11 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
     totolItemsWritten++;
 
     if (result != null) {
-      for (ConsumedCapacity consumedCapacity : result.getConsumedCapacity()) {
-        double consumedUnits = consumedCapacity.getCapacityUnits();
-        totalIOPSConsumed += consumedUnits;
+      if (result.getConsumedCapacity() != null) {
+        for (ConsumedCapacity consumedCapacity : result.getConsumedCapacity()) {
+          double consumedUnits = consumedCapacity.getCapacityUnits();
+          totalIOPSConsumed += consumedUnits;
+        }
       }
 
       int unprocessedItems = 0;
