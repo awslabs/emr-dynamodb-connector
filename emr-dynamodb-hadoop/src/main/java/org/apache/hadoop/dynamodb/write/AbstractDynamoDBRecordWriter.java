@@ -50,7 +50,7 @@ import java.util.List;
  * @param <K> The type of Key received from the reducer
  * @param <V> The type of Value received from the reducer
  */
-public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter<K, V> {
+public abstract class  <K, V> implements RecordWriter<K, V> {
 
   private static final Log log = LogFactory.getLog(AbstractDynamoDBRecordWriter.class);
   private static final long PRINT_COUNT_INCREMENT = 1000;
@@ -65,7 +65,7 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
   private int batchSize = 0;
   private long intervalBeginTime = 0;
   private long nextPrintCount = PRINT_COUNT_INCREMENT;
-  private long totolItemsWritten = 0;
+  private long totalItemsWritten = 0;
   private double totalIOPSConsumed = 0;
   private long writesPerSecond = 0;
 
@@ -109,7 +109,7 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
         permissibleWritesPerSecond - writesPerSecond, reporter);
 
     batchSize++;
-    totolItemsWritten++;
+    totalItemsWritten++;
 
     if (result != null) {
       if (result.getConsumedCapacity() != null) {
@@ -131,7 +131,7 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
   @Override
   public void close(Reporter reporter) throws IOException {
     client.close();
-    log.info(totolItemsWritten + " total items written");
+    log.info(totalItemsWritten + " total items written");
   }
 
   /**
@@ -149,8 +149,8 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
       }
       permissibleWritesPerSecond = iopsController.getTargetItemsPerSecond();
 
-      if (totolItemsWritten > nextPrintCount) {
-        log.info("Total items written: " + totolItemsWritten);
+      if (totalItemsWritten > nextPrintCount) {
+        log.info("Total items written: " + totalItemsWritten);
         log.info("New writes per second: " + permissibleWritesPerSecond);
         nextPrintCount += PRINT_COUNT_INCREMENT;
       }
