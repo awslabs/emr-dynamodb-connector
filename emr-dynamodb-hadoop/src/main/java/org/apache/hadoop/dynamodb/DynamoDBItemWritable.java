@@ -24,9 +24,11 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.Math;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.lang.System;
 
 public class DynamoDBItemWritable implements Writable, Serializable {
 
@@ -45,12 +47,28 @@ public class DynamoDBItemWritable implements Writable, Serializable {
   // format itself and make sure that's backward compatible.
   @Override
   public void readFields(DataInput in) throws IOException {
-    readFieldsStream(in.readUTF());
+    int chunks = in.readInt();
+    String whole = "";
+    for (int c = 0; c < chunks; c++) {
+        String chunk = in.readUTF();
+        whole += chunk;
+    }
+    readFieldsStream(whole);
   }
 
   @Override
   public void write(DataOutput out) throws IOException {
-    out.writeUTF(writeStream());
+    String whole = writeStream();
+    int chunkSize = 1 << 14;
+    int chunks = whole.length() / chunkSize;
+    if (whole.length() % chunkSize != 0) {
+        chunks += 1;
+    }
+    out.writeInt(chunks);
+    for (int c = 0; c < chunks; c++){
+        String chunk = whole.substring(c * chunkSize, Math.min((c + 1) * chunkSize, whole.length()));
+        out.writeUTF(chunk);
+    }
   }
 
   public void readFieldsStream(String string) {
