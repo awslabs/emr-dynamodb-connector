@@ -27,6 +27,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutput;
@@ -66,6 +67,36 @@ public class DynamoDBItemWritableTest {
     assertNull(item.getItem());
 
     item.readFields(new DataInputStream(IOUtils.toInputStream(data)));
+    checkReturnedItem();
+  }
+
+  @Test
+  public void testSerializationBackwardsCompatibility() throws IOException {
+    setTestData();
+
+    ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+    DataOutput out = new DataOutputStream(outStream);
+    out.writeUTF(item.writeStream()); // the old method of serialization
+    outStream.close();
+
+    item.setItem(null);
+    assertNull(item.getItem());
+
+    item.readFields(new DataInputStream(new ByteArrayInputStream(outStream.toByteArray())));
+    checkReturnedItem();
+
+    item.setItem(new HashMap<String, AttributeValue>());
+    outStream = new ByteArrayOutputStream();
+    out = new DataOutputStream(outStream);
+    out.writeUTF(item.writeStream()); // the old method of serialization
+    outStream.close();
+
+    item.setItem(null);
+    item.readFields(new DataInputStream(new ByteArrayInputStream(outStream.toByteArray())));
+    assertEquals(item.getItem(), new HashMap<String, AttributeValue>());
+  }
+
+  private void checkReturnedItem() {
     assertNotNull(item.getItem());
     Map<String, AttributeValue> returnedData = item.getItem();
     assertEquals(4, returnedData.size());
