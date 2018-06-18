@@ -237,6 +237,14 @@ public class DynamoDBStorageHandler implements HiveMetaHook, HiveStoragePredicat
     configureTableJobProperties(tableDesc, jobProperties);
   }
 
+  protected boolean isHiveDynamoDBItemMapType(String type){
+    return HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(type);
+  }
+
+  protected HiveDynamoDBType getTypeObjectFromHiveType(String type){
+    return HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(type);
+  }
+
   void checkTableSchemaMapping(TableDescription tableDescription, Table table) throws
       MetaException {
     String mapping = table.getParameters().get(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING);
@@ -244,7 +252,7 @@ public class DynamoDBStorageHandler implements HiveMetaHook, HiveStoragePredicat
 
     List<FieldSchema> tableSchema = table.getSd().getCols();
     for (FieldSchema fieldSchema : tableSchema) {
-      if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(fieldSchema.getType())) {
+      if (isHiveDynamoDBItemMapType(fieldSchema.getType())) {
         // We don't need column mapping as this column contains full
         // DynamoDB row
         continue;
@@ -261,7 +269,7 @@ public class DynamoDBStorageHandler implements HiveMetaHook, HiveStoragePredicat
     }
   }
 
-  void checkTableSchemaType(TableDescription tableDescription, Table table) throws MetaException {
+  public void checkTableSchemaType(TableDescription tableDescription, Table table) throws MetaException {
     List<FieldSchema> tableSchema = table.getSd().getCols();
 
     for (FieldSchema fieldSchema : tableSchema) {
@@ -271,7 +279,7 @@ public class DynamoDBStorageHandler implements HiveMetaHook, HiveStoragePredicat
       }
 
       // Check for each field type
-      if (HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(fieldSchema.getType()) == null) {
+      if (getTypeObjectFromHiveType(fieldSchema.getType()) == null) {
         throw new MetaException("The hive type " + fieldSchema.getType() + " is not supported in "
             + "DynamoDB");
       }
@@ -286,7 +294,7 @@ public class DynamoDBStorageHandler implements HiveMetaHook, HiveStoragePredicat
   private void validateKeySchema(String attributeName, String attributeType, FieldSchema
       fieldSchema) throws MetaException {
     if (fieldSchema.getName().equalsIgnoreCase(attributeName)) {
-      HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(fieldSchema
+      HiveDynamoDBType ddType = getTypeObjectFromHiveType(fieldSchema
           .getType());
       if ((ddType == null) || (ddType.equals(HiveDynamoDBTypeFactory.DYNAMODB_ITEM_TYPE))
           || (!ddType.getDynamoDBType().equals(attributeType))) {

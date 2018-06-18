@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file
  * except in compliance with the License. A copy of the License is located at
  *
- *     http://aws.amazon.com/apache2.0/
+ *     http://aws.amazon.com/apache2.0/
  *
  * or in the "LICENSE.TXT" file accompanying this file. This file is distributed on an "AS IS"
  * BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -99,17 +99,22 @@ public class DynamoDBItemWritableTest {
   private void checkReturnedItem() {
     assertNotNull(item.getItem());
     Map<String, AttributeValue> returnedData = item.getItem();
-    assertEquals(4, returnedData.size());
+    assertEquals(5, returnedData.size());
     assertEquals("test", returnedData.get("s").getS());
     assertEquals("1234", returnedData.get("n").getN());
     assertNull(returnedData.get("n").getS());
     assertEquals(0, returnedData.get("ss").getSS().size());
     assertEquals(3, returnedData.get("ns").getNS().size());
+    assertEquals(2, returnedData.get("l").getL().size());
 
     List<String> ns = returnedData.get("ns").getNS();
     assertEquals("1.0", ns.get(0));
     assertEquals("1.10", ns.get(1));
     assertEquals("2.0", ns.get(2));
+
+    List<AttributeValue> l = returnedData.get("l").getL();
+    assertEquals("1.0", l.get(0).getS());
+    assertEquals("0", l.get(1).getS());
   }
 
   @Test
@@ -178,12 +183,16 @@ public class DynamoDBItemWritableTest {
     ns.add("1.0");
     ns.add("1.10");
     ns.add("2.0");
+    List<AttributeValue> l = new ArrayList<>();
+    l.add(new AttributeValue("1.0"));
+    l.add(new AttributeValue("0"));
 
     Map<String, AttributeValue> sampleData = new HashMap<>();
     sampleData.put("s", new AttributeValue().withS("test"));
     sampleData.put("n", new AttributeValue().withN("1234"));
     sampleData.put("ss", new AttributeValue().withSS(ss));
     sampleData.put("ns", new AttributeValue().withNS(ns));
+    sampleData.put("l", new AttributeValue().withL(l));
 
     item.setItem(sampleData);
   }

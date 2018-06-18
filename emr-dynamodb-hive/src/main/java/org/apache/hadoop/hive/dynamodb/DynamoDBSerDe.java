@@ -21,6 +21,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
+import org.apache.hadoop.dynamodb.type.DynamoDBType;
+import org.apache.hadoop.dynamodb.type.DynamoDBTypeFactory;
 import org.apache.hadoop.hive.dynamodb.shims.SerDeParametersShim;
 import org.apache.hadoop.hive.dynamodb.shims.ShimsLoader;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBItemType;
@@ -90,6 +92,11 @@ public class DynamoDBSerDe extends AbstractSerDe {
     return Text.class;
   }
 
+
+  protected HiveDynamoDBType getTypeObjectFromHiveType(String type) {
+    return HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(type);
+  }
+
   @Override
   public Writable serialize(Object obj, ObjectInspector objInspector) throws SerDeException {
     // Prepare the field ObjectInspectors
@@ -107,7 +114,7 @@ public class DynamoDBSerDe extends AbstractSerDe {
 
       // Get the Hive to DynamoDB mapper
       HiveDynamoDBType ddType =
-          HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(fieldObjectInspector.getTypeName());
+          getTypeObjectFromHiveType(fieldObjectInspector.getTypeName());
       if (ddType == null) {
         throw new RuntimeException("Unsupported hive type " + fieldObjectInspector.getTypeName()
             + " Object inspector: " + fieldObjectInspector);
