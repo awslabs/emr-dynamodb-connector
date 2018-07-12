@@ -10,8 +10,9 @@ accessed by Amazon EMR.
 - [Using Apache Hive in Amazon EMR with Amazon DynamoDB][emr-dynamodb-hive-docs]
 - [Accessing data in Amazon DynamoDB with Apache Spark][dynamodb-spark-blog-post]
 
-For more information about supported data types in DynamoDB, see [Data Types for Hive and DynamoDB]
-[hive-dynamodb-data-types] in the *[Amazon EMR Release Guide][emr-release-guide]*.
+For more information about supported data types in DynamoDB, see
+[Data Types for Hive and DynamoDB][hive-dynamodb-data-types] in the
+*[Amazon EMR Release Guide][emr-release-guide]*.
 
 ### Hive StorageHandler Implementation
 For more information, see [Hive Commands Examples for Exporting, Importing, and Querying Data in
@@ -20,11 +21,12 @@ DynamoDB][hive-commands-emr-dev-guide] in the *[Amazon DynamoDB Developer Guide]
 
 ### Hadoop InputFormat and OutputFormat Implementation
 An implementation of [Apache Hadoop InputFormat interface][input-format-javadoc] and
-[OutputFormat][output-format-javadoc] are included, which allows [DynamoDB AttributeValues]
-[dynamodb-attributevalues] to be directly ingested by MapReduce jobs. For an example of how to use
-these classes, see [Set Up a Hive Table to Run Hive Commands][set-up-hive-table] in the *[Amazon EMR
-Release Guide][emr-release-guide]*, as well as their usage in the Import/Export tool classes in
-[DynamoDBExport.java] [export-tool-source] and [DynamoDBImport.java][import-tool-source].
+[OutputFormat][output-format-javadoc] are included, which allows
+[DynamoDB AttributeValues][dynamodb-attributevalues] to be directly ingested by MapReduce jobs. For
+an example of how to use these classes, see
+[Set Up a Hive Table to Run Hive Commands][set-up-hive-table] in the
+*[Amazon EMR Release Guide][emr-release-guide]*, as well as their usage in the Import/Export tool
+classes in [DynamoDBExport.java] [export-tool-source] and [DynamoDBImport.java][import-tool-source].
 
 ### Import/Export Tool
 This simple tool that makes use of the InputFormat and OutputFormat implementations provides an easy
