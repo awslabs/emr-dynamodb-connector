@@ -1,6 +1,4 @@
 /**
- * Copyright 2012-2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
  * Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file
  * except in compliance with the License. A copy of the License is located at
  *
@@ -14,25 +12,18 @@
 package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
-import org.apache.hadoop.dynamodb.type.DynamoDBStringSetType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
-import java.util.List;
+import static org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeUtil.parseMap;
 
-public class HiveDynamoDBStringSetType extends DynamoDBStringSetType implements HiveDynamoDBType {
+public class HiveDynamoDBMapType  extends HiveDynamoDBItemType {
 
   private final DynamoDBDataParser parser = new DynamoDBDataParser();
 
   @Override
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
-    List<String> values = parser.getSetAttribute(data, objectInspector, getDynamoDBType());
-    if ((values != null) && (!values.isEmpty())) {
-      return new AttributeValue().withSS(values);
-    } else {
-      return null;
-    }
+    return parseMap(parser.getMap(data, objectInspector));
   }
 
   @Override
@@ -40,7 +31,7 @@ public class HiveDynamoDBStringSetType extends DynamoDBStringSetType implements 
     if (data == null) {
       return null;
     }
-    return data.getSS();
+    return data.getM();
   }
 
 }

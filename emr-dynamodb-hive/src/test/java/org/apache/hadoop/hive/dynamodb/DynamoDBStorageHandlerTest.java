@@ -39,7 +39,7 @@ public class DynamoDBStorageHandlerTest {
 
   @Rule
   public ExpectedException exceptionRule = ExpectedException.none();
-  private DynamoDBStorageHandler storageHandler;
+  protected DynamoDBStorageHandler storageHandler;
 
   @Before
   public void setup() {
