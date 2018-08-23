@@ -116,8 +116,7 @@ public class DynamoDBExportSerDe extends AbstractSerDe {
         item.put(dynamoDBAttributeName, deserializedAttributeValue);
       }
 
-      DynamoDBItemWritable dynamoDBItem = new DynamoDBItemWritable();
-      dynamoDBItem.setItem(item);
+      DynamoDBItemWritable dynamoDBItem = new DynamoDBItemWritable(item);
       return dynamoDBItem;
     } else {
       throw new SerDeException(getClass().toString() + ": expects Text object!");

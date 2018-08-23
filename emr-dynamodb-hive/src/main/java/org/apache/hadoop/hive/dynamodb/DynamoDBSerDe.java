@@ -152,8 +152,7 @@ public class DynamoDBSerDe extends AbstractSerDe {
       }
     }
 
-    DynamoDBItemWritable itemWritable = new DynamoDBItemWritable();
-    itemWritable.setItem(item);
+    DynamoDBItemWritable itemWritable = new DynamoDBItemWritable(item);
     return itemWritable;
   }
 

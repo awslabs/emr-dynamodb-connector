@@ -130,8 +130,7 @@ public abstract class AbstractDynamoDBRecordReader<K, V> implements RecordReader
   }
 
   protected void convertDynamoDBItemToValue(Map<String, AttributeValue> item, V value) {
-    DynamoDBItemWritable ddbItem = new DynamoDBItemWritable();
-    ddbItem.setItem(item);
+    DynamoDBItemWritable ddbItem = new DynamoDBItemWritable(item);
     convertDynamoDBItemToValue(ddbItem, value);
   }
 

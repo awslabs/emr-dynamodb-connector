@@ -196,4 +196,11 @@ public class DynamoDBItemWritableTest {
 
     item.setItem(sampleData);
   }
+
+  @Test
+  public void testParametrizedConstructor() {
+    Map<String, AttributeValue> map = new HashMap<>();
+    DynamoDBItemWritable item = new DynamoDBItemWritable(map);
+    assertEquals(item.getItem(), map);
+  }
 }
