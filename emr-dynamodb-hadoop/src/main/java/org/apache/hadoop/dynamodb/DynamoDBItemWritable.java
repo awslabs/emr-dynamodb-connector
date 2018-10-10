@@ -42,7 +42,15 @@ public class DynamoDBItemWritable implements Writable, Serializable {
   private static final char FIRST_MAGIC_BYTES = 0x0001;
   private static final byte NEXT_MAGIC_BYTE = 0x00;
 
-  private Map<String, AttributeValue> dynamoDBItem = new HashMap<>();
+  private Map<String, AttributeValue> dynamoDBItem;
+
+  public DynamoDBItemWritable() {
+    dynamoDBItem = new HashMap<>();
+  }
+
+  public DynamoDBItemWritable(Map<String, AttributeValue> dynamoDBItem) {
+    this.dynamoDBItem = dynamoDBItem;
+  }
 
   // Remember: By changing this method, you change how items are serialized
   // to disk, including for backups in S3. At least the read method needs to
