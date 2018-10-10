@@ -112,10 +112,10 @@ public class DynamoDBDataParser {
       }
 
       if (ddType.equals("L")) {
-        if (listType == String.class || dataItem instanceof LazyString || dataItem instanceof String) {
+        if (listType == LazyString.class || dataItem instanceof LazyString || dataItem instanceof String) {
           itemList.add(getString(dataItem, itemObjectInspector));
           listType = LazyString.class;
-        } if (listType == LazyMap.class || dataItem instanceof LazyMap || dataItem instanceof HashMap) {
+        } else if (listType == LazyMap.class || dataItem instanceof LazyMap || dataItem instanceof HashMap) {
           itemList.add(getMap(dataItem, itemObjectInspector));
           listType = LazyMap.class;
         } else {

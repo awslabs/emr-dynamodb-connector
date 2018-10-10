@@ -47,7 +47,8 @@ public class DynamoDBListStorageHandlerTest extends DynamoDBStorageHandlerTest {
     Table table = new Table();
     Map<String, String> parameters = Maps.newHashMap();
     parameters.put(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING, "col1:dynamo_col1$," +
-      "col2:dynamo_col2#,col3:dynamo_col3#,col4:dynamo_col4#,col5:dynamo_col5#,hashKey:hashKey");
+      "col2:dynamo_col2#,col3:dynamo_col3#,col4:dynamo_col4#,col5:dynamo_col5#," +
+      "col6:dynamo_col6#,col7:dynamo_col7#,hashKey:hashKey");
     table.setParameters(parameters);
     StorageDescriptor sd = new StorageDescriptor();
     List<FieldSchema> cols = Lists.newArrayList();
@@ -57,6 +58,7 @@ public class DynamoDBListStorageHandlerTest extends DynamoDBStorageHandlerTest {
     cols.add(new FieldSchema("col4", "array<map<string,string>>", ""));
     cols.add(new FieldSchema("col5", "array<bigint>", ""));
     cols.add(new FieldSchema("col6", "array<double>", ""));
+    cols.add(new FieldSchema("col7", "array<string>", ""));
     cols.add(new FieldSchema("hashKey", "string", ""));
     sd.setCols(cols);
     table.setSd(sd);
