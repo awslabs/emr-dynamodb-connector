@@ -16,9 +16,11 @@ package org.apache.hadoop.dynamodb.write;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
+import com.amazonaws.services.dynamodbv2.model.BillingModeSummary;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 
+import org.apache.hadoop.dynamodb.DynamoDBBillingMode;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.mapred.JobClient;
@@ -36,6 +38,7 @@ public class WriteIopsCalculatorTest {
   private static final int MAX_CONCURRENT_MAP_TASKS = 20;
   private static final double THROUGHPUT_WRITE_PERCENT = 0.8;
   private static final long WRITE_CAPACITY_UNITS = 1000;
+  private static final long MAX_ON_DEMAND_CAPACITY_UNITS = 2000;
 
   @Mock
   private DynamoDBClient dynamoDBClient;
@@ -47,14 +50,17 @@ public class WriteIopsCalculatorTest {
   @Before
   public void setup() {
     when(dynamoDBClient.describeTable(TABLE_NAME)).thenReturn(new TableDescription()
-        .withProvisionedThroughput(new ProvisionedThroughputDescription().withWriteCapacityUnits
-            (WRITE_CAPACITY_UNITS)));
+            .withBillingModeSummary(new BillingModeSummary().withBillingMode(DynamoDBBillingMode.PROVISIONED.name()))
+            .withProvisionedThroughput(new ProvisionedThroughputDescription().withWriteCapacityUnits
+              (WRITE_CAPACITY_UNITS)));
 
     JobConf jobConf = new JobConf();
     jobConf.setNumMapTasks(TOTAL_MAP_TASKS);
     jobConf.set("mapreduce.task.attempt.id", "attempt_m_1");
     jobConf.set(DynamoDBConstants.THROUGHPUT_WRITE_PERCENT, String.valueOf
         (THROUGHPUT_WRITE_PERCENT));
+    jobConf.set(DynamoDBConstants.MAX_ON_DEMAND_WRITE_THROUGHPUT, String.valueOf
+            (MAX_ON_DEMAND_CAPACITY_UNITS));
     when(jobClient.getConf()).thenReturn(jobConf);
 
     writeIopsCalculator = new WriteIopsCalculator(jobClient, dynamoDBClient, TABLE_NAME) {
@@ -70,6 +76,17 @@ public class WriteIopsCalculatorTest {
     long writeIops = writeIopsCalculator.calculateTargetIops();
     long expectedWriteIops = (long) (WRITE_CAPACITY_UNITS * THROUGHPUT_WRITE_PERCENT / Math.min
         (MAX_CONCURRENT_MAP_TASKS, TOTAL_MAP_TASKS));
+    assertEquals(expectedWriteIops, writeIops);
+  }
+
+  @Test
+  public void testCalculateTargetIopsWithOnDemand() {
+    when(dynamoDBClient.describeTable(TABLE_NAME)).thenReturn(new TableDescription()
+            .withBillingModeSummary(new BillingModeSummary().withBillingMode(DynamoDBBillingMode.PAY_PER_REQUEST.name())));
+
+    long writeIops = writeIopsCalculator.calculateTargetIops();
+    long expectedWriteIops = (MAX_ON_DEMAND_CAPACITY_UNITS / Math.min
+            (MAX_CONCURRENT_MAP_TASKS, TOTAL_MAP_TASKS));
     assertEquals(expectedWriteIops, writeIops);
   }
 }

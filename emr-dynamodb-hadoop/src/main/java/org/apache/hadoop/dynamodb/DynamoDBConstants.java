@@ -52,6 +52,8 @@ public interface DynamoDBConstants {
   String THROUGHPUT_READ_PERCENT = "dynamodb.throughput.read.percent";
   String READ_THROUGHPUT = "dynamodb.throughput.read";
   String WRITE_THROUGHPUT = "dynamodb.throughput.write";
+  String MAX_ON_DEMAND_WRITE_THROUGHPUT = "dynamodb.max.ondemand.write.throughput";
+  String MAX_ON_DEMAND_READ_THROUGHPUT = "dynamodb.max.ondemand.read.throughput";
   String AVG_ITEM_SIZE = "dynamodb.item.average.size";
   String ITEM_COUNT = "dynamodb.item.count";
   String TABLE_SIZE_BYTES = "dynamodb.table.size-bytes";

@@ -13,16 +13,15 @@
 
 package org.apache.hadoop.dynamodb.write;
 
+import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
+import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.google.common.base.Strings;
 
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.dynamodb.DynamoDBClient;
-import org.apache.hadoop.dynamodb.DynamoDBConstants;
-import org.apache.hadoop.dynamodb.DynamoDBUtil;
-import org.apache.hadoop.dynamodb.IopsCalculator;
+import org.apache.hadoop.dynamodb.*;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 
@@ -67,7 +66,7 @@ public class WriteIopsCalculator implements IopsCalculator {
   }
 
   public long calculateTargetIops() {
-    double configuredThroughput = Math.floor(getThroughput() * throughputPercent);
+    double configuredThroughput = getThroughput();
     long throughputPerTask = Math.max((long) (configuredThroughput / maxParallelTasks), 1);
 
     log.info("Throughput per task for table " + tableName + " : " + throughputPerTask);
@@ -84,10 +83,17 @@ public class WriteIopsCalculator implements IopsCalculator {
   }
 
   private double getThroughput() {
-    ProvisionedThroughputDescription provisionedThroughput = dynamoDBClient
-        .describeTable(tableName)
-        .getProvisionedThroughput();
-    return provisionedThroughput.getWriteCapacityUnits();
+    TableDescription description = dynamoDBClient.describeTable(tableName);
+    description.getBillingModeSummary();
+    if (description.getBillingModeSummary() != null &&
+            description.getBillingModeSummary().getBillingMode().equalsIgnoreCase(DynamoDBBillingMode.PAY_PER_REQUEST.name())) {
+      return Double.parseDouble(this.jobConf.get(DynamoDBConstants.MAX_ON_DEMAND_WRITE_THROUGHPUT));
+    } else {
+     ProvisionedThroughputDescription provisionedThroughput = dynamoDBClient
+              .describeTable(tableName)
+              .getProvisionedThroughput();
+      return Math.floor(provisionedThroughput.getWriteCapacityUnits() * throughputPercent);
+    }
   }
 
 }

@@ -16,9 +16,11 @@ package org.apache.hadoop.dynamodb.read;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
+import com.amazonaws.services.dynamodbv2.model.BillingModeSummary;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 
+import org.apache.hadoop.dynamodb.DynamoDBBillingMode;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.mapred.JobClient;
@@ -35,7 +37,8 @@ public class ReadIopsCalculatorTest {
   private static final long READ_CAPACITY_UNITS = 2000;
   private static final double THROUGHPUT_READ_PERCENT = 0.8;
   private static final int LOCAL_SEGMENTS = 2;
-  private static final int TOTAL_SEGMETNS = 9;
+  private static final int TOTAL_SEGMENTS = 9;
+  private static final long MAX_ON_DEMAND_CAPACITY_UNITS = 2000;
 
   @Mock
   private DynamoDBClient dynamoDBClient;
@@ -47,23 +50,35 @@ public class ReadIopsCalculatorTest {
   @Before
   public void setup() {
     when(dynamoDBClient.describeTable(TABLE_NAME)).thenReturn(new TableDescription()
-        .withProvisionedThroughput(new ProvisionedThroughputDescription().withReadCapacityUnits
-            (READ_CAPACITY_UNITS)));
+            .withBillingModeSummary(new BillingModeSummary().withBillingMode(DynamoDBBillingMode.PROVISIONED.name()))
+            .withProvisionedThroughput(new ProvisionedThroughputDescription().withReadCapacityUnits(READ_CAPACITY_UNITS)));
 
     JobConf jobConf = new JobConf();
     jobConf.set(DynamoDBConstants.THROUGHPUT_READ_PERCENT, String.valueOf(THROUGHPUT_READ_PERCENT));
+    jobConf.set(DynamoDBConstants.MAX_ON_DEMAND_READ_THROUGHPUT, String.valueOf
+            (MAX_ON_DEMAND_CAPACITY_UNITS));
     when(jobClient.getConf()).thenReturn(jobConf);
 
     readIopsCalculator = new ReadIopsCalculator(jobClient, dynamoDBClient, TABLE_NAME,
-        TOTAL_SEGMETNS, LOCAL_SEGMENTS);
+            TOTAL_SEGMENTS, LOCAL_SEGMENTS);
   }
 
   @Test
   public void testCalculateTargetIops() {
     long readIops = readIopsCalculator.calculateTargetIops();
     long expectedReadIops = (long) (READ_CAPACITY_UNITS * THROUGHPUT_READ_PERCENT *
-        LOCAL_SEGMENTS / TOTAL_SEGMETNS);
+        LOCAL_SEGMENTS / TOTAL_SEGMENTS);
     assertEquals(expectedReadIops, readIops);
   }
 
+  @Test
+  public void testCalculateTargetIopsWithOnDemand() {
+    when(dynamoDBClient.describeTable(TABLE_NAME)).thenReturn(new TableDescription()
+            .withBillingModeSummary(new BillingModeSummary().withBillingMode(DynamoDBBillingMode.PAY_PER_REQUEST.name())));
+
+    long readIops = readIopsCalculator.calculateTargetIops();
+    long expectedReadIops = (MAX_ON_DEMAND_CAPACITY_UNITS  *
+            LOCAL_SEGMENTS / TOTAL_SEGMENTS);
+    assertEquals(expectedReadIops, readIops);
+  }
 }
