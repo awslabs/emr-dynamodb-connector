@@ -169,13 +169,19 @@ public class DynamoDBStorageHandler implements HiveMetaHook, HiveStoragePredicat
             .getProperty(DynamoDBConstants.THROUGHPUT_WRITE_PERCENT));
       }
 
-      String readThroughput = description.getProvisionedThroughput().getReadCapacityUnits()
-          .toString();
-      String writeThroughput = description.getProvisionedThroughput().getWriteCapacityUnits()
-          .toString();
+      if(description.getBillingModeSummary().getBillingMode().equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
+        jobProperties.put(DynamoDBConstants.READ_THROUGHPUT, description.getProvisionedThroughput().getReadCapacityUnits()
+                .toString());
+        jobProperties.put(DynamoDBConstants.WRITE_THROUGHPUT,description.getProvisionedThroughput().getWriteCapacityUnits()
+                .toString());
+      }
+      else
+      {
+        // If not specified at the table level, set a hard coded value of 40,000
+        jobProperties.put(DynamoDBConstants.READ_THROUGHPUT, tableDesc.getProperties().getProperty(DynamoDBConstants.READ_THROUGHPUT, "40000"));
+        jobProperties.put(DynamoDBConstants.WRITE_THROUGHPUT, tableDesc.getProperties().getProperty(DynamoDBConstants.WRITE_THROUGHPUT, "40000"));
+      }
 
-      jobProperties.put(DynamoDBConstants.READ_THROUGHPUT, readThroughput);
-      jobProperties.put(DynamoDBConstants.WRITE_THROUGHPUT, writeThroughput);
       jobProperties.put(DynamoDBConstants.ITEM_COUNT, description.getItemCount().toString());
       jobProperties.put(DynamoDBConstants.TABLE_SIZE_BYTES, description.getTableSizeBytes()
           .toString());
@@ -184,8 +190,8 @@ public class DynamoDBStorageHandler implements HiveMetaHook, HiveStoragePredicat
       log.info("Average item size: " + averageItemSize);
       log.info("Item count: " + description.getItemCount());
       log.info("Table size: " + description.getTableSizeBytes());
-      log.info("Read throughput: " + readThroughput);
-      log.info("Write throughput: " + writeThroughput);
+      log.info("Read throughput: " + jobProperties.get(DynamoDBConstants.READ_THROUGHPUT));
+      log.info("Write throughput: " + jobProperties.get(DynamoDBConstants.WRITE_THROUGHPUT));
 
     } finally {
       client.close();

@@ -57,8 +57,11 @@ public interface DynamoDBConstants {
   String TABLE_SIZE_BYTES = "dynamodb.table.size-bytes";
   String MAX_MAP_TASKS = "dynamodb.max.map.tasks";
   String DEFAULT_THROUGHPUT_PERCENTAGE = "0.5";
+  String BILLING_MODE_PROVISIONED = "PROVISIONED";
+  String BILLING_MODE_ON_DEMAND = "PAY_PER_REQUEST";
 
-  String MAX_ITEM_SIZE = "dynamodb.max.item.size";
+  String DYNAMODB_MAX_ITEM_SIZE = "dynamodb.max.item.size";
+  String MAX_ITEM_SIZE = DYNAMODB_MAX_ITEM_SIZE;
   String MAX_BATCH_SIZE = "dynamodb.max.batch.size";
   String MAX_ITEMS_PER_BATCH = "dynamodb.max.batch.items";
 

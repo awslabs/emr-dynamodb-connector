@@ -13,6 +13,7 @@
 
 package org.apache.hadoop.dynamodb.write;
 
+import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.google.common.base.Strings;
 
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
@@ -67,7 +68,7 @@ public class WriteIopsCalculator implements IopsCalculator {
   }
 
   public long calculateTargetIops() {
-    double configuredThroughput = Math.floor(getThroughput() * throughputPercent);
+    double configuredThroughput = Math.floor(Double.parseDouble(jobConf.get(DynamoDBConstants.WRITE_THROUGHPUT)) * throughputPercent);
     long throughputPerTask = Math.max((long) (configuredThroughput / maxParallelTasks), 1);
 
     log.info("Throughput per task for table " + tableName + " : " + throughputPerTask);
@@ -82,12 +83,13 @@ public class WriteIopsCalculator implements IopsCalculator {
     }
     return totalMapTasks;
   }
-
-  private double getThroughput() {
-    ProvisionedThroughputDescription provisionedThroughput = dynamoDBClient
-        .describeTable(tableName)
-        .getProvisionedThroughput();
-    return provisionedThroughput.getWriteCapacityUnits();
-  }
+//
+//  private double getThroughput() {
+//    TableDescription tableDescription = dynamoDBClient.describeTable(tableName);
+//    ProvisionedThroughputDescription provisionedThroughput = dynamoDBClient
+//        .describeTable(tableName)
+//        .getProvisionedThroughput();
+//    return provisionedThroughput.getWriteCapacityUnits();
+//  }
 
 }
