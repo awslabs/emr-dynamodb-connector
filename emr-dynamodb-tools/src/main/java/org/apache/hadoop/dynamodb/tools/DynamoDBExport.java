@@ -108,20 +108,30 @@ public class DynamoDBExport extends Configured implements Tool {
     DynamoDBClient client = new DynamoDBClient(jobConf);
     TableDescription description = client.describeTable(tableName);
 
-    Long readThroughput = description.getProvisionedThroughput().getReadCapacityUnits();
-    Long writeThroughput = description.getProvisionedThroughput().getWriteCapacityUnits();
     Long itemCount = description.getItemCount();
     Long tableSizeBytes = description.getTableSizeBytes();
     Double averageItemSize = DynamoDBUtil.calculateAverageItemSize(description);
 
-    jobConf.set(DynamoDBConstants.READ_THROUGHPUT, readThroughput.toString());
-    jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT, writeThroughput.toString());
+    if (description.getBillingModeSummary().getBillingMode()
+        .equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
+      jobConf.set(DynamoDBConstants.READ_THROUGHPUT,
+          description.getProvisionedThroughput().getReadCapacityUnits().toString());
+      jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT,
+          description.getProvisionedThroughput().getWriteCapacityUnits().toString());
+    } else {
+      // If not specified at the table level, set a hard coded value of 40,000
+      jobConf.set(DynamoDBConstants.READ_THROUGHPUT,
+          DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString());
+      jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT,
+          DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString());
+    }
+
     jobConf.set(DynamoDBConstants.ITEM_COUNT, itemCount.toString());
     jobConf.set(DynamoDBConstants.TABLE_SIZE_BYTES, tableSizeBytes.toString());
     jobConf.set(DynamoDBConstants.AVG_ITEM_SIZE, averageItemSize.toString());
 
-    log.info("Read throughput:       " + readThroughput);
-    log.info("Write throughput:      " + writeThroughput);
+    log.info("Read throughput:       " + jobConf.get(DynamoDBConstants.READ_THROUGHPUT));
+    log.info("Write throughput:      " + jobConf.get(DynamoDBConstants.WRITE_THROUGHPUT));
     log.info("Item count:            " + itemCount);
     log.info("Table size:            " + tableSizeBytes);
     log.info("Average item size:     " + averageItemSize);

@@ -14,7 +14,7 @@
 package org.apache.hadoop.dynamodb.read;
 
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
-
+import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
@@ -54,7 +54,8 @@ public class ReadIopsCalculator implements IopsCalculator {
   }
 
   public long calculateTargetIops() {
-    double configuredThroughput = Math.floor(getThroughput() * throughputPercent);
+    double configuredThroughput = Math.floor(Double.parseDouble(
+        jobConf.get(DynamoDBConstants.READ_THROUGHPUT, String.valueOf(getThroughput()))) * throughputPercent);
     long throughputPerTask = Math.max((long) (configuredThroughput / totalSegments
         * localSegments), 1);
 
@@ -63,9 +64,14 @@ public class ReadIopsCalculator implements IopsCalculator {
   }
 
   private double getThroughput() {
-    ProvisionedThroughputDescription provisionedThroughput = dynamoDBClient
-        .describeTable(tableName)
-        .getProvisionedThroughput();
-    return provisionedThroughput.getReadCapacityUnits();
+    TableDescription tableDescription = dynamoDBClient.describeTable(tableName);
+    if (tableDescription.getBillingModeSummary() != null &&
+        tableDescription.getBillingModeSummary().getBillingMode()
+            .equalsIgnoreCase(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
+      ProvisionedThroughputDescription provisionedThroughput = tableDescription
+          .getProvisionedThroughput();
+      return provisionedThroughput.getReadCapacityUnits();
+    }
+    return DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND;
   }
 }

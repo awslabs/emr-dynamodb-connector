@@ -13,10 +13,9 @@
 
 package org.apache.hadoop.hive.dynamodb;
 
-import com.google.common.base.Strings;
-
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
+import com.google.common.base.Strings;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,8 +42,8 @@ import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.ql.security.authorization.DefaultHiveAuthorizationProvider;
 import org.apache.hadoop.hive.ql.security.authorization.HiveAuthorizationProvider;
-import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
+import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
@@ -55,8 +54,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public class DynamoDBStorageHandler implements HiveMetaHook, HiveStoragePredicateHandler,
-    HiveStorageHandler {
+public class DynamoDBStorageHandler
+    implements HiveMetaHook, HiveStoragePredicateHandler, HiveStorageHandler {
 
   private static final Log log = LogFactory.getLog(DynamoDBStorageHandler.class);
 
@@ -169,13 +168,22 @@ public class DynamoDBStorageHandler implements HiveMetaHook, HiveStoragePredicat
             .getProperty(DynamoDBConstants.THROUGHPUT_WRITE_PERCENT));
       }
 
-      String readThroughput = description.getProvisionedThroughput().getReadCapacityUnits()
-          .toString();
-      String writeThroughput = description.getProvisionedThroughput().getWriteCapacityUnits()
-          .toString();
+      if (description.getBillingModeSummary().getBillingMode()
+          .equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
+        jobProperties.put(DynamoDBConstants.READ_THROUGHPUT,
+            description.getProvisionedThroughput().getReadCapacityUnits().toString());
+        jobProperties.put(DynamoDBConstants.WRITE_THROUGHPUT,
+            description.getProvisionedThroughput().getWriteCapacityUnits().toString());
+      } else {
+        // If not specified at the table level, set default value
+        jobProperties.put(DynamoDBConstants.READ_THROUGHPUT, tableDesc.getProperties()
+            .getProperty(DynamoDBConstants.READ_THROUGHPUT,
+                DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString()));
+        jobProperties.put(DynamoDBConstants.WRITE_THROUGHPUT, tableDesc.getProperties()
+            .getProperty(DynamoDBConstants.WRITE_THROUGHPUT,
+                DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString()));
+      }
 
-      jobProperties.put(DynamoDBConstants.READ_THROUGHPUT, readThroughput);
-      jobProperties.put(DynamoDBConstants.WRITE_THROUGHPUT, writeThroughput);
       jobProperties.put(DynamoDBConstants.ITEM_COUNT, description.getItemCount().toString());
       jobProperties.put(DynamoDBConstants.TABLE_SIZE_BYTES, description.getTableSizeBytes()
           .toString());
@@ -184,8 +192,8 @@ public class DynamoDBStorageHandler implements HiveMetaHook, HiveStoragePredicat
       log.info("Average item size: " + averageItemSize);
       log.info("Item count: " + description.getItemCount());
       log.info("Table size: " + description.getTableSizeBytes());
-      log.info("Read throughput: " + readThroughput);
-      log.info("Write throughput: " + writeThroughput);
+      log.info("Read throughput: " + jobProperties.get(DynamoDBConstants.READ_THROUGHPUT));
+      log.info("Write throughput: " + jobProperties.get(DynamoDBConstants.WRITE_THROUGHPUT));
 
     } finally {
       client.close();
@@ -237,11 +245,11 @@ public class DynamoDBStorageHandler implements HiveMetaHook, HiveStoragePredicat
     configureTableJobProperties(tableDesc, jobProperties);
   }
 
-  protected boolean isHiveDynamoDBItemMapType(String type){
+  protected boolean isHiveDynamoDBItemMapType(String type) {
     return HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(type);
   }
 
-  protected HiveDynamoDBType getTypeObjectFromHiveType(String type){
+  protected HiveDynamoDBType getTypeObjectFromHiveType(String type) {
     return HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(type);
   }
 
@@ -269,7 +277,8 @@ public class DynamoDBStorageHandler implements HiveMetaHook, HiveStoragePredicat
     }
   }
 
-  public void checkTableSchemaType(TableDescription tableDescription, Table table) throws MetaException {
+  public void checkTableSchemaType(TableDescription tableDescription, Table table) throws
+      MetaException {
     List<FieldSchema> tableSchema = table.getSd().getCols();
 
     for (FieldSchema fieldSchema : tableSchema) {

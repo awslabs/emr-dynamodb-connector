@@ -95,14 +95,21 @@ public class DynamoDBImport extends Configured implements Tool {
     DynamoDBClient client = new DynamoDBClient(jobConf);
     TableDescription description = client.describeTable(tableName);
 
-    Long readThroughput = description.getProvisionedThroughput().getReadCapacityUnits();
-    Long writeThroughput = description.getProvisionedThroughput().getWriteCapacityUnits();
+    if (description.getBillingModeSummary().getBillingMode()
+        .equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
+      jobConf.set(DynamoDBConstants.READ_THROUGHPUT,
+          description.getProvisionedThroughput().getReadCapacityUnits().toString());
+      jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT,
+          description.getProvisionedThroughput().getWriteCapacityUnits().toString());
+    } else {
+      jobConf.set(DynamoDBConstants.READ_THROUGHPUT,
+          DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString());
+      jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT,
+          DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString());
+    }
 
-    jobConf.set(DynamoDBConstants.READ_THROUGHPUT, readThroughput.toString());
-    jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT, writeThroughput.toString());
-
-    log.info("Read throughput:       " + readThroughput);
-    log.info("Write throughput:      " + writeThroughput);
+    log.info("Read throughput:       " + jobConf.get(DynamoDBConstants.READ_THROUGHPUT));
+    log.info("Write throughput:      " + jobConf.get(DynamoDBConstants.WRITE_THROUGHPUT));
 
     // Optional properties
     if (writeRatio != null) {

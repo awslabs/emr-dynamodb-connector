@@ -21,8 +21,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
-import org.apache.hadoop.dynamodb.type.DynamoDBType;
-import org.apache.hadoop.dynamodb.type.DynamoDBTypeFactory;
 import org.apache.hadoop.hive.dynamodb.shims.SerDeParametersShim;
 import org.apache.hadoop.hive.dynamodb.shims.ShimsLoader;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBItemType;
@@ -209,7 +207,8 @@ public class DynamoDBSerDe extends AbstractSerDe {
       throw new RuntimeException("Could not get cluster capacity.", e);
     }
 
-    if (maxMapTasks > writesPerSecond) {
+    if (maxMapTasks > writesPerSecond &&
+            client.describeTable(dynamoDBTableName).getBillingModeSummary().getBillingMode().equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
       String message = "WARNING: Configured write throughput of the dynamodb table "
           + dynamoDBTableName + " is less than the cluster map capacity." + " ClusterMapCapacity: "
           + maxMapTasks + " WriteThroughput: " + writesPerSecond + "\nWARNING: Writes to this "

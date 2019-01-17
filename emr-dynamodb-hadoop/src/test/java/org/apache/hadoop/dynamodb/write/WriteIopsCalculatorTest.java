@@ -16,6 +16,7 @@ package org.apache.hadoop.dynamodb.write;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
+import com.amazonaws.services.dynamodbv2.model.BillingModeSummary;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 
@@ -47,8 +48,10 @@ public class WriteIopsCalculatorTest {
   @Before
   public void setup() {
     when(dynamoDBClient.describeTable(TABLE_NAME)).thenReturn(new TableDescription()
-        .withProvisionedThroughput(new ProvisionedThroughputDescription().withWriteCapacityUnits
-            (WRITE_CAPACITY_UNITS)));
+        .withBillingModeSummary(
+            new BillingModeSummary().withBillingMode(DynamoDBConstants.BILLING_MODE_PROVISIONED))
+        .withProvisionedThroughput(
+            new ProvisionedThroughputDescription().withWriteCapacityUnits(WRITE_CAPACITY_UNITS)));
 
     JobConf jobConf = new JobConf();
     jobConf.setNumMapTasks(TOTAL_MAP_TASKS);
