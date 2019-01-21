@@ -209,7 +209,8 @@ public class DynamoDBSerDe extends AbstractSerDe {
       throw new RuntimeException("Could not get cluster capacity.", e);
     }
 
-    if (maxMapTasks > writesPerSecond && client.describeTable(dynamoDBTableName).getBillingModeSummary().getBillingMode().equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
+    if (maxMapTasks > writesPerSecond &&
+            client.describeTable(dynamoDBTableName).getBillingModeSummary().getBillingMode().equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
       String message = "WARNING: Configured write throughput of the dynamodb table "
           + dynamoDBTableName + " is less than the cluster map capacity." + " ClusterMapCapacity: "
           + maxMapTasks + " WriteThroughput: " + writesPerSecond + "\nWARNING: Writes to this "

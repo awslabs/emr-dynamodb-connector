@@ -58,7 +58,6 @@ public interface DynamoDBConstants {
   String MAX_MAP_TASKS = "dynamodb.max.map.tasks";
   String DEFAULT_THROUGHPUT_PERCENTAGE = "0.5";
   String BILLING_MODE_PROVISIONED = "PROVISIONED";
-  String BILLING_MODE_ON_DEMAND = "PAY_PER_REQUEST";
 
   String DYNAMODB_MAX_ITEM_SIZE = "dynamodb.max.item.size";
   String MAX_ITEM_SIZE = DYNAMODB_MAX_ITEM_SIZE;
@@ -89,4 +88,5 @@ public interface DynamoDBConstants {
   String DEFAULT_AWS_REGION = Regions.US_EAST_1.getName();
 
   int DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES = 100;
+  String DEFAULT_CAPCITY_FOR_ON_DEMAND = "40000";
 }
