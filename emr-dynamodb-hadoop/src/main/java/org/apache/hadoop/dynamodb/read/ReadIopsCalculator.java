@@ -55,7 +55,7 @@ public class ReadIopsCalculator implements IopsCalculator {
 
     public long calculateTargetIops() {
         double configuredThroughput = Math.floor(Double.parseDouble(
-                jobConf.get(DynamoDBConstants.WRITE_THROUGHPUT, String.valueOf(getThroughput()))) * throughputPercent);
+                jobConf.get(DynamoDBConstants.READ_THROUGHPUT, String.valueOf(getThroughput()))) * throughputPercent);
         long throughputPerTask = Math.max((long) (configuredThroughput / totalSegments
                 * localSegments), 1);
 
