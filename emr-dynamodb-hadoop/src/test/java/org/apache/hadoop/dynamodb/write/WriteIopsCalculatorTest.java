@@ -13,12 +13,9 @@
 
 package org.apache.hadoop.dynamodb.write;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
-
+import com.amazonaws.services.dynamodbv2.model.BillingModeSummary;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
-
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.mapred.JobClient;
@@ -28,6 +25,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WriteIopsCalculatorTest {
@@ -47,14 +47,15 @@ public class WriteIopsCalculatorTest {
   @Before
   public void setup() {
     when(dynamoDBClient.describeTable(TABLE_NAME)).thenReturn(new TableDescription()
-        .withProvisionedThroughput(new ProvisionedThroughputDescription().withWriteCapacityUnits
-            (WRITE_CAPACITY_UNITS)));
+            .withBillingModeSummary(new BillingModeSummary().withBillingMode(DynamoDBConstants.BILLING_MODE_PROVISIONED))
+            .withProvisionedThroughput(new ProvisionedThroughputDescription().withWriteCapacityUnits
+                    (WRITE_CAPACITY_UNITS)));
 
     JobConf jobConf = new JobConf();
     jobConf.setNumMapTasks(TOTAL_MAP_TASKS);
     jobConf.set("mapreduce.task.attempt.id", "attempt_m_1");
     jobConf.set(DynamoDBConstants.THROUGHPUT_WRITE_PERCENT, String.valueOf
-        (THROUGHPUT_WRITE_PERCENT));
+            (THROUGHPUT_WRITE_PERCENT));
     when(jobClient.getConf()).thenReturn(jobConf);
 
     writeIopsCalculator = new WriteIopsCalculator(jobClient, dynamoDBClient, TABLE_NAME) {
@@ -69,7 +70,7 @@ public class WriteIopsCalculatorTest {
   public void testCalculateTargetIops() {
     long writeIops = writeIopsCalculator.calculateTargetIops();
     long expectedWriteIops = (long) (WRITE_CAPACITY_UNITS * THROUGHPUT_WRITE_PERCENT / Math.min
-        (MAX_CONCURRENT_MAP_TASKS, TOTAL_MAP_TASKS));
+            (MAX_CONCURRENT_MAP_TASKS, TOTAL_MAP_TASKS));
     assertEquals(expectedWriteIops, writeIops);
   }
 }

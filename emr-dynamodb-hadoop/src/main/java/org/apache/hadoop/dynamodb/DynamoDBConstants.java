@@ -14,6 +14,7 @@
 package org.apache.hadoop.dynamodb;
 
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.dynamodbv2.model.BillingMode;
 
 /**
  * Contains constants used for the Hadoop to DynamoDB connection. Note that many of these string
@@ -57,7 +58,7 @@ public interface DynamoDBConstants {
   String TABLE_SIZE_BYTES = "dynamodb.table.size-bytes";
   String MAX_MAP_TASKS = "dynamodb.max.map.tasks";
   String DEFAULT_THROUGHPUT_PERCENTAGE = "0.5";
-  String BILLING_MODE_PROVISIONED = "PROVISIONED";
+  String BILLING_MODE_PROVISIONED = BillingMode.PROVISIONED.toString();
 
   String DYNAMODB_MAX_ITEM_SIZE = "dynamodb.max.item.size";
   String MAX_ITEM_SIZE = DYNAMODB_MAX_ITEM_SIZE;

@@ -13,18 +13,7 @@
 
 package org.apache.hadoop.dynamodb.read;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ConsumedCapacity;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.KeyType;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
-import com.amazonaws.services.dynamodbv2.model.ScanResult;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
-
+import com.amazonaws.services.dynamodbv2.model.*;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
@@ -40,11 +29,10 @@ import org.apache.hadoop.mapred.Reporter;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class DynamoDBRecordReaderTest {
 
@@ -52,12 +40,12 @@ public class DynamoDBRecordReaderTest {
   private static final String RANGE_KEY = "rangeKey";
   private static final int NUM_RANGE_KEYS_PER_HASH_KEY = 3;
   private static final String[] HASH_KEYS = {"6d9KhslLlNWKoPUpOrYX",
-      "gi0aeHusUZPjgpNJtXNDLzkipmeft", "9w3ZDZyiFheGE", "cfk9gcCgFA6M5g"};
+          "gi0aeHusUZPjgpNJtXNDLzkipmeft", "9w3ZDZyiFheGE", "cfk9gcCgFA6M5g"};
 
   @Test
   public void testPaginatedReads() {
     DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, new
-        DynamoDBQueryFilter());
+            DynamoDBQueryFilter());
 
     DynamoDBRecordReaderContext context = buildContext();
     context.setSplit(split);
@@ -71,8 +59,8 @@ public class DynamoDBRecordReaderTest {
 
       @Override
       public RetryResult<ScanResult> scanTable(String tableName, DynamoDBQueryFilter
-          dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
-          AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
+              dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
+              AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
 
         List<Map<String, AttributeValue>> items = getItems();
         if (i == 0) {
@@ -80,13 +68,13 @@ public class DynamoDBRecordReaderTest {
           lastEvaluatedKey.put("test", new AttributeValue("test"));
           i++;
           return new RetryResult<>(new ScanResult().withScannedCount(items.size())
-              .withConsumedCapacity(new ConsumedCapacity().withCapacityUnits(1d)).withItems
-                  (items).withLastEvaluatedKey(lastEvaluatedKey), 0);
+                  .withConsumedCapacity(new ConsumedCapacity().withCapacityUnits(1d)).withItems
+                          (items).withLastEvaluatedKey(lastEvaluatedKey), 0);
         } else {
           assertEquals("test", exclusiveStartKey.get("test").getS());
           return new RetryResult<>(new ScanResult().withScannedCount(items.size())
-              .withConsumedCapacity(new ConsumedCapacity().withCapacityUnits(1d)).withItems
-                  (items), 0);
+                  .withConsumedCapacity(new ConsumedCapacity().withCapacityUnits(1d)).withItems
+                          (items), 0);
         }
       }
 
@@ -121,7 +109,7 @@ public class DynamoDBRecordReaderTest {
   @Test
   public void testConsumingRemainingElementsIfEndKeyIsNull() {
     DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, new
-        DynamoDBQueryFilter());
+            DynamoDBQueryFilter());
 
     DynamoDBRecordReaderContext context = buildContext();
     context.setSplit(split);
@@ -134,8 +122,8 @@ public class DynamoDBRecordReaderTest {
 
       @Override
       public RetryResult<ScanResult> scanTable(String tableName, DynamoDBQueryFilter
-          dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
-          AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
+              dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
+              AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
         return new RetryResult<>(getHashNumberRangeKeyItems(HASH_KEYS, "S"), 0);
       }
     });
@@ -163,7 +151,7 @@ public class DynamoDBRecordReaderTest {
   @Test
   public void testConsumingAllBeginningElementsIfStartKeyIsNull() {
     DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, new
-        DynamoDBQueryFilter());
+            DynamoDBQueryFilter());
 
     DynamoDBRecordReaderContext context = buildContext();
     context.setSplit(split);
@@ -176,8 +164,8 @@ public class DynamoDBRecordReaderTest {
 
       @Override
       public RetryResult<ScanResult> scanTable(String tableName, DynamoDBQueryFilter
-          dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
-          AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
+              dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
+              AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
         assertNull(exclusiveStartKey);
         return new RetryResult<>(getHashNumberRangeKeyItems(HASH_KEYS, "S"), 0);
       }
@@ -206,7 +194,7 @@ public class DynamoDBRecordReaderTest {
   @Test
   public void testScanFirstSegment() {
     DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, new
-        DynamoDBQueryFilter());
+            DynamoDBQueryFilter());
 
     DynamoDBRecordReaderContext context = buildContext();
     context.setSplit(split);
@@ -218,8 +206,8 @@ public class DynamoDBRecordReaderTest {
 
       @Override
       public RetryResult<ScanResult> scanTable(String tableName, DynamoDBQueryFilter
-          dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
-          AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
+              dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
+              AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
         assertEquals(0, (int) segment);
         assertEquals(4, (int) totalSegments);
         return new RetryResult<>(getHashKeyItems(HASH_KEYS), 0);
@@ -246,7 +234,7 @@ public class DynamoDBRecordReaderTest {
   @Test(expected = IOException.class, timeout = 10000)
   public void testExceptionInDbClient() throws IOException {
     DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, new
-        DynamoDBQueryFilter());
+            DynamoDBQueryFilter());
     DynamoDBRecordReaderContext context = buildContext();
     context.setSplit(split);
     context.setClient(new DynamoDBClient() {
@@ -257,8 +245,8 @@ public class DynamoDBRecordReaderTest {
 
       @Override
       public RetryResult<ScanResult> scanTable(String tableName, DynamoDBQueryFilter
-          dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
-          AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
+              dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
+              AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
         throw new RuntimeException("Unrecoverable Exception");
       }
     });
@@ -347,7 +335,7 @@ public class DynamoDBRecordReaderTest {
       items.add(item);
     }
     return new ScanResult().withScannedCount(items.size()).withItems(items).withConsumedCapacity
-        (new ConsumedCapacity().withCapacityUnits(1d));
+            (new ConsumedCapacity().withCapacityUnits(1d));
   }
 
   private ScanResult getHashNumberRangeKeyItems(String[] hashKeys, String hashType) {
@@ -365,7 +353,7 @@ public class DynamoDBRecordReaderTest {
       }
     }
     return new ScanResult().withScannedCount(items.size()).withItems(items).withConsumedCapacity
-        (new ConsumedCapacity().withCapacityUnits(1d));
+            (new ConsumedCapacity().withCapacityUnits(1d));
   }
 
   private TableDescription getTableDescription(String hashType, String rangeType) {
@@ -374,19 +362,19 @@ public class DynamoDBRecordReaderTest {
 
     keySchema.add(new KeySchemaElement().withAttributeName("hashKey").withKeyType(KeyType.HASH));
     definitions.add(new AttributeDefinition().withAttributeName("hashKey").withAttributeType
-        (hashType));
+            (hashType));
 
     if (rangeType != null) {
       keySchema.add(new KeySchemaElement().withAttributeName("rangeKey").withKeyType(KeyType
-          .RANGE));
+              .RANGE));
       definitions.add(new AttributeDefinition().withAttributeName("rangeKey").withAttributeType
-          (rangeType));
+              (rangeType));
     }
 
     TableDescription description = new TableDescription().withKeySchema(keySchema)
-        .withAttributeDefinitions(definitions).withProvisionedThroughput(new
-            ProvisionedThroughputDescription().withReadCapacityUnits(1000L)
-            .withWriteCapacityUnits(1000L));
+            .withAttributeDefinitions(definitions).withProvisionedThroughput(new
+                    ProvisionedThroughputDescription().withReadCapacityUnits(1000L)
+                    .withWriteCapacityUnits(1000L));
     return description;
   }
 
