@@ -112,7 +112,8 @@ public class DynamoDBExport extends Configured implements Tool {
     Long tableSizeBytes = description.getTableSizeBytes();
     Double averageItemSize = DynamoDBUtil.calculateAverageItemSize(description);
 
-    if (description.getBillingModeSummary().getBillingMode()
+    if (description.getBillingModeSummary() == null
+            || description.getBillingModeSummary().getBillingMode()
         .equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
       jobConf.set(DynamoDBConstants.READ_THROUGHPUT,
           description.getProvisionedThroughput().getReadCapacityUnits().toString());

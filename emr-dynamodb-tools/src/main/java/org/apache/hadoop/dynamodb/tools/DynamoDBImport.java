@@ -95,7 +95,8 @@ public class DynamoDBImport extends Configured implements Tool {
     DynamoDBClient client = new DynamoDBClient(jobConf);
     TableDescription description = client.describeTable(tableName);
 
-    if (description.getBillingModeSummary().getBillingMode()
+    if (description.getBillingModeSummary() == null
+        || description.getBillingModeSummary().getBillingMode()
         .equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
       jobConf.set(DynamoDBConstants.READ_THROUGHPUT,
           description.getProvisionedThroughput().getReadCapacityUnits().toString());

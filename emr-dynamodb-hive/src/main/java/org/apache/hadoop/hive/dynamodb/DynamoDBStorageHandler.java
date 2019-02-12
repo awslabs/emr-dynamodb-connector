@@ -168,7 +168,8 @@ public class DynamoDBStorageHandler
             .getProperty(DynamoDBConstants.THROUGHPUT_WRITE_PERCENT));
       }
 
-      if (description.getBillingModeSummary().getBillingMode()
+      if (description.getBillingModeSummary() == null
+          || description.getBillingModeSummary().getBillingMode()
           .equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
         jobProperties.put(DynamoDBConstants.READ_THROUGHPUT,
             description.getProvisionedThroughput().getReadCapacityUnits().toString());

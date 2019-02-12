@@ -65,7 +65,7 @@ public class ReadIopsCalculator implements IopsCalculator {
 
   private double getThroughput() {
     TableDescription tableDescription = dynamoDBClient.describeTable(tableName);
-    if (tableDescription.getBillingModeSummary() != null &&
+    if (tableDescription.getBillingModeSummary() == null ||
         tableDescription.getBillingModeSummary().getBillingMode()
             .equalsIgnoreCase(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
       ProvisionedThroughputDescription provisionedThroughput = tableDescription
