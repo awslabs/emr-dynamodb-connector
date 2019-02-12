@@ -15,6 +15,7 @@ package org.apache.hadoop.hive.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
+import com.amazonaws.services.dynamodbv2.model.BillingModeSummary;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -207,8 +208,9 @@ public class DynamoDBSerDe extends AbstractSerDe {
       throw new RuntimeException("Could not get cluster capacity.", e);
     }
 
+    BillingModeSummary billingModeSummary = client.describeTable(dynamoDBTableName).getBillingModeSummary();
     if (maxMapTasks > writesPerSecond &&
-            client.describeTable(dynamoDBTableName).getBillingModeSummary().getBillingMode().equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
+            (billingModeSummary == null || billingModeSummary.getBillingMode().equals(DynamoDBConstants.BILLING_MODE_PROVISIONED))) {
       String message = "WARNING: Configured write throughput of the dynamodb table "
           + dynamoDBTableName + " is less than the cluster map capacity." + " ClusterMapCapacity: "
           + maxMapTasks + " WriteThroughput: " + writesPerSecond + "\nWARNING: Writes to this "
