@@ -186,6 +186,14 @@ public final class DynamoDBUtil {
       for (ByteBuffer byteBuffer : att.getBS()) {
         byteSize += byteBuffer.array().length;
       }
+    } else if (att.getM() != null) {
+      for (Entry<String, AttributeValue> entry : att.getM().entrySet()) {
+    	byteSize += getAttributeSizeBytes(entry.getValue()) + entry.getKey().getBytes(CHARACTER_ENCODING).length;
+      }
+    } else if (att.getL() != null) {
+      for (AttributeValue entry : att.getL()) {
+        byteSize += getAttributeSizeBytes(entry);
+      }
     }
     return byteSize;
   }

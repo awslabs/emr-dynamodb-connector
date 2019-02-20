@@ -39,6 +39,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,34 @@ public class DynamoDBUtilTest {
     item.put("numberArray", new AttributeValue().withNS(numberArray));
 
     assertEquals(131, DynamoDBUtil.getItemSizeBytes(item));
+  }
+  
+  @Test
+  public void testListItemSize() throws UnsupportedEncodingException {
+    Map<String, AttributeValue> item = new HashMap<>();
+    item.put("id", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
+    item.put("payload", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
+    item.put("number", new AttributeValue().withN("3592.0001"));
+    List<AttributeValue> attrList = new ArrayList<>();
+    attrList.add(new AttributeValue().withN("20123"));
+    attrList.add(new AttributeValue("QERASdfklkajsdfasdf"));
+    item.put("testList", new AttributeValue().withL(attrList));
+
+    assertEquals(116, DynamoDBUtil.getItemSizeBytes(item));
+  }
+  
+  @Test
+  public void testMapItemSize() throws UnsupportedEncodingException {
+    Map<String, AttributeValue> item = new HashMap<>();
+    item.put("id", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
+    item.put("payload", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
+    item.put("number", new AttributeValue().withN("3592.0001"));
+    Map<String, AttributeValue> attrMap = new HashMap<>();
+    attrMap.put("mapNumber", new AttributeValue().withN("20123"));
+    attrMap.put("mapString", new AttributeValue("QERASdfklkajsdfasdf"));
+    item.put("testMap", new AttributeValue().withM(attrMap));
+
+    assertEquals(133, DynamoDBUtil.getItemSizeBytes(item));
   }
 
   @Test
