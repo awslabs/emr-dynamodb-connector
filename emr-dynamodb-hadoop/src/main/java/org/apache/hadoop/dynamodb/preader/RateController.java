@@ -24,6 +24,11 @@ public class RateController {
   private static final double MAX_RCU_PER_REQ = 25;
   private static final Log log = LogFactory.getLog(RateController.class);
   private static final double ITEM_SIZE_SMOOTH_FACTOR = 0.7;
+
+  // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Limits.html#limits-items
+  private static final double MIN_ITEM_SIZE = 1.0;
+  private static final double MAX_ITEM_SIZE = 400 * 1024;
+
   private final double targetRate;
   private final TokenBucket bucket;
   private double avgItemSizeBytes;
@@ -31,7 +36,7 @@ public class RateController {
   public RateController(AbstractTimeSource time, double targetRate, int windowSize, double
       avgItemSizeBytes) {
     this.targetRate = targetRate;
-    this.avgItemSizeBytes = avgItemSizeBytes;
+    this.avgItemSizeBytes = Math.min(Math.max(avgItemSizeBytes, MIN_ITEM_SIZE), MAX_ITEM_SIZE);;
 
     double capacity = Math.max(targetRate * windowSize, MIN_RCU_PER_REQ);
     this.bucket = new TokenBucket(targetRate, capacity, time);
@@ -57,8 +62,11 @@ public class RateController {
   void adjust(double permittedReadUnits, double consumedReadUnits, int items) {
     // Update average item size
     double oldAvg = avgItemSizeBytes;
-    avgItemSizeBytes = (avgItemSizeBytes * ITEM_SIZE_SMOOTH_FACTOR)
-        + estimateAvgItemSize(consumedReadUnits, items) * (1.0 - ITEM_SIZE_SMOOTH_FACTOR);
+    if (items > 0) {
+      avgItemSizeBytes = (avgItemSizeBytes * ITEM_SIZE_SMOOTH_FACTOR)
+          + estimateAvgItemSize(consumedReadUnits, items) * (1.0 - ITEM_SIZE_SMOOTH_FACTOR);
+      avgItemSizeBytes = Math.min(Math.max(avgItemSizeBytes, MIN_ITEM_SIZE), MAX_ITEM_SIZE);
+    }
 
     log.debug("report: permitted=" + permittedReadUnits + ", consumed=" + consumedReadUnits + ", "
         + "items=" + items + ", avg from= " + oldAvg + " to " + avgItemSizeBytes);

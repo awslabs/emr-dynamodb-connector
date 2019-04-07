@@ -13,11 +13,13 @@
 
 package org.apache.hadoop.dynamodb.preader;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.util.MockTimeSource;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
@@ -30,7 +32,7 @@ public class RateControllerTest {
   @DataPoints("rates")
   public static final double rates[] = {1.0, 10.0, 50.0, 100.0, 1000.0, 10000.0};
   @DataPoints("sizes")
-  public static final double sizes[] = {50, 100, 200, 4000, 4100, 9000, 20000, 40000, 60000};
+  public static final double sizes[] = {0, 50, 100, 200, 4000, 4100, 9000, 20000, 40000, 60000};
   @DataPoints("windows")
   public static final int windows[] = {1, 5, 10, 100};
   private MockTimeSource time;
@@ -84,6 +86,7 @@ public class RateControllerTest {
         double c = Math.ceil((lim.items * itemSize) / (DynamoDBConstants
             .BYTES_PER_READ_CAPACITY_UNIT * DynamoDBConstants
             .READ_EVENTUALLY_TO_STRONGLY_CONSISTENT_FACTOR));
+        c = Math.max(c, 1.0);
         rateCtr.adjust(lim.readCapacityUnits, c, lim.items);
 
         consumed += c;
@@ -110,4 +113,35 @@ public class RateControllerTest {
         totalItemSize <= totalRcuSize);
   }
 
+  @Test
+  public void emptyBatchAdjustment() {
+    time.setNanoTime(0);
+    RateController ctrl = new RateController(time, 10, 1, 1.0);
+    assertEquals(1.0, ctrl.getAvgItemSize(), 0.01);
+
+    // Empty batch is allowed
+    ctrl.adjust(25, 0, 0);
+    assertEquals(1.0, ctrl.getAvgItemSize(), 0.01);
+
+    // The item size is updated when item count is non-zero
+    ctrl.adjust(25, 10, 1);
+    assertTrue(ctrl.getAvgItemSize() > 1.0);
+  }
+
+  @Test
+  public void limitedAverageItemSize() {
+    time.setNanoTime(0);
+    RateController ctrl = new RateController(time, 10, 1, 10.0);
+    assertEquals(10.0, ctrl.getAvgItemSize(), 0.01);
+
+    // Item size upper bound
+    ctrl.adjust(25, 10000, 1);
+    assertEquals(400 * 1024, ctrl.getAvgItemSize(), 0.01);
+
+    // Item size lower bound
+    for (int i = 0; i < 100; i++) {
+      ctrl.adjust(25, 1, 999999999);
+    }
+    assertEquals(1, ctrl.getAvgItemSize(), 0.01);
+  }
 }
