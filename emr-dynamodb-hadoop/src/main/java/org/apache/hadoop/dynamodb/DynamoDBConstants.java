@@ -65,6 +65,9 @@ public interface DynamoDBConstants {
   String MAX_BATCH_SIZE = "dynamodb.max.batch.size";
   String MAX_ITEMS_PER_BATCH = "dynamodb.max.batch.items";
 
+  String DELETION_MODE = "dynamodb.deletion.mode";
+  boolean DEFAULT_DELETION_MODE = false;
+
   // http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Limits.html
   long DEFAULT_MAX_ITEM_SIZE = 400 * 1024;
   long DEFAULT_MAX_BATCH_SIZE = 16 * 1024 * 1024;

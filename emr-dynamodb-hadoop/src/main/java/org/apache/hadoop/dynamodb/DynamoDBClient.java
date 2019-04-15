@@ -42,6 +42,7 @@ import com.amazonaws.services.dynamodbv2.model.ConsumedCapacity;
 import com.amazonaws.services.dynamodbv2.model.DescribeTableRequest;
 import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
+import com.amazonaws.services.dynamodbv2.model.DeleteRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
@@ -113,6 +114,10 @@ public class DynamoDBClient {
     maxItemByteSize = config.getLong(MAX_ITEM_SIZE, DEFAULT_MAX_ITEM_SIZE);
   }
 
+  public final Map<String, List<WriteRequest>> getWriteBatchMap() {
+    return this.writeBatchMap;
+  }
+
   public TableDescription describeTable(String tableName) {
     final DescribeTableRequest describeTablesRequest = new DescribeTableRequest()
         .withTableName(tableName);
@@ -181,8 +186,9 @@ public class DynamoDBClient {
   }
 
   public BatchWriteItemResult putBatch(String tableName, Map<String, AttributeValue> item,
-      long maxItemsPerBatch, Reporter reporter)
+      long maxItemsPerBatch, Reporter reporter, boolean deletionMode)
       throws UnsupportedEncodingException {
+
     int itemSizeBytes = DynamoDBUtil.getItemSizeBytes(item);
     if (itemSizeBytes > maxItemByteSize) {
       throw new RuntimeException("Cannot pass items with size greater than " + maxItemByteSize
@@ -210,7 +216,15 @@ public class DynamoDBClient {
     } else {
       writeBatchList = writeBatchMap.get(tableName);
     }
-    writeBatchList.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item)));
+
+    log.debug("BatchWriteItem deletionMode " + deletionMode);
+
+    if (deletionMode) {
+      writeBatchList.add(new WriteRequest().withDeleteRequest(new DeleteRequest().withKey(item)));
+    } else {
+      writeBatchList.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item)));
+    }
+
     writeBatchMapSizeBytes += itemSizeBytes;
 
     return result;

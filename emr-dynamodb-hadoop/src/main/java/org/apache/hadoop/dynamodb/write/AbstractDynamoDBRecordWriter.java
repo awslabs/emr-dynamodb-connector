@@ -68,6 +68,7 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
   private long totalItemsWritten = 0;
   private double totalIOPSConsumed = 0;
   private long writesPerSecond = 0;
+  private boolean deletionMode;
 
   public AbstractDynamoDBRecordWriter(JobConf jobConf, Progressable progressable) {
     this.progressable = progressable;
@@ -77,6 +78,9 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
     if (tableName == null) {
       throw new ResourceNotFoundException("No output table name was specified.");
     }
+
+
+    deletionMode = jobConf.getBoolean(DynamoDBConstants.DELETION_MODE, DynamoDBConstants.DEFAULT_DELETION_MODE);
 
     IopsCalculator iopsCalculator = new WriteIopsCalculator(createJobClient(jobConf), client,
         tableName);
@@ -106,7 +110,7 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
 
     DynamoDBItemWritable item = convertValueToDynamoDBItem(key, value);
     BatchWriteItemResult result = client.putBatch(tableName, item.getItem(),
-        permissibleWritesPerSecond - writesPerSecond, reporter);
+        permissibleWritesPerSecond - writesPerSecond, reporter, deletionMode);
 
     batchSize++;
     totalItemsWritten++;

@@ -15,6 +15,8 @@ package org.apache.hadoop.dynamodb;
 
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEM_SIZE;
 
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
+import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
@@ -33,6 +35,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.List;
 import java.util.Map;
 
 public class DynamoDBClientTest {
@@ -171,14 +174,29 @@ public class DynamoDBClientTest {
   public void testPutBatchThrowsWhenItemIsTooLarge() throws Exception {
     Map<String, AttributeValue> item = ImmutableMap.of("",
         new AttributeValue(Strings.repeat("a", (int) (DEFAULT_MAX_ITEM_SIZE + 1))));
-    client.putBatch("dummyTable", item, 1, null);
+    client.putBatch("dummyTable", item, 1, null, false);
   }
 
   @Test
   public void testPutBatchDoesNotThrowWhenItemIsNotTooLarge() throws Exception {
     Map<String, AttributeValue> item = ImmutableMap.of("",
         new AttributeValue(Strings.repeat("a", (int) DEFAULT_MAX_ITEM_SIZE)));
-    client.putBatch("dummyTable", item, 1, null);
+    client.putBatch("dummyTable", item, 1, null, false);
+  }
+
+  @Test
+  public void testPutBatchDeletionModeSuccessful() throws Exception {
+    Map<String, AttributeValue> item = ImmutableMap.of("",
+            new AttributeValue(Strings.repeat("a", (int) DEFAULT_MAX_ITEM_SIZE)));
+
+    client.putBatch("dummyTable", item, 1, null, true);
+
+    for (Map.Entry<String, List<WriteRequest>> entry: client.getWriteBatchMap().entrySet()) {
+      for (WriteRequest req: entry.getValue()) {
+        Assert.assertNotNull(req.getDeleteRequest());
+        Assert.assertNull(req.getPutRequest());
+      }
+    }
   }
 
   private void setTestProxyHostAndPort(Configuration conf) {
