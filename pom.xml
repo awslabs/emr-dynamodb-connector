@@ -65,7 +65,7 @@
         <dependencies>
             <dependency>
                 <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk-dynamodb</artifactId>
+                <artifactId>aws-java-sdk-bundle</artifactId>
                 <version>${aws-java-sdk.version}</version>
             </dependency>
             <dependency>

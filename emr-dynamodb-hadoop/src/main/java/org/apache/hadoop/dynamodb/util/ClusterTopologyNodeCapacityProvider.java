@@ -14,7 +14,7 @@
 package org.apache.hadoop.dynamodb.util;
 
 import com.amazonaws.util.json.Jackson;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.amazonaws.thirdparty.jackson.databind.JsonNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapred.JobConf;

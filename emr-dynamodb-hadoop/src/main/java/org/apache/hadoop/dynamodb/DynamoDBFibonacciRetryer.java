@@ -16,12 +16,12 @@ package org.apache.hadoop.dynamodb;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 
+import com.amazonaws.thirdparty.joda.time.DateTime;
+import com.amazonaws.thirdparty.joda.time.DateTimeZone;
+import com.amazonaws.thirdparty.joda.time.Duration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapred.Reporter;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.Duration;
 
 import java.net.SocketException;
 import java.net.SocketTimeoutException;

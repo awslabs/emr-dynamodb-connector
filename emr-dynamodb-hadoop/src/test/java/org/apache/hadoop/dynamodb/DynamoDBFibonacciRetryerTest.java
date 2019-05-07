@@ -21,8 +21,8 @@ import static org.mockito.Mockito.when;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.thirdparty.joda.time.Duration;
 
-import org.joda.time.Duration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
