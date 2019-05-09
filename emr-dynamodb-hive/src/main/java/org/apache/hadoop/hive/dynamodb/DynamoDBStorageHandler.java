@@ -171,10 +171,7 @@ public class DynamoDBStorageHandler
       if (description.getBillingModeSummary() == null
           || description.getBillingModeSummary().getBillingMode()
           .equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
-        jobProperties.put(DynamoDBConstants.READ_THROUGHPUT,
-            description.getProvisionedThroughput().getReadCapacityUnits().toString());
-        jobProperties.put(DynamoDBConstants.WRITE_THROUGHPUT,
-            description.getProvisionedThroughput().getWriteCapacityUnits().toString());
+        useExplicitThroughputIfRequired(jobProperties, tableDesc);
       } else {
         // If not specified at the table level, set default value
         jobProperties.put(DynamoDBConstants.READ_THROUGHPUT, tableDesc.getProperties()
@@ -198,6 +195,18 @@ public class DynamoDBStorageHandler
 
     } finally {
       client.close();
+    }
+  }
+
+  private void useExplicitThroughputIfRequired(Map<String, String> jobProperties, TableDesc tableDesc) {
+    String userRequiredReadThroughput = tableDesc.getProperties().getProperty(DynamoDBConstants.READ_THROUGHPUT);
+    if (userRequiredReadThroughput != null) {
+      jobProperties.put(DynamoDBConstants.READ_THROUGHPUT, userRequiredReadThroughput);
+    }
+
+    String userRequiredWriteThroughput = tableDesc.getProperties().getProperty(DynamoDBConstants.WRITE_THROUGHPUT);
+    if (userRequiredWriteThroughput != null) {
+      jobProperties.put(DynamoDBConstants.WRITE_THROUGHPUT, userRequiredWriteThroughput);
     }
   }
 
