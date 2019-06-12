@@ -32,6 +32,7 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -80,6 +81,12 @@ public class DynamoDBClient {
           DynamoDBConstants.DYNAMODB_ACCESS_KEY_CONF,
           DynamoDBConstants.DYNAMODB_SECRET_KEY_CONF
       );
+  private static final CredentialPairName DYNAMODB_SESSION_CREDENTIAL_PAIR_NAME =
+          new CredentialPairName(
+                  DYNAMODB_CREDENTIAL_PAIR_NAME.getAccessKeyName(),
+                  DYNAMODB_CREDENTIAL_PAIR_NAME.getSecretKeyName(),
+                  DynamoDBConstants.DYNAMODB_SESSION_TOKEN_CONF
+          );
   private static final CredentialPairName DEFAULT_CREDENTIAL_PAIR_NAME =
       new CredentialPairName(
           DynamoDBConstants.DEFAULT_ACCESS_KEY_CONF,
@@ -385,18 +392,33 @@ public class DynamoDBClient {
     }
 
     // try to fetch credentials from core-site
-    String accessKey = conf.get(DYNAMODB_CREDENTIAL_PAIR_NAME.getAccessKeyName());
+    String accessKey = conf.get(DYNAMODB_SESSION_CREDENTIAL_PAIR_NAME.getAccessKeyName());
     String secretKey;
+    String sessionKey;
     if (Strings.isNullOrEmpty(accessKey)) {
       accessKey = conf.get(DEFAULT_CREDENTIAL_PAIR_NAME.getAccessKeyName());
       secretKey = conf.get(DEFAULT_CREDENTIAL_PAIR_NAME.getSecretKeyName());
+      sessionKey = null;
     } else {
-      secretKey = conf.get(DYNAMODB_CREDENTIAL_PAIR_NAME.getSecretKeyName());
+      secretKey = conf.get(DYNAMODB_SESSION_CREDENTIAL_PAIR_NAME.getSecretKeyName());
+      sessionKey = conf.get(DYNAMODB_SESSION_CREDENTIAL_PAIR_NAME.getSessionKeyName());
     }
 
     if (Strings.isNullOrEmpty(accessKey) || Strings.isNullOrEmpty(secretKey)) {
       providersList.add(new InstanceProfileCredentialsProvider());
-    } else {
+    } else if (!Strings.isNullOrEmpty(sessionKey) ){
+      final AWSCredentials credentials = new BasicSessionCredentials(accessKey, secretKey, sessionKey);
+      providersList.add(new AWSCredentialsProvider() {
+        @Override
+        public AWSCredentials getCredentials() {
+          return credentials;
+        }
+
+        @Override
+        public void refresh() {
+        }
+      });
+    }else {
       final AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
       providersList.add(new AWSCredentialsProvider() {
         @Override
