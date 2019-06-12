@@ -26,6 +26,7 @@ public interface DynamoDBConstants {
   // Credentials
   String DYNAMODB_ACCESS_KEY_CONF = "dynamodb.awsAccessKeyId";
   String DYNAMODB_SECRET_KEY_CONF = "dynamodb.awsSecretAccessKey";
+  String DYNAMODB_SESSION_TOKEN_CONF = "dynamodb.awsSessionToken";
   String DEFAULT_ACCESS_KEY_CONF = "fs.s3.awsAccessKeyId";
   String DEFAULT_SECRET_KEY_CONF = "fs.s3.awsSecretAccessKey";
   String CUSTOM_CREDENTIALS_PROVIDER_CONF = "dynamodb.customAWSCredentialsProvider";
