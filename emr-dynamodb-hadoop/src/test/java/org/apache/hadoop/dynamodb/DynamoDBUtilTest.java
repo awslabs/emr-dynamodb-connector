@@ -54,6 +54,14 @@ public class DynamoDBUtilTest {
   Configuration conf = new Configuration();
   Region region;
 
+  private static final List<String> TEST_NAMES = Lists.newArrayList("id", "payload", "number", "collection");
+  private static final String TEST_STRING = "AfFLIHsycSvZoEhPPKHUrtwewDAlcD";
+  private static final String TEST_NUMBER = "3592.0001";
+  private static final List<String> TEST_NUMBER_ARRAY = Lists.newArrayList("2.14748364", "1.23452487", "1.73904643");
+  private static final List<AttributeValue> TEST_LIST = Lists.newArrayList(new AttributeValue(TEST_STRING),
+    new AttributeValue().withN(TEST_NUMBER));
+  private static final List<String> TEST_MAP_KEYS = Lists.newArrayList("mapString", "mapNumber");
+
   @Before
   public void setUp() {
     PowerMockito.spy(RegionUtils.class);
@@ -65,41 +73,50 @@ public class DynamoDBUtilTest {
   @Test
   public void testArrayItemSize() throws UnsupportedEncodingException {
     Map<String, AttributeValue> item = new HashMap<>();
-    item.put("id", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
-    item.put("payload", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
-    item.put("number", new AttributeValue().withN("3592.0001"));
-    List<String> numberArray = Lists.newArrayList("2.1474836479", "1.2345248749", "1.7390464369");
-    item.put("numberArray", new AttributeValue().withNS(numberArray));
+    item.put(TEST_NAMES.get(0), new AttributeValue(TEST_STRING));
+    item.put(TEST_NAMES.get(1), new AttributeValue(TEST_STRING));
+    item.put(TEST_NAMES.get(2), new AttributeValue().withN(TEST_NUMBER));
+    item.put(TEST_NAMES.get(3), new AttributeValue().withNS(TEST_NUMBER_ARRAY));
 
-    assertEquals(131, DynamoDBUtil.getItemSizeBytes(item));
+    List<String> allStrings = Lists.newArrayList(TEST_STRING, TEST_STRING, TEST_NUMBER);
+    allStrings.addAll(TEST_NAMES);
+    allStrings.addAll(TEST_NUMBER_ARRAY);
+
+    assertEquals(getExpectedItemSize(allStrings), DynamoDBUtil.getItemSizeBytes(item));
   }
   
   @Test
   public void testListItemSize() throws UnsupportedEncodingException {
     Map<String, AttributeValue> item = new HashMap<>();
-    item.put("id", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
-    item.put("payload", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
-    item.put("number", new AttributeValue().withN("3592.0001"));
-    List<AttributeValue> attrList = new ArrayList<>();
-    attrList.add(new AttributeValue().withN("20123"));
-    attrList.add(new AttributeValue("QERASdfklkajsdfasdf"));
-    item.put("testList", new AttributeValue().withL(attrList));
+    int expectedSize = 0;
+    item.put(TEST_NAMES.get(0), new AttributeValue(TEST_STRING));
+    item.put(TEST_NAMES.get(1), new AttributeValue(TEST_STRING));
+    item.put(TEST_NAMES.get(2), new AttributeValue().withN(TEST_NUMBER));
+    item.put(TEST_NAMES.get(3), new AttributeValue().withL(TEST_LIST));
 
-    assertEquals(116, DynamoDBUtil.getItemSizeBytes(item));
+    List<String> allStrings = Lists.newArrayList(TEST_STRING, TEST_STRING, TEST_STRING, TEST_NUMBER, TEST_NUMBER);
+    allStrings.addAll(TEST_NAMES);
+
+    assertEquals(getExpectedItemSize(allStrings), DynamoDBUtil.getItemSizeBytes(item));
   }
   
   @Test
   public void testMapItemSize() throws UnsupportedEncodingException {
     Map<String, AttributeValue> item = new HashMap<>();
-    item.put("id", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
-    item.put("payload", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
-    item.put("number", new AttributeValue().withN("3592.0001"));
-    Map<String, AttributeValue> attrMap = new HashMap<>();
-    attrMap.put("mapNumber", new AttributeValue().withN("20123"));
-    attrMap.put("mapString", new AttributeValue("QERASdfklkajsdfasdf"));
-    item.put("testMap", new AttributeValue().withM(attrMap));
+    item.put(TEST_NAMES.get(0), new AttributeValue(TEST_STRING));
+    item.put(TEST_NAMES.get(1), new AttributeValue(TEST_STRING));
+    item.put(TEST_NAMES.get(2), new AttributeValue().withN(TEST_NUMBER));
 
-    assertEquals(133, DynamoDBUtil.getItemSizeBytes(item));
+    Map<String, AttributeValue> attrMap = new HashMap<>();
+    attrMap.put(TEST_MAP_KEYS.get(0), new AttributeValue(TEST_STRING));
+    attrMap.put(TEST_MAP_KEYS.get(1), new AttributeValue().withN(TEST_NUMBER));
+    item.put(TEST_NAMES.get(3), new AttributeValue().withM(attrMap));
+
+    List<String> allStrings = Lists.newArrayList(TEST_STRING, TEST_STRING, TEST_STRING, TEST_NUMBER, TEST_NUMBER);
+    allStrings.addAll(TEST_NAMES);
+    allStrings.addAll(TEST_MAP_KEYS);
+
+    assertEquals(getExpectedItemSize(allStrings), DynamoDBUtil.getItemSizeBytes(item));
   }
 
   @Test
@@ -110,15 +127,29 @@ public class DynamoDBUtilTest {
   }
 
   @Test
+  public void testNullItemSize() throws UnsupportedEncodingException {
+    Map<String, AttributeValue> item = new HashMap<>();
+    item.put(null, new AttributeValue(TEST_STRING));
+    item.put(TEST_NAMES.get(0), null);
+
+    List<String> allStrings = Lists.newArrayList(TEST_STRING, TEST_NAMES.get(0));
+
+    assertEquals(getExpectedItemSize(allStrings), DynamoDBUtil.getItemSizeBytes(item));
+  }
+
+  @Test
   public void testNumberItemSize() throws UnsupportedEncodingException {
     Map<String, AttributeValue> item = new HashMap<>();
-    item.put("id", new AttributeValue().withN("1234"));
-    item.put("payload", new AttributeValue("AfFLIHsycSvZoEhPPKHUrtwewDAlcD"));
-    item.put("number", new AttributeValue().withN("3592.0001"));
-    List<String> numberArray = Lists.newArrayList("2.1474836479", "1.2345248749", "1.7390464369");
-    item.put("numberArray", new AttributeValue().withNS(numberArray));
+    item.put(TEST_NAMES.get(0), new AttributeValue().withN(TEST_NUMBER));
+    item.put(TEST_NAMES.get(1), new AttributeValue(TEST_STRING));
+    item.put(TEST_NAMES.get(2), new AttributeValue().withN(TEST_NUMBER));
+    item.put(TEST_NAMES.get(3), new AttributeValue().withNS(TEST_NUMBER_ARRAY));
 
-    assertEquals(105, DynamoDBUtil.getItemSizeBytes(item));
+    List<String> allStrings = Lists.newArrayList(TEST_STRING, TEST_NUMBER, TEST_NUMBER);
+    allStrings.addAll(TEST_NAMES);
+    allStrings.addAll(TEST_NUMBER_ARRAY);
+
+    assertEquals(getExpectedItemSize(allStrings), DynamoDBUtil.getItemSizeBytes(item));
   }
 
   @Test
@@ -168,5 +199,13 @@ public class DynamoDBUtilTest {
         getBoundedBatchLimit(conf, DEFAULT_MAX_ITEMS_PER_BATCH + 1));
     assertEquals(DEFAULT_MAX_ITEMS_PER_BATCH,
         getBoundedBatchLimit(conf, DEFAULT_MAX_ITEMS_PER_BATCH));
+  }
+
+  private int getExpectedItemSize(List<String> strings) {
+    int size = 0;
+    for (String str : strings) {
+      size += str.length();
+    }
+    return size;
   }
 }
