@@ -270,20 +270,33 @@ public class DynamoDBStorageHandler
 
     List<FieldSchema> tableSchema = table.getSd().getCols();
     for (FieldSchema fieldSchema : tableSchema) {
+      String fieldSchemaName = fieldSchema.getName().toLowerCase();
+
       if (isHiveDynamoDBItemMapType(fieldSchema.getType())) {
         // We don't need column mapping as this column contains full
         // DynamoDB row
+        columnMapping.remove(fieldSchemaName);
         continue;
       }
 
-      String fieldSchemaName = fieldSchema.getName().toLowerCase();
       if (columnMapping.containsKey(fieldSchemaName)) {
         if (columnMapping.get(fieldSchemaName).isEmpty()) {
           throw new MetaException("Invalid column mapping for column: " + fieldSchemaName);
         }
+        columnMapping.remove(fieldSchemaName);
       } else {
         throw new MetaException("Could not find column mapping for column: " + fieldSchemaName);
       }
+    }
+
+    if (!columnMapping.isEmpty()) {
+      StringBuilder exMessage = new StringBuilder("Could not find column(s) for column mapping(s): ");
+      String delim = "";
+      for (String extraMapping : columnMapping.keySet()) {
+        exMessage.append(delim + extraMapping + ":" + columnMapping.get(extraMapping));
+        delim = ",";
+      }
+      throw new MetaException(exMessage.toString());
     }
   }
 

@@ -145,8 +145,8 @@ public final class DynamoDBUtil {
     try {
       int itemSize = 0;
       for (Entry<String, AttributeValue> entry : item.entrySet()) {
-        itemSize += entry.getKey().getBytes(CHARACTER_ENCODING).length;
-        itemSize += getAttributeSizeBytes(entry.getValue());
+        itemSize += entry.getKey() != null ? entry.getKey().getBytes(CHARACTER_ENCODING).length : 0;
+        itemSize += entry.getValue() != null ? getAttributeSizeBytes(entry.getValue()) : 0;
       }
       return itemSize;
     } catch (UnsupportedEncodingException e) {

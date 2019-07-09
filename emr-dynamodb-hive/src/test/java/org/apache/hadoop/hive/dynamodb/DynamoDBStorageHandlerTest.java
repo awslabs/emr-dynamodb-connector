@@ -52,19 +52,42 @@ public class DynamoDBStorageHandlerTest {
 
     Table table = new Table();
     Map<String, String> parameters = Maps.newHashMap();
-    parameters.put(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING, "col1:dynamo_col1$,hashKey:hashKey");
+    parameters.put(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING, "col1:dynamo_col1$,hashMap:hashMap");
     table.setParameters(parameters);
     StorageDescriptor sd = new StorageDescriptor();
     List<FieldSchema> cols = Lists.newArrayList();
     cols.add(new FieldSchema("col1", "string", ""));
     cols.add(new FieldSchema("col2", "tinyint", ""));
-    cols.add(new FieldSchema("col3", "map<string,string>", ""));
-    cols.add(new FieldSchema("hashMap", "string", ""));
+    cols.add(new FieldSchema("col3", "string", ""));
+    cols.add(new FieldSchema("hashMap", "map<string,string>", ""));
     sd.setCols(cols);
     table.setSd(sd);
 
     exceptionRule.expect(MetaException.class);
     exceptionRule.expectMessage("Could not find column mapping for column: col2");
+    storageHandler.checkTableSchemaMapping(description, table);
+  }
+
+  @Test
+  public void testCheckTableSchemaMappingMissingColumnMapping() throws MetaException {
+    TableDescription description = getHashRangeTable();
+
+    Table table = new Table();
+    Map<String, String> parameters = Maps.newHashMap();
+    parameters.put(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING, "col1:dynamo_col1$," +
+	    "col2:dynamo_col2#,hashKey:hashKey,hashMap:hashMap");
+    table.setParameters(parameters);
+    StorageDescriptor sd = new StorageDescriptor();
+    List<FieldSchema> cols = Lists.newArrayList();
+    cols.add(new FieldSchema("col1", "string", ""));
+    cols.add(new FieldSchema("hashMap", "map<string,string>", ""));
+    sd.setCols(cols);
+    table.setSd(sd);
+
+    exceptionRule.expect(MetaException.class);
+    exceptionRule.expectMessage("Could not find column(s) for column mapping(s): ");
+    exceptionRule.expectMessage("col2:dynamo_col2#");
+    exceptionRule.expectMessage("hashkey:hashKey");
     storageHandler.checkTableSchemaMapping(description, table);
   }
 
