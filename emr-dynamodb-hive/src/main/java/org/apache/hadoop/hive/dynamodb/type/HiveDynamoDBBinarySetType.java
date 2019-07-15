@@ -14,7 +14,6 @@
 package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.hadoop.dynamodb.type.DynamoDBBinarySetType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -26,31 +25,21 @@ import java.util.List;
 
 public class HiveDynamoDBBinarySetType extends DynamoDBBinarySetType implements HiveDynamoDBType {
 
-  private final DynamoDBDataParser parser = new DynamoDBDataParser();
-
   @Override
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
-    List<ByteBuffer> values = parser.getByteBuffers(data, objectInspector, getDynamoDBType());
-    if ((values != null) && (!values.isEmpty())) {
-      return new AttributeValue().withBS(values);
-    } else {
-      return null;
-    }
+    List<ByteBuffer> values = DynamoDBDataParser.getByteBuffers(data, objectInspector, getDynamoDBType());
+    return (values == null || values.isEmpty()) ? null : new AttributeValue().withBS(values);
   }
 
   @Override
   public Object getHiveData(AttributeValue data, String hiveType) {
-    if (data == null) {
-      return null;
-    }
-
     List<ByteBuffer> byteBuffers = data.getBS();
 
     if (byteBuffers == null || byteBuffers.isEmpty()) {
       return null;
     }
 
-    List<byte[]> byteArrays = new ArrayList<byte[]>(byteBuffers.size());
+    List<byte[]> byteArrays = new ArrayList<>(byteBuffers.size());
     for (ByteBuffer byteBuffer : byteBuffers) {
       byteArrays.add(Arrays.copyOf(byteBuffer.array(), byteBuffer.array().length));
     }

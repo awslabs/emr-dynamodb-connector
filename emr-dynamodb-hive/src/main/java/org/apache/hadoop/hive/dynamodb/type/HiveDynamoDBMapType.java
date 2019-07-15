@@ -19,11 +19,9 @@ import static org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeUtil.parseMap
 
 public class HiveDynamoDBMapType  extends HiveDynamoDBItemType {
 
-  private final DynamoDBDataParser parser = new DynamoDBDataParser();
-
   @Override
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
-    return parseMap(parser.getMap(data, objectInspector));
+    return parseMap(DynamoDBDataParser.getMap(data, objectInspector));
   }
 
   @Override

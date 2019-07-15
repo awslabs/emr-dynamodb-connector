@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * This class is used to read the DynanmoDB backup format and allow querying individual columns from
+ * This class is used to read the DynamoDB backup format and allow querying individual columns from
  * the schemaless backup.
  */
 public class DynamoDBExportSerDe extends AbstractSerDe {
