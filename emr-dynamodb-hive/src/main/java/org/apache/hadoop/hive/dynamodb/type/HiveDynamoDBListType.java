@@ -13,31 +13,19 @@ package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.type.DynamoDBListType;
+import org.apache.hadoop.hive.dynamodb.DerivedHiveTypeConstants;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeUtil.parseObject;
-
 public class HiveDynamoDBListType extends DynamoDBListType implements HiveDynamoDBType {
-
-  private final DynamoDBDataParser parser = new DynamoDBDataParser();
 
   @Override
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
-    List<Object> values = parser.getListAttribute(data, objectInspector, getDynamoDBType());
-    if ((values != null) && (!values.isEmpty())) {
-      List<AttributeValue> toSet = new ArrayList<AttributeValue>();
-      AttributeValue outer = new AttributeValue();
-      for (Object v : values) {
-        toSet.add(parseObject(v));
-      }
-      return outer.withL(toSet);
-    } else {
-      return null;
-    }
+    List<AttributeValue> values = DynamoDBDataParser.getListAttribute(data, objectInspector);
+    return values == null ? null : new AttributeValue().withL(values);
   }
 
   @Override
@@ -45,7 +33,14 @@ public class HiveDynamoDBListType extends DynamoDBListType implements HiveDynamo
     if (data == null) {
       return null;
     }
-    return data.getL();
+
+    String elementType = DerivedHiveTypeConstants.getArrayElementType(hiveType);
+    HiveDynamoDBType ddType = HiveDynamoDBListTypeFactory.getTypeObjectFromHiveType(elementType);
+    List<Object> values = new ArrayList<>();
+    for (AttributeValue av : data.getL()) {
+      values.add(ddType.getHiveData(av, elementType));
+    }
+    return values;
   }
 
 }

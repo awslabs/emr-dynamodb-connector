@@ -14,7 +14,6 @@
 package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.hadoop.dynamodb.type.DynamoDBNumberSetType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -23,24 +22,15 @@ import java.util.List;
 
 public class HiveDynamoDBNumberSetType extends DynamoDBNumberSetType implements HiveDynamoDBType {
 
-  private final DynamoDBDataParser parser = new DynamoDBDataParser();
-
   @Override
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
-    List<String> values = parser.getSetAttribute(data, objectInspector, getDynamoDBType());
-    if ((values != null) && (!values.isEmpty())) {
-      return new AttributeValue().withNS(values);
-    } else {
-      return null;
-    }
+    List<String> values = DynamoDBDataParser.getSetAttribute(data, objectInspector, getDynamoDBType());
+    return (values == null || values.isEmpty()) ? null : new AttributeValue().withNS(values);
   }
 
   @Override
   public Object getHiveData(AttributeValue data, String hiveType) {
-    if (data == null) {
-      return null;
-    }
-    return parser.getNumberObjectList(data.getNS(), hiveType);
+    return DynamoDBDataParser.getNumberObjectList(data.getNS(), hiveType);
   }
 
 }

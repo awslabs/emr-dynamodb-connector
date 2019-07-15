@@ -14,7 +14,6 @@
 package org.apache.hadoop.hive.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import com.amazonaws.services.dynamodbv2.model.BillingModeSummary;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,7 +25,6 @@ import org.apache.hadoop.hive.dynamodb.shims.SerDeParametersShim;
 import org.apache.hadoop.hive.dynamodb.shims.ShimsLoader;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBItemType;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBType;
-import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
 import org.apache.hadoop.hive.dynamodb.util.HiveDynamoDBUtil;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
@@ -36,6 +34,7 @@ import org.apache.hadoop.hive.serde2.SerDeStats;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobClient;
@@ -53,6 +52,7 @@ public class DynamoDBSerDe extends AbstractSerDe {
   // Hive initializes SerDe multiple times and we need to make sure that the
   // user is warned exactly once
   private static boolean warningPrinted;
+
   private DynamoDBObjectInspector objectInspector;
   private SerDeParametersShim serdeParams;
   private Map<String, String> columnMappings;
@@ -66,10 +66,14 @@ public class DynamoDBSerDe extends AbstractSerDe {
         tbl.getProperty(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING)
     );
     columnNames = serdeParams.getColumnNames();
-    objectInspector = new DynamoDBObjectInspector(serdeParams.getColumnNames(), serdeParams
-        .getColumnTypes(), columnMappings);
+    objectInspector = newObjectInspector(serdeParams.getColumnNames(), serdeParams.getColumnTypes(), columnMappings);
 
     verifyDynamoDBWriteThroughput(conf, tbl);
+  }
+
+  protected DynamoDBObjectInspector newObjectInspector(List<String> columnNames, List<TypeInfo> columnTypes,
+                                                       Map<String,String> columnMappings) {
+    return new DynamoDBObjectInspector(columnNames, columnTypes, columnMappings);
   }
 
   @Override
@@ -91,11 +95,6 @@ public class DynamoDBSerDe extends AbstractSerDe {
     return Text.class;
   }
 
-
-  protected HiveDynamoDBType getTypeObjectFromHiveType(String type) {
-    return HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(type);
-  }
-
   @Override
   public Writable serialize(Object obj, ObjectInspector objInspector) throws SerDeException {
     // Prepare the field ObjectInspectors
@@ -112,8 +111,7 @@ public class DynamoDBSerDe extends AbstractSerDe {
       ObjectInspector fieldObjectInspector = field.getFieldObjectInspector();
 
       // Get the Hive to DynamoDB mapper
-      HiveDynamoDBType ddType =
-          getTypeObjectFromHiveType(fieldObjectInspector.getTypeName());
+      HiveDynamoDBType ddType = objectInspector.getTypeObjectFromHiveType(fieldObjectInspector.getTypeName());
       if (ddType == null) {
         throw new RuntimeException("Unsupported hive type " + fieldObjectInspector.getTypeName()
             + " Object inspector: " + fieldObjectInspector);
@@ -151,8 +149,7 @@ public class DynamoDBSerDe extends AbstractSerDe {
       }
     }
 
-    DynamoDBItemWritable itemWritable = new DynamoDBItemWritable(item);
-    return itemWritable;
+    return new DynamoDBItemWritable(item);
   }
 
   @Override

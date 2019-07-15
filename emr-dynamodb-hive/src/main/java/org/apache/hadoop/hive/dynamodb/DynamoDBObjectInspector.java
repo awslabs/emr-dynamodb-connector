@@ -14,7 +14,6 @@
 package org.apache.hadoop.hive.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBItemType;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBType;
@@ -74,13 +73,17 @@ public class DynamoDBObjectInspector extends StructObjectInspector {
     return getColumnData(fieldRef, rowData);
   }
 
+  protected HiveDynamoDBType getTypeObjectFromHiveType(String type) {
+    return HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(type);
+  }
+
   private Object getColumnData(StructField fieldRef, DynamoDBItemWritable rowData) {
     try {
       /* Get the hive data type for this column. */
       String hiveType = ((DynamoDBField) fieldRef).getType();
 
       /* Get the Hive to DynamoDB type mapper for this column. */
-      HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(hiveType);
+      HiveDynamoDBType ddType = getTypeObjectFromHiveType(hiveType);
 
       if (ddType == null) {
         throw new RuntimeException("Unsupported hive type " + hiveType);
@@ -97,12 +100,12 @@ public class DynamoDBObjectInspector extends StructObjectInspector {
         return ddItemType.buildHiveData(rowData.getItem());
 
       } else {
-        /* User has mapped individual attributes in DyanamoDB to hive. */
+        /* User has mapped individual attributes in DynamoDB to hive. */
         if (rowData.getItem()
             .containsKey(hiveDynamoDBColumnMappings.get(fieldRef.getFieldName()))) {
           AttributeValue fieldValue = rowData.getItem()
               .get(hiveDynamoDBColumnMappings.get(fieldRef.getFieldName()));
-          return ddType.getHiveData(fieldValue, hiveType);
+          return fieldValue == null ? null : ddType.getHiveData(fieldValue, hiveType);
         } else {
           return null;
         }

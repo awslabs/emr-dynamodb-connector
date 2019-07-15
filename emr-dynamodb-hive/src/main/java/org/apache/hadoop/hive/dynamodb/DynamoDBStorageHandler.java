@@ -15,8 +15,6 @@ package org.apache.hadoop.hive.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
-import com.google.common.base.Strings;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -48,6 +46,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputFormat;
+import com.google.common.base.Strings;
 
 import java.util.HashMap;
 import java.util.List;
@@ -305,15 +304,27 @@ public class DynamoDBStorageHandler
     List<FieldSchema> tableSchema = table.getSd().getCols();
 
     for (FieldSchema fieldSchema : tableSchema) {
-      for (AttributeDefinition definition : tableDescription.getAttributeDefinitions()) {
-        validateKeySchema(definition.getAttributeName(), definition.getAttributeType(),
-            fieldSchema);
-      }
-
-      // Check for each field type
-      if (getTypeObjectFromHiveType(fieldSchema.getType()) == null) {
+      String fieldName = fieldSchema.getName();
+      String fieldType = fieldSchema.getType();
+      HiveDynamoDBType ddType;
+      try {
+        ddType = getTypeObjectFromHiveType(fieldType);
+      } catch (IllegalArgumentException e){
         throw new MetaException("The hive type " + fieldSchema.getType() + " is not supported in "
             + "DynamoDB");
+      }
+
+      // validate key schema
+      for (AttributeDefinition definition : tableDescription.getAttributeDefinitions()) {
+        String attributeName = definition.getAttributeName();
+        if (fieldName.equalsIgnoreCase(attributeName)) {
+          String attributeType = definition.getAttributeType();
+          if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(fieldType) ||
+                  (!ddType.getDynamoDBType().equals(attributeType))) {
+            throw new MetaException("The key element " + fieldName + " does not match type. " +
+                    "DynamoDB Type: " + attributeType + " Hive type: " + fieldType);
+          }
+        }
       }
     }
   }
@@ -321,19 +332,6 @@ public class DynamoDBStorageHandler
   private DynamoDBClient createDynamoDBClient(Table table) {
     String region = table.getParameters().get(DynamoDBConstants.REGION);
     return new DynamoDBClient(conf, region);
-  }
-
-  private void validateKeySchema(String attributeName, String attributeType, FieldSchema
-      fieldSchema) throws MetaException {
-    if (fieldSchema.getName().equalsIgnoreCase(attributeName)) {
-      HiveDynamoDBType ddType = getTypeObjectFromHiveType(fieldSchema
-          .getType());
-      if ((ddType == null) || (ddType.equals(HiveDynamoDBTypeFactory.DYNAMODB_ITEM_TYPE))
-          || (!ddType.getDynamoDBType().equals(attributeType))) {
-        throw new MetaException("The key element " + fieldSchema.getName() + " does not match "
-            + "type. DynamoDB Type: " + attributeType + " Hive type: " + fieldSchema.getType());
-      }
-    }
   }
 
   private void checkTableStatus(TableDescription tableDescription) throws MetaException {

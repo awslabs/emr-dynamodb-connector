@@ -21,23 +21,14 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
 public class HiveDynamoDBStringType extends DynamoDBStringType implements HiveDynamoDBType {
 
-  private final DynamoDBDataParser parser = new DynamoDBDataParser();
-
   @Override
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
-    String value = parser.getString(data, objectInspector);
-    if (value != null) {
-      return new AttributeValue(value);
-    } else {
-      return null;
-    }
+    String value = DynamoDBDataParser.getString(data, objectInspector);
+    return value == null ? null : new AttributeValue(value);
   }
 
   @Override
   public Object getHiveData(AttributeValue data, String hiveType) {
-    if (data == null) {
-      return null;
-    }
     return data.getS();
   }
 
