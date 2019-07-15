@@ -12,35 +12,17 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
-import org.apache.hadoop.hive.dynamodb.DerivedHiveTypeConstants;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.serde.serdeConstants;
 
 public class HiveDynamoDBListTypeFactory extends HiveDynamoDBTypeFactory {
 
-  private static final HiveDynamoDBType NUMBER_LIST_TYPE = new HiveDynamoDBListType();
-  private static final HiveDynamoDBType STRING_LIST_TYPE = new HiveDynamoDBListType();
-  private static final HiveDynamoDBType LIST_ITEM_TYPE = new HiveDynamoDBListType();
-  private static final HiveDynamoDBType MAP_TYPE = new HiveDynamoDBMapType();
-
-  private static final Map<String, HiveDynamoDBType> HIVE_TYPE_MAP = new HashMap<>();
-  static {
-    HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.BIGINT_ARRAY_LIST_TYPE_NAME, NUMBER_LIST_TYPE);
-    HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.DOUBLE_ARRAY_LIST_TYPE_NAME, NUMBER_LIST_TYPE);
-    HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.STRING_ARRAY_LIST_TYPE_NAME, STRING_LIST_TYPE);
-    HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.STRING_BIGINT_MAP_TYPE_NAME, MAP_TYPE);
-    HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.LIST_STRING_BIG_INT_MAP_TYPE_NAME, LIST_ITEM_TYPE);
-    HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.LIST_STRING_BIG_DOUBLE_MAP_TYPE_NAME, LIST_ITEM_TYPE);
-    HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.LIST_ITEM_MAP_TYPE_NAME, LIST_ITEM_TYPE);
-  }
+  private static final HiveDynamoDBType LIST_TYPE = new HiveDynamoDBListType();
 
   public static HiveDynamoDBType getTypeObjectFromHiveType(String hiveType) {
-    HiveDynamoDBType aType = HIVE_TYPE_MAP.get(hiveType.toLowerCase());
-    if (aType != null) {
-      return aType;
+    if (StringUtils.startsWithIgnoreCase(hiveType, serdeConstants.LIST_TYPE_NAME)) {
+      return LIST_TYPE;
     }
-    return HiveDynamoDBTypeFactory
-      .getTypeObjectFromHiveType(hiveType.toLowerCase());
+    return HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(hiveType.toLowerCase());
   }
 }

@@ -26,18 +26,11 @@ public class HiveDynamoDBStringType extends DynamoDBStringType implements HiveDy
   @Override
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
     String value = parser.getString(data, objectInspector);
-    if (value != null) {
-      return new AttributeValue(value);
-    } else {
-      return null;
-    }
+    return value == null ? null : new AttributeValue(value);
   }
 
   @Override
   public Object getHiveData(AttributeValue data, String hiveType) {
-    if (data == null) {
-      return null;
-    }
     return data.getS();
   }
 

@@ -13,43 +13,32 @@
 
 package org.apache.hadoop.hive.dynamodb;
 
-import org.apache.hadoop.hive.serde.Constants;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.serde.serdeConstants;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class DerivedHiveTypeConstants {
 
-  public static final String BIGINT_ARRAY_TYPE_NAME = Constants.LIST_TYPE_NAME + "<" + Constants
-      .BIGINT_TYPE_NAME + ">";
+  private static final List<Character> COLLECTION_TYPE_DELIMITERS = Arrays.asList('<', '>');
+  private static final char MAP_KEY_VALUE_TYPE_DELIMITER = ',';
 
-  public static final String DOUBLE_ARRAY_TYPE_NAME = Constants.LIST_TYPE_NAME + "<" + Constants
-      .DOUBLE_TYPE_NAME + ">";
-
-  public static final String STRING_ARRAY_TYPE_NAME = Constants.LIST_TYPE_NAME + "<" + Constants
-      .STRING_TYPE_NAME + ">";
-
-  public static final String BINARY_ARRAY_TYPE_NAME = Constants.LIST_TYPE_NAME + "<" + Constants
-      .BINARY_TYPE_NAME + ">";
+  public static final String BIGINT_ARRAY_TYPE_NAME = setArrayElementType(serdeConstants.BIGINT_TYPE_NAME);
+  public static final String DOUBLE_ARRAY_TYPE_NAME = setArrayElementType(serdeConstants.DOUBLE_TYPE_NAME);
+  public static final String STRING_ARRAY_TYPE_NAME = setArrayElementType(serdeConstants.STRING_TYPE_NAME);
+  public static final String BINARY_ARRAY_TYPE_NAME = setArrayElementType(serdeConstants.BINARY_TYPE_NAME);
 
   /* A map<string, string> map. */
-  public static final String ITEM_MAP_TYPE_NAME = Constants.MAP_TYPE_NAME + "<" + Constants
-      .STRING_TYPE_NAME + "," + Constants.STRING_TYPE_NAME + ">";
+  public static final String ITEM_MAP_TYPE_NAME = setMapKeyValueTypes(serdeConstants.STRING_TYPE_NAME,
+          serdeConstants.STRING_TYPE_NAME);
 
-  public static final String STRING_BIGINT_MAP_TYPE_NAME = Constants.MAP_TYPE_NAME + "<" + Constants.STRING_TYPE_NAME
-    + "," + Constants.BIGINT_TYPE_NAME + ">";
-  public static final String STRING_DOUBLE_MAP_TYPE_NAME = Constants.MAP_TYPE_NAME + "<" + Constants.STRING_TYPE_NAME
-    + "," + Constants.DOUBLE_TYPE_NAME + ">";
+  private static String setArrayElementType(String elementType) {
+    return serdeConstants.LIST_TYPE_NAME + StringUtils.join(COLLECTION_TYPE_DELIMITERS, elementType);
+  }
 
-  public static final String BIGINT_ARRAY_LIST_TYPE_NAME = Constants.LIST_TYPE_NAME + "<" + Constants
-    .BIGINT_TYPE_NAME + ">";
-  public static final String DOUBLE_ARRAY_LIST_TYPE_NAME = Constants.LIST_TYPE_NAME + "<" + Constants
-    .DOUBLE_TYPE_NAME + ">";
-  public static final String STRING_ARRAY_LIST_TYPE_NAME = Constants.LIST_TYPE_NAME + "<" + Constants
-    .STRING_TYPE_NAME + ">";
-
-
-  public static final String LIST_ITEM_MAP_TYPE_NAME = Constants.LIST_TYPE_NAME + "<" +
-    ITEM_MAP_TYPE_NAME + ">";
-  public static final String LIST_STRING_BIG_INT_MAP_TYPE_NAME = Constants.LIST_TYPE_NAME + "<" +
-    STRING_BIGINT_MAP_TYPE_NAME + ">";
-  public static final String LIST_STRING_BIG_DOUBLE_MAP_TYPE_NAME = Constants.LIST_TYPE_NAME + "<" +
-    STRING_DOUBLE_MAP_TYPE_NAME + ">";
+  private static String setMapKeyValueTypes(String... types) {
+    return serdeConstants.MAP_TYPE_NAME + StringUtils.join(COLLECTION_TYPE_DELIMITERS,
+            StringUtils.join(types, MAP_KEY_VALUE_TYPE_DELIMITER));
+  }
 }
