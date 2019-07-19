@@ -19,7 +19,7 @@ import org.apache.hadoop.hive.serde.serdeConstants;
 import java.util.Arrays;
 import java.util.List;
 
-public class DerivedHiveTypeConstants {
+public final class DerivedHiveTypeConstants {
 
   private static final List<Character> COLLECTION_TYPE_DELIMITERS = Arrays.asList('<', '>');
   private static final char MAP_KEY_VALUE_TYPE_DELIMITER = ',';
@@ -29,6 +29,10 @@ public class DerivedHiveTypeConstants {
   public static final String STRING_ARRAY_TYPE_NAME = setArrayElementType(serdeConstants.STRING_TYPE_NAME);
   public static final String BINARY_ARRAY_TYPE_NAME = setArrayElementType(serdeConstants.BINARY_TYPE_NAME);
 
+  private DerivedHiveTypeConstants() {
+    throw new UnsupportedOperationException();
+  }
+
   /* A map<string, string> map. */
   public static final String ITEM_MAP_TYPE_NAME = setMapKeyValueTypes(serdeConstants.STRING_TYPE_NAME,
           serdeConstants.STRING_TYPE_NAME);
@@ -37,12 +41,13 @@ public class DerivedHiveTypeConstants {
     return serdeConstants.LIST_TYPE_NAME + StringUtils.join(COLLECTION_TYPE_DELIMITERS, elementType);
   }
 
-  private static String setMapKeyValueTypes(String... types) {
+  public static String setMapKeyValueTypes(String... types) {
     return serdeConstants.MAP_TYPE_NAME + StringUtils.join(COLLECTION_TYPE_DELIMITERS,
             StringUtils.join(types, MAP_KEY_VALUE_TYPE_DELIMITER));
   }
 
-  public static String getArrayElementType(String hiveType) {
-    return hiveType.substring(hiveType.indexOf(COLLECTION_TYPE_DELIMITERS.get(0)) + 1, hiveType.length() - 1);
+  public static String getMapKeyType(String hiveType) {
+    return hiveType.substring(hiveType.indexOf(COLLECTION_TYPE_DELIMITERS.get(0)) + 1,
+            hiveType.indexOf(MAP_KEY_VALUE_TYPE_DELIMITER));
   }
 }

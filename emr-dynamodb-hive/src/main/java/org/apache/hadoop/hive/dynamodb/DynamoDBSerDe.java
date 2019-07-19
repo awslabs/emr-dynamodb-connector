@@ -25,6 +25,7 @@ import org.apache.hadoop.hive.dynamodb.shims.SerDeParametersShim;
 import org.apache.hadoop.hive.dynamodb.shims.ShimsLoader;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBItemType;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBType;
+import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
 import org.apache.hadoop.hive.dynamodb.util.HiveDynamoDBUtil;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
@@ -109,16 +110,13 @@ public class DynamoDBSerDe extends AbstractSerDe {
       StructField field = fields.get(i);
       Object data = rowData.get(i);
       ObjectInspector fieldObjectInspector = field.getFieldObjectInspector();
+      String hiveType = fieldObjectInspector.getTypeName();
 
       // Get the Hive to DynamoDB mapper
-      HiveDynamoDBType ddType = objectInspector.getTypeObjectFromHiveType(fieldObjectInspector.getTypeName());
-      if (ddType == null) {
-        throw new RuntimeException("Unsupported hive type " + fieldObjectInspector.getTypeName()
-            + " Object inspector: " + fieldObjectInspector);
-      }
+      HiveDynamoDBType ddType = objectInspector.getTypeObjectFromHiveType(hiveType);
 
       // Check if this column maps a DynamoDB item.
-      if (ddType instanceof HiveDynamoDBItemType) {
+      if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(hiveType)) {
         HiveDynamoDBItemType ddItemType = (HiveDynamoDBItemType) ddType;
         Map<String, AttributeValue> backupItem = ddItemType.parseDynamoDBData(data,
             fieldObjectInspector);
@@ -129,11 +127,9 @@ public class DynamoDBSerDe extends AbstractSerDe {
         // when there is a full backup column and attribute mapped
         // columns.
         for (Map.Entry<String, AttributeValue> entry : backupItem.entrySet()) {
-          if (!item.containsKey(entry.getKey())) {
+          if (!columnMappings.containsValue(entry.getKey())) {
             item.put(entry.getKey(), entry.getValue());
           }
-        }
-        for (String key : backupItem.keySet()) {
         }
       } else {
         // User has mapped individual attribute in DynamoDB to

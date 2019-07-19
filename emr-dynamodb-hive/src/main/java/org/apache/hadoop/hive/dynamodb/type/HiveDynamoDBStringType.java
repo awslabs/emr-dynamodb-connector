@@ -14,7 +14,6 @@
 package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.hadoop.dynamodb.type.DynamoDBStringType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -28,7 +27,7 @@ public class HiveDynamoDBStringType extends DynamoDBStringType implements HiveDy
   }
 
   @Override
-  public Object getHiveData(AttributeValue data, String hiveType) {
+  public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
     return data.getS();
   }
 

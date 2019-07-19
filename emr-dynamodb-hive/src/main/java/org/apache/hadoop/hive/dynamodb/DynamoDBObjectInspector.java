@@ -85,12 +85,8 @@ public class DynamoDBObjectInspector extends StructObjectInspector {
       /* Get the Hive to DynamoDB type mapper for this column. */
       HiveDynamoDBType ddType = getTypeObjectFromHiveType(hiveType);
 
-      if (ddType == null) {
-        throw new RuntimeException("Unsupported hive type " + hiveType);
-      }
-
       /* See if column is of hive map<string,string> type. */
-      if (ddType instanceof HiveDynamoDBItemType) {
+      if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(hiveType)) {
         /*
          * User has mapped a DynamoDB item to a single hive column of
          * type map<string,string>.
@@ -103,9 +99,10 @@ public class DynamoDBObjectInspector extends StructObjectInspector {
         /* User has mapped individual attributes in DynamoDB to hive. */
         if (rowData.getItem()
             .containsKey(hiveDynamoDBColumnMappings.get(fieldRef.getFieldName()))) {
+          ObjectInspector objectInspector = fieldRef.getFieldObjectInspector();
           AttributeValue fieldValue = rowData.getItem()
               .get(hiveDynamoDBColumnMappings.get(fieldRef.getFieldName()));
-          return fieldValue == null ? null : ddType.getHiveData(fieldValue, hiveType);
+          return fieldValue == null ? null : ddType.getHiveData(fieldValue, objectInspector);
         } else {
           return null;
         }

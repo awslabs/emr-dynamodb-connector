@@ -13,11 +13,7 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.dynamodb.key.DynamoDBKey;
 import org.apache.hadoop.dynamodb.type.DynamoDBItemType;
@@ -27,6 +23,8 @@ import org.apache.hadoop.hive.serde2.objectinspector.MapObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -38,7 +36,7 @@ public class HiveDynamoDBItemType implements DynamoDBItemType, HiveDynamoDBType 
   private static final Type TYPE = new TypeToken<AttributeValue>() {}.getType();
 
   @Override
-  public Object getHiveData(AttributeValue data, String hiveType) {
+  public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
     throw new UnsupportedOperationException("DynamoDBItemType does not support this operation.");
   }
 
@@ -114,7 +112,7 @@ public class HiveDynamoDBItemType implements DynamoDBItemType, HiveDynamoDBType 
           + fieldObjectInspector.getTypeName() + " Object inspector: " + fieldObjectInspector);
     }
 
-    Map<String, AttributeValue> item = new HashMap<String, AttributeValue>();
+    Map<String, AttributeValue> item = new HashMap<>();
 
     /* map is of type <String, String> */
     MapObjectInspector mapOI = (MapObjectInspector) fieldObjectInspector;

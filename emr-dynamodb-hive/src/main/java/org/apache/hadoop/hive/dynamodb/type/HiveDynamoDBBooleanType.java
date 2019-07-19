@@ -14,7 +14,7 @@ public class HiveDynamoDBBooleanType extends DynamoDBBooleanType implements Hive
   }
 
   @Override
-  public Object getHiveData(AttributeValue data, String hiveType) {
+  public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
     return data.getBOOL();
   }
 }
