@@ -302,6 +302,7 @@ public class DynamoDBStorageHandler
   public void checkTableSchemaType(TableDescription tableDescription, Table table) throws
       MetaException {
     List<FieldSchema> tableSchema = table.getSd().getCols();
+    boolean hasItemMapType = false;
 
     for (FieldSchema fieldSchema : tableSchema) {
       String fieldName = fieldSchema.getName();
@@ -312,6 +313,14 @@ public class DynamoDBStorageHandler
       } catch (IllegalArgumentException e){
         throw new MetaException("The hive type " + fieldSchema.getType() + " is not supported in "
             + "DynamoDB");
+      }
+
+      // make sure only one column has item map type
+      if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(fieldType)) {
+        if (hasItemMapType) {
+          throw new MetaException("Only one column can be mapped to item map type " + fieldType);
+        }
+        hasItemMapType = true;
       }
 
       // validate key schema

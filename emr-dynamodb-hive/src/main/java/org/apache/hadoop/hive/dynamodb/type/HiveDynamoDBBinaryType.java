@@ -29,7 +29,7 @@ public class HiveDynamoDBBinaryType extends DynamoDBBinaryType implements HiveDy
   }
 
   @Override
-  public Object getHiveData(AttributeValue data, String hiveType) {
+  public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
     return data.getB() == null ? null : data.getB().array();
   }
 }

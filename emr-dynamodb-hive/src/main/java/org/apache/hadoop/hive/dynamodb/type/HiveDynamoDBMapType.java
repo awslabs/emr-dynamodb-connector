@@ -12,24 +12,23 @@
 package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import org.apache.hadoop.dynamodb.type.DynamoDBMapType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
-import static org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeUtil.parseMap;
+import java.util.Map;
 
-public class HiveDynamoDBMapType  extends HiveDynamoDBItemType {
+public class HiveDynamoDBMapType extends DynamoDBMapType implements HiveDynamoDBType {
 
   @Override
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
-    return parseMap(DynamoDBDataParser.getMap(data, objectInspector));
+    Map<String, AttributeValue> values = DynamoDBDataParser.getMapAttribute(data, objectInspector);
+    return values == null ? null : new AttributeValue().withM(values);
   }
 
   @Override
-  public Object getHiveData(AttributeValue data, String hiveType) {
-    if (data == null) {
-      return null;
-    }
-    return data.getM();
+  public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
+    return data.getM() == null ? null : DynamoDBDataParser.getMapObject(data.getM(), objectInspector);
   }
 
 }

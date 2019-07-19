@@ -14,13 +14,12 @@
 package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.hadoop.dynamodb.type.DynamoDBType;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
 public interface HiveDynamoDBType extends DynamoDBType {
 
-  Object getHiveData(AttributeValue data, String hiveType);
+  Object getHiveData(AttributeValue data, ObjectInspector objectInspector);
 
   AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector);
 

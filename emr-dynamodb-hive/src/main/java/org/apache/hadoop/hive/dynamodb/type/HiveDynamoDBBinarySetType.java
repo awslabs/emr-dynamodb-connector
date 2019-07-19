@@ -32,7 +32,7 @@ public class HiveDynamoDBBinarySetType extends DynamoDBBinarySetType implements 
   }
 
   @Override
-  public Object getHiveData(AttributeValue data, String hiveType) {
+  public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
     List<ByteBuffer> byteBuffers = data.getBS();
 
     if (byteBuffers == null || byteBuffers.isEmpty()) {

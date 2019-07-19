@@ -55,7 +55,7 @@ public class HiveDynamoDBTypeFactory extends DynamoDBTypeFactory {
   public static HiveDynamoDBType getTypeObjectFromHiveType(String hiveType) {
     if (isHiveDynamoDBItemMapType(hiveType)) {
       return DYNAMODB_ITEM_TYPE;
-    } else if (StringUtils.startsWithIgnoreCase(hiveType, serdeConstants.MAP_TYPE_NAME)) {
+    } else if (isSupportedMapType(hiveType)) {
       return MAP_TYPE;
     } else if (HIVE_TYPE_MAP.containsKey(hiveType.toLowerCase())) {
       return HIVE_TYPE_MAP.get(hiveType.toLowerCase());
@@ -71,6 +71,11 @@ public class HiveDynamoDBTypeFactory extends DynamoDBTypeFactory {
    */
   public static boolean isHiveDynamoDBItemMapType(String hiveType) {
     return DerivedHiveTypeConstants.ITEM_MAP_TYPE_NAME.equalsIgnoreCase(hiveType);
+  }
 
+  // DynamoDB only supports maps & items with string keys
+  private static boolean isSupportedMapType(String hiveType) {
+    return StringUtils.startsWithIgnoreCase(hiveType, serdeConstants.MAP_TYPE_NAME) &&
+            DerivedHiveTypeConstants.getMapKeyType(hiveType).equalsIgnoreCase(serdeConstants.STRING_TYPE_NAME);
   }
 }

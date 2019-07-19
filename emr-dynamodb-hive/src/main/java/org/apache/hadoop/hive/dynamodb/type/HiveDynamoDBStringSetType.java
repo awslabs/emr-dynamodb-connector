@@ -29,7 +29,7 @@ public class HiveDynamoDBStringSetType extends DynamoDBStringSetType implements 
   }
 
   @Override
-  public Object getHiveData(AttributeValue data, String hiveType) {
+  public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
     return data.getSS();
   }
 
