@@ -26,7 +26,7 @@ import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 
 import org.apache.hadoop.dynamodb.DynamoDBClient;
-import org.apache.hadoop.dynamodb.DynamoDBConstants;
+import org.apache.hadoop.dynamodb.constants.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;

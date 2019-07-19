@@ -13,9 +13,8 @@
 
 package org.apache.hadoop.dynamodb;
 
-import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEM_SIZE;
+import static org.apache.hadoop.dynamodb.constants.DynamoDBConstants.DEFAULT_MAX_ITEM_SIZE;
 
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -28,6 +27,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.dynamodb.constants.DynamoDBConstants;
 import org.hamcrest.core.Is;
 import org.junit.Assert;
 import org.junit.Before;

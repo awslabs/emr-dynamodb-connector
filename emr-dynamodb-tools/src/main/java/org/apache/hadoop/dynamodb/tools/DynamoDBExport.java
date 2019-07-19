@@ -20,7 +20,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
-import org.apache.hadoop.dynamodb.DynamoDBConstants;
+import org.apache.hadoop.dynamodb.constants.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.dynamodb.exportformat.ExportManifestOutputFormat;
 import org.apache.hadoop.dynamodb.read.DynamoDBInputFormat;

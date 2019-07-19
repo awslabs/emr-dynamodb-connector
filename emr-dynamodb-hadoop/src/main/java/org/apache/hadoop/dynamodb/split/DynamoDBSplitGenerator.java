@@ -15,7 +15,7 @@ package org.apache.hadoop.dynamodb.split;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.dynamodb.DynamoDBConstants;
+import org.apache.hadoop.dynamodb.constants.DynamoDBConstants;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;

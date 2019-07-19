@@ -13,8 +13,9 @@
 
 package org.apache.hadoop.dynamodb;
 
-import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES;
+import static org.apache.hadoop.dynamodb.constants.DynamoDBConstants.DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES;
 
+import org.apache.hadoop.dynamodb.constants.DynamoDBConstants;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;

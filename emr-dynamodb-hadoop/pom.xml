@@ -17,7 +17,10 @@
     <description>EMR DynamoDB Hadoop Connector</description>
 
     <dependencies>
-
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sts</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>

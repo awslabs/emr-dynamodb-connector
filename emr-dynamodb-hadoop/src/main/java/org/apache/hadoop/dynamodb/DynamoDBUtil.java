@@ -13,8 +13,8 @@
 
 package org.apache.hadoop.dynamodb;
 
-import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEMS_PER_BATCH;
-import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_ITEMS_PER_BATCH;
+import static org.apache.hadoop.dynamodb.constants.DynamoDBConstants.DEFAULT_MAX_ITEMS_PER_BATCH;
+import static org.apache.hadoop.dynamodb.constants.DynamoDBConstants.MAX_ITEMS_PER_BATCH;
 
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
@@ -37,6 +37,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.dynamodb.constants.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.util.ClusterTopologyNodeCapacityProvider;
 import org.apache.hadoop.dynamodb.util.NodeCapacityProvider;
 import org.apache.hadoop.dynamodb.util.RoundRobinYarnContainerAllocator;

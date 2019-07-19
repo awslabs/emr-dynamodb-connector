@@ -16,7 +16,7 @@ package org.apache.hadoop.dynamodb.preader;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.hadoop.dynamodb.DynamoDBConstants;
+import org.apache.hadoop.dynamodb.constants.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.util.MockTimeSource;
 import org.junit.Before;
 import org.junit.Test;

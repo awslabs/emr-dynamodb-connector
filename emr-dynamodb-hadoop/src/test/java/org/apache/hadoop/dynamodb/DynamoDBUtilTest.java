@@ -13,7 +13,7 @@
 
 package org.apache.hadoop.dynamodb;
 
-import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEMS_PER_BATCH;
+import static org.apache.hadoop.dynamodb.constants.DynamoDBConstants.DEFAULT_MAX_ITEMS_PER_BATCH;
 import static org.apache.hadoop.dynamodb.DynamoDBUtil.getBoundedBatchLimit;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -31,6 +31,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.util.EC2MetadataUtils;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.dynamodb.constants.DynamoDBConstants;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,7 +40,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

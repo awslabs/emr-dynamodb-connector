@@ -16,7 +16,7 @@ package org.apache.hadoop.dynamodb.read;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
-import org.apache.hadoop.dynamodb.DynamoDBConstants;
+import org.apache.hadoop.dynamodb.constants.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.dynamodb.preader.DynamoDBRecordReaderContext;
 import org.apache.hadoop.dynamodb.split.DynamoDBSplitGenerator;

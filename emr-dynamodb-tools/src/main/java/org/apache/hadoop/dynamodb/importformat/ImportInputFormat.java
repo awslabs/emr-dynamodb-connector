@@ -19,7 +19,7 @@ import com.google.gson.stream.JsonReader;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.dynamodb.DynamoDBConstants;
+import org.apache.hadoop.dynamodb.constants.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.dynamodb.exportformat.ExportManifestEntry;

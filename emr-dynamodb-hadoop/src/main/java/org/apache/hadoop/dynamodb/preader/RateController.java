@@ -15,7 +15,7 @@ package org.apache.hadoop.dynamodb.preader;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.dynamodb.DynamoDBConstants;
+import org.apache.hadoop.dynamodb.constants.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.util.AbstractTimeSource;
 
 public class RateController {
