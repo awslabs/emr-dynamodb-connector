@@ -56,7 +56,7 @@ public class AWSSTSAssumeRoleSessionCredentialsProvider
                 break;
 
             case DynamoDBCredentialType.DYNAMODB_CREDENTIALS:
-                getStsTypeforDynamoDB(dynamoDBaccessKey, dynamoDBSecretKey);
+                sts = getStsTypeforDynamoDB(dynamoDBaccessKey, dynamoDBSecretKey);
                 break;
 
             case DynamoDBCredentialType.INSTANCE_PROFILE:
