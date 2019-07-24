@@ -40,8 +40,8 @@ public class AWSSTSAssumeRoleSessionCredentialsProvider
         String sessionName = configuration.get(SESSION_NAME_CONF);
         String accessKey = configuration.get(DEFAULT_ACCESS_KEY_CONF);
         String secretKey = configuration.get(DEFAULT_SECRET_KEY_CONF);
-        String dynamoDBaccessKey = configuration.get(DEFAULT_ACCESS_KEY_CONF);
-        String dynamoDBSecretKey = configuration.get(DEFAULT_SECRET_KEY_CONF);
+        String dynamoDBaccessKey = configuration.get(DYNAMODB_ACCESS_KEY_CONF);
+        String dynamoDBSecretKey = configuration.get(DYNAMODB_SECRET_KEY_CONF);
         String credentialType = configuration.get(DYNAMODB_CREDENTIAL_TYPE);
 
         if (roleArn == null || roleArn.isEmpty() || sessionName == null || sessionName.isEmpty() || credentialType == null || credentialType.isEmpty()) {
