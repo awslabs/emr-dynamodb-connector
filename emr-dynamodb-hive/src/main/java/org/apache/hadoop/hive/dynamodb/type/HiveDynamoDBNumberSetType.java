@@ -17,6 +17,8 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.type.DynamoDBNumberSetType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
 import java.util.List;
 
@@ -26,6 +28,18 @@ public class HiveDynamoDBNumberSetType extends DynamoDBNumberSetType implements 
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
     List<String> values = DynamoDBDataParser.getSetAttribute(data, objectInspector, getDynamoDBType());
     return (values == null || values.isEmpty()) ? null : new AttributeValue().withNS(values);
+  }
+
+  @Override
+  public TypeInfo getSupportedHiveType() {
+    throw new UnsupportedOperationException(getClass().toString() + "does not support this operation.");
+  }
+
+  @Override
+  public boolean supportsHiveType(TypeInfo typeInfo) {
+    return typeInfo.equals(TypeInfoFactory.getListTypeInfo(TypeInfoFactory.doubleTypeInfo)) ||
+        typeInfo.equals(TypeInfoFactory.getListTypeInfo(TypeInfoFactory.longTypeInfo));
+
   }
 
   @Override

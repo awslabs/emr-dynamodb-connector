@@ -54,9 +54,7 @@ public class DynamoDBObjectInspector extends StructObjectInspector {
 
     // Constructing struct field list for each column
     for (int i = 0; i < columnNames.size(); i++) {
-      DynamoDBField field = new DynamoDBField(i, columnNames.get(i).toLowerCase(), TypeInfoUtils
-          .getStandardJavaObjectInspectorFromTypeInfo(columnTypes.get(i)), columnTypes.get(i)
-          .getTypeName());
+      DynamoDBField field = new DynamoDBField(i, columnNames.get(i).toLowerCase(), columnTypes.get(i));
       structFields.add(field);
       columnNameStructFieldMap.put(columnNames.get(i), field);
     }
@@ -73,20 +71,20 @@ public class DynamoDBObjectInspector extends StructObjectInspector {
     return getColumnData(fieldRef, rowData);
   }
 
-  protected HiveDynamoDBType getTypeObjectFromHiveType(String type) {
-    return HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(type);
+  protected HiveDynamoDBType getTypeObjectFromHiveType(ObjectInspector objectInspector) {
+    return HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(objectInspector);
   }
 
   private Object getColumnData(StructField fieldRef, DynamoDBItemWritable rowData) {
     try {
       /* Get the hive data type for this column. */
-      String hiveType = ((DynamoDBField) fieldRef).getType();
+      ObjectInspector fieldOI = fieldRef.getFieldObjectInspector();
 
       /* Get the Hive to DynamoDB type mapper for this column. */
-      HiveDynamoDBType ddType = getTypeObjectFromHiveType(hiveType);
+      HiveDynamoDBType ddType = getTypeObjectFromHiveType(fieldOI);
 
       /* See if column is of hive map<string,string> type. */
-      if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(hiveType)) {
+      if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(fieldOI.getTypeName())) {
         /*
          * User has mapped a DynamoDB item to a single hive column of
          * type map<string,string>.
@@ -99,10 +97,9 @@ public class DynamoDBObjectInspector extends StructObjectInspector {
         /* User has mapped individual attributes in DynamoDB to hive. */
         if (rowData.getItem()
             .containsKey(hiveDynamoDBColumnMappings.get(fieldRef.getFieldName()))) {
-          ObjectInspector objectInspector = fieldRef.getFieldObjectInspector();
           AttributeValue fieldValue = rowData.getItem()
               .get(hiveDynamoDBColumnMappings.get(fieldRef.getFieldName()));
-          return fieldValue == null ? null : ddType.getHiveData(fieldValue, objectInspector);
+          return fieldValue == null ? null : ddType.getHiveData(fieldValue, fieldOI);
         } else {
           return null;
         }
@@ -145,13 +142,12 @@ public class DynamoDBObjectInspector extends StructObjectInspector {
     private final ObjectInspector objectInspector;
     private final String type;
 
-    public DynamoDBField(int fieldID, String fieldName, ObjectInspector objectInspector, String
-        fieldType) {
+    public DynamoDBField(int fieldID, String fieldName, TypeInfo typeInfo) {
       super();
       this.fieldID = fieldID;
       this.fieldName = fieldName;
-      this.objectInspector = objectInspector;
-      this.type = fieldType;
+      this.objectInspector = TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(typeInfo);
+      this.type = typeInfo.getTypeName();
     }
 
     @Override

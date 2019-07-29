@@ -17,13 +17,24 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.type.DynamoDBStringType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
 public class HiveDynamoDBStringType extends DynamoDBStringType implements HiveDynamoDBType {
-
   @Override
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
     String value = DynamoDBDataParser.getString(data, objectInspector);
     return value == null ? null : new AttributeValue(value);
+  }
+
+  @Override
+  public TypeInfo getSupportedHiveType() {
+    return TypeInfoFactory.stringTypeInfo;
+  }
+
+  @Override
+  public boolean supportsHiveType(TypeInfo typeInfo) {
+    return typeInfo.equals(getSupportedHiveType());
   }
 
   @Override

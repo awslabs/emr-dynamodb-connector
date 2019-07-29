@@ -17,6 +17,8 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.type.DynamoDBNumberType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
 public class HiveDynamoDBNumberType extends DynamoDBNumberType implements HiveDynamoDBType {
 
@@ -24,6 +26,16 @@ public class HiveDynamoDBNumberType extends DynamoDBNumberType implements HiveDy
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
     String value = DynamoDBDataParser.getNumber(data, objectInspector);
     return value == null ? null : new AttributeValue().withN(value);
+  }
+
+  @Override
+  public TypeInfo getSupportedHiveType() {
+    throw new UnsupportedOperationException(getClass().toString() + "does not support this operation.");
+  }
+
+  @Override
+  public boolean supportsHiveType(TypeInfo typeInfo) {
+    return typeInfo.equals(TypeInfoFactory.doubleTypeInfo) || typeInfo.equals(TypeInfoFactory.longTypeInfo);
   }
 
   @Override
