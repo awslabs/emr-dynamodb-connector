@@ -75,7 +75,7 @@ public class DynamoDBDataParser {
     Map<String, AttributeValue> itemMap = new HashMap<>();
     StringObjectInspector mapKeyOI = (StringObjectInspector) mapOI.getMapKeyObjectInspector();
     ObjectInspector mapValueOI = mapOI.getMapValueObjectInspector();
-    HiveDynamoDBType valueType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(mapValueOI.getTypeName());
+    HiveDynamoDBType valueType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(mapValueOI);
 
     // borrowed from HiveDynamoDBItemType
     for (Map.Entry<?,?> entry : dataMap.entrySet()) {
@@ -95,8 +95,7 @@ public class DynamoDBDataParser {
     }
 
     ObjectInspector itemObjectInspector = listObjectInspector.getListElementObjectInspector();
-    HiveDynamoDBType itemType = HiveDynamoDBListTypeFactory
-            .getTypeObjectFromHiveType(itemObjectInspector.getTypeName());
+    HiveDynamoDBType itemType = HiveDynamoDBListTypeFactory.getTypeObjectFromHiveType(itemObjectInspector);
     List<AttributeValue> itemList = new ArrayList<>();
     for (Object dataItem : dataList) {
       if (dataItem == null) {
@@ -194,13 +193,12 @@ public class DynamoDBDataParser {
 
   public static Object getListObject(List<AttributeValue> data, ObjectInspector objectInspector) {
     ListObjectInspector listOI = (ListObjectInspector) objectInspector;
-    ObjectInspector itemOI = listOI.getListElementObjectInspector();
-    HiveDynamoDBType itemType = HiveDynamoDBListTypeFactory
-            .getTypeObjectFromHiveType(itemOI.getTypeName());
+    ObjectInspector elementOI = listOI.getListElementObjectInspector();
+    HiveDynamoDBType elementType = HiveDynamoDBListTypeFactory.getTypeObjectFromHiveType(elementOI);
 
     List<Object> values = new ArrayList<>();
     for (AttributeValue av : data) {
-      values.add(itemType.getHiveData(av, itemOI));
+      values.add(elementType.getHiveData(av, elementOI));
     }
 
     return values;
@@ -209,7 +207,7 @@ public class DynamoDBDataParser {
   public static Object getMapObject(Map<String, AttributeValue> data, ObjectInspector objectInspector) {
     MapObjectInspector mapOI = (MapObjectInspector) objectInspector;
     ObjectInspector mapValueOI = mapOI.getMapValueObjectInspector();
-    HiveDynamoDBType valueType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(mapValueOI.getTypeName());
+    HiveDynamoDBType valueType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(mapValueOI);
 
     Map<String, Object> values = new HashMap<>();
     for (Map.Entry<String, AttributeValue> entry : data.entrySet()) {

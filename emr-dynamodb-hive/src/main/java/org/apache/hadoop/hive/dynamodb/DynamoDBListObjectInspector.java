@@ -2,6 +2,7 @@ package org.apache.hadoop.hive.dynamodb;
 
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBListTypeFactory;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBType;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 
 import java.util.List;
@@ -15,7 +16,7 @@ public class DynamoDBListObjectInspector extends DynamoDBObjectInspector {
   }
 
   @Override
-  protected HiveDynamoDBType getTypeObjectFromHiveType(String type) {
-    return HiveDynamoDBListTypeFactory.getTypeObjectFromHiveType(type);
+  protected HiveDynamoDBType getTypeObjectFromHiveType(ObjectInspector objectInspector) {
+    return HiveDynamoDBListTypeFactory.getTypeObjectFromHiveType(objectInspector);
   }
 }

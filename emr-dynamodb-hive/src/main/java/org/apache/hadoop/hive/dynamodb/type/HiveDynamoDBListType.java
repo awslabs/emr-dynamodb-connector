@@ -15,6 +15,8 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.type.DynamoDBListType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 
 import java.util.List;
 
@@ -24,6 +26,26 @@ public class HiveDynamoDBListType extends DynamoDBListType implements HiveDynamo
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
     List<AttributeValue> values = DynamoDBDataParser.getListAttribute(data, objectInspector);
     return values == null ? null : new AttributeValue().withL(values);
+  }
+
+  @Override
+  public TypeInfo getSupportedHiveType() {
+    throw new UnsupportedOperationException(getClass().toString() + " does not support this operation.");
+  }
+
+  @Override
+  public boolean supportsHiveType(TypeInfo typeInfo) {
+    if (typeInfo.getCategory() != ObjectInspector.Category.LIST) {
+      return false;
+    }
+
+    TypeInfo elementTypeInfo = ((ListTypeInfo) typeInfo).getListElementTypeInfo();
+    try {
+      HiveDynamoDBListTypeFactory.getTypeObjectFromHiveType(elementTypeInfo);
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
+    return true;
   }
 
   @Override

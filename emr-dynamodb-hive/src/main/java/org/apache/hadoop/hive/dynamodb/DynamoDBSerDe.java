@@ -110,13 +110,12 @@ public class DynamoDBSerDe extends AbstractSerDe {
       StructField field = fields.get(i);
       Object data = rowData.get(i);
       ObjectInspector fieldObjectInspector = field.getFieldObjectInspector();
-      String hiveType = fieldObjectInspector.getTypeName();
 
       // Get the Hive to DynamoDB mapper
-      HiveDynamoDBType ddType = objectInspector.getTypeObjectFromHiveType(hiveType);
+      HiveDynamoDBType ddType = objectInspector.getTypeObjectFromHiveType(fieldObjectInspector);
 
       // Check if this column maps a DynamoDB item.
-      if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(hiveType)) {
+      if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(fieldObjectInspector)) {
         HiveDynamoDBItemType ddItemType = (HiveDynamoDBItemType) ddType;
         Map<String, AttributeValue> backupItem = ddItemType.parseDynamoDBData(data,
             fieldObjectInspector);
