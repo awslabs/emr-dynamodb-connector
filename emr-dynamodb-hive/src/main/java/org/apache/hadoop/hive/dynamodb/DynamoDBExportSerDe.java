@@ -60,8 +60,10 @@ public class DynamoDBExportSerDe extends AbstractSerDe {
     String specifiedColumnMapping = tbl.getProperty(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING);
 
     for (TypeInfo type : serdeParams.getColumnTypes()) {
-      if (HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(type.getTypeName()) == null) {
-        throw new SerDeException("Unsupported type: " + type.getTypeName());
+      try {
+        HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(type);
+      } catch (IllegalArgumentException e) {
+        throw new SerDeException("Unsupported Hive type: " + type.getTypeName());
       }
     }
 

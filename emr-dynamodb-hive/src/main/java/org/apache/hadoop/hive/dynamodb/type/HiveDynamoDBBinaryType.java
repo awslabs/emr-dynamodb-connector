@@ -17,6 +17,8 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.type.DynamoDBBinaryType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
 import java.nio.ByteBuffer;
 
@@ -26,6 +28,16 @@ public class HiveDynamoDBBinaryType extends DynamoDBBinaryType implements HiveDy
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
     ByteBuffer value = DynamoDBDataParser.getByteBuffer(data, objectInspector);
     return new AttributeValue().withB(value);
+  }
+
+  @Override
+  public TypeInfo getSupportedHiveType() {
+    return TypeInfoFactory.binaryTypeInfo;
+  }
+
+  @Override
+  public boolean supportsHiveType(TypeInfo typeInfo) {
+    return typeInfo.equals(getSupportedHiveType());
   }
 
   @Override

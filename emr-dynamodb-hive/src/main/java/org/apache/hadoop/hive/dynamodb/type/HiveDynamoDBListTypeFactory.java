@@ -12,17 +12,26 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 
 public class HiveDynamoDBListTypeFactory extends HiveDynamoDBTypeFactory {
 
   private static final HiveDynamoDBType LIST_TYPE = new HiveDynamoDBListType();
 
   public static HiveDynamoDBType getTypeObjectFromHiveType(String hiveType) {
-    if (StringUtils.startsWithIgnoreCase(hiveType, serdeConstants.LIST_TYPE_NAME)) {
+    return getTypeObjectFromHiveType(TypeInfoUtils.getTypeInfoFromTypeString(hiveType));
+  }
+
+  public static HiveDynamoDBType getTypeObjectFromHiveType(ObjectInspector objectInspector) {
+    return getTypeObjectFromHiveType(TypeInfoUtils.getTypeInfoFromObjectInspector(objectInspector));
+  }
+
+  public static HiveDynamoDBType getTypeObjectFromHiveType(TypeInfo typeInfo) {
+    if (LIST_TYPE.supportsHiveType(typeInfo)) {
       return LIST_TYPE;
     }
-    return HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(hiveType.toLowerCase());
+    return HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(typeInfo);
   }
 }

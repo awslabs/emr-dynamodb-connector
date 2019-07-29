@@ -13,54 +13,65 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.dynamodb.type.DynamoDBTypeFactory;
-import org.apache.hadoop.hive.dynamodb.DerivedHiveTypeConstants;
-import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class HiveDynamoDBTypeFactory extends DynamoDBTypeFactory {
-  /* Hive Map type encapsulates a DynamoDB item */
 
+  /* Hive Map type encapsulates a DynamoDB item */
   private static final HiveDynamoDBType DYNAMODB_ITEM_TYPE = new HiveDynamoDBItemType();
 
-  private static final HiveDynamoDBType STRING_TYPE = new HiveDynamoDBStringType();
-  private static final HiveDynamoDBType NUMBER_TYPE = new HiveDynamoDBNumberType();
-  private static final HiveDynamoDBType BINARY_TYPE = new HiveDynamoDBBinaryType();
-  private static final HiveDynamoDBType BOOLEAN_TYPE = new HiveDynamoDBBooleanType();
+  private static final Set<HiveDynamoDBType> HIVE_DYNAMODB_TYPES = Sets.newHashSet(
+          new HiveDynamoDBStringType(),
+          new HiveDynamoDBBinaryType(),
+          new HiveDynamoDBNumberType(),
+          new HiveDynamoDBBooleanType(),
 
-  private static final HiveDynamoDBType NUMBER_SET_TYPE = new HiveDynamoDBNumberSetType();
-  private static final HiveDynamoDBType STRING_SET_TYPE = new HiveDynamoDBStringSetType();
-  private static final HiveDynamoDBType BINARY_SET_TYPE = new HiveDynamoDBBinarySetType();
+          new HiveDynamoDBStringSetType(),
+          new HiveDynamoDBBinarySetType(),
+          new HiveDynamoDBNumberSetType(),
 
-  private static final HiveDynamoDBType MAP_TYPE = new HiveDynamoDBMapType();
+          new HiveDynamoDBItemType(),
+          new HiveDynamoDBMapType()
+  );
 
-  private static final Map<String, HiveDynamoDBType> HIVE_TYPE_MAP = new HashMap<>();
-
+  private static final Map<TypeInfo, HiveDynamoDBType> SIMPLE_HIVE_DYNAMODB_TYPES_MAP = Maps.newHashMap();
+  private static final Set<HiveDynamoDBType> COMPLEX_HIVE_DYNAMODB_TYPES_SET = Sets.newHashSet();
   static {
-    HIVE_TYPE_MAP.put(serdeConstants.STRING_TYPE_NAME, STRING_TYPE);
-    HIVE_TYPE_MAP.put(serdeConstants.DOUBLE_TYPE_NAME, NUMBER_TYPE);
-    HIVE_TYPE_MAP.put(serdeConstants.BIGINT_TYPE_NAME, NUMBER_TYPE);
-    HIVE_TYPE_MAP.put(serdeConstants.BINARY_TYPE_NAME, BINARY_TYPE);
-    HIVE_TYPE_MAP.put(serdeConstants.BOOLEAN_TYPE_NAME, BOOLEAN_TYPE);
-
-    HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.BIGINT_ARRAY_TYPE_NAME, NUMBER_SET_TYPE);
-    HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.DOUBLE_ARRAY_TYPE_NAME, NUMBER_SET_TYPE);
-    HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.STRING_ARRAY_TYPE_NAME, STRING_SET_TYPE);
-    HIVE_TYPE_MAP.put(DerivedHiveTypeConstants.BINARY_ARRAY_TYPE_NAME, BINARY_SET_TYPE);
+    for (HiveDynamoDBType type : HIVE_DYNAMODB_TYPES) {
+      try {
+        SIMPLE_HIVE_DYNAMODB_TYPES_MAP.put(type.getSupportedHiveType(), type);
+      } catch (UnsupportedOperationException e) {
+        COMPLEX_HIVE_DYNAMODB_TYPES_SET.add(type);
+      }
+    }
   }
 
   public static HiveDynamoDBType getTypeObjectFromHiveType(String hiveType) {
-    if (isHiveDynamoDBItemMapType(hiveType)) {
-      return DYNAMODB_ITEM_TYPE;
-    } else if (isSupportedMapType(hiveType)) {
-      return MAP_TYPE;
-    } else if (HIVE_TYPE_MAP.containsKey(hiveType.toLowerCase())) {
-      return HIVE_TYPE_MAP.get(hiveType.toLowerCase());
+    return getTypeObjectFromHiveType(TypeInfoUtils.getTypeInfoFromTypeString(hiveType));
+  }
+
+  public static HiveDynamoDBType getTypeObjectFromHiveType(ObjectInspector objectInspector) {
+    return getTypeObjectFromHiveType(TypeInfoUtils.getTypeInfoFromObjectInspector(objectInspector));
+  }
+
+  public static HiveDynamoDBType getTypeObjectFromHiveType(TypeInfo typeInfo) {
+    if (SIMPLE_HIVE_DYNAMODB_TYPES_MAP.containsKey(typeInfo)) {
+      return SIMPLE_HIVE_DYNAMODB_TYPES_MAP.get(typeInfo);
     }
-    throw new IllegalArgumentException("Unsupported Hive type: " + hiveType);
+    for (HiveDynamoDBType type : COMPLEX_HIVE_DYNAMODB_TYPES_SET) {
+      if (type.supportsHiveType(typeInfo)) {
+        return type;
+      }
+    }
+    throw new IllegalArgumentException("Unsupported Hive type: " + typeInfo.getTypeName());
   }
 
   /**
@@ -70,12 +81,10 @@ public class HiveDynamoDBTypeFactory extends DynamoDBTypeFactory {
    * @return {@code true} if the provided hiveType is a map type, {@code false} otherwise
    */
   public static boolean isHiveDynamoDBItemMapType(String hiveType) {
-    return DerivedHiveTypeConstants.ITEM_MAP_TYPE_NAME.equalsIgnoreCase(hiveType);
+    return DYNAMODB_ITEM_TYPE.supportsHiveType(TypeInfoUtils.getTypeInfoFromTypeString(hiveType));
   }
 
-  // DynamoDB only supports maps & items with string keys
-  private static boolean isSupportedMapType(String hiveType) {
-    return StringUtils.startsWithIgnoreCase(hiveType, serdeConstants.MAP_TYPE_NAME) &&
-            DerivedHiveTypeConstants.getMapKeyType(hiveType).equalsIgnoreCase(serdeConstants.STRING_TYPE_NAME);
+  public static boolean isHiveDynamoDBItemMapType(ObjectInspector objectInspector) {
+    return DYNAMODB_ITEM_TYPE.supportsHiveType(TypeInfoUtils.getTypeInfoFromObjectInspector(objectInspector));
   }
 }

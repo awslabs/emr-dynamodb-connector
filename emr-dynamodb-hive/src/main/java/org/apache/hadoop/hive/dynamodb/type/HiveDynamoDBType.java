@@ -16,6 +16,7 @@ package org.apache.hadoop.hive.dynamodb.type;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.type.DynamoDBType;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 
 public interface HiveDynamoDBType extends DynamoDBType {
 
@@ -23,4 +24,7 @@ public interface HiveDynamoDBType extends DynamoDBType {
 
   AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector);
 
+  TypeInfo getSupportedHiveType();
+
+  boolean supportsHiveType(TypeInfo typeInfo);
 }

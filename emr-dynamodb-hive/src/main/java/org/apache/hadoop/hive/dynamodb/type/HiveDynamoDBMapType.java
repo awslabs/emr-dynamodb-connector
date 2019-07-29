@@ -15,6 +15,9 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.type.DynamoDBMapType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
 import java.util.Map;
 
@@ -24,6 +27,31 @@ public class HiveDynamoDBMapType extends DynamoDBMapType implements HiveDynamoDB
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
     Map<String, AttributeValue> values = DynamoDBDataParser.getMapAttribute(data, objectInspector);
     return values == null ? null : new AttributeValue().withM(values);
+  }
+
+  @Override
+  public TypeInfo getSupportedHiveType() {
+    throw new UnsupportedOperationException(getClass().toString() + "does not support this operation.");
+  }
+
+  @Override
+  public boolean supportsHiveType(TypeInfo typeInfo) {
+    if (typeInfo.getCategory() != ObjectInspector.Category.MAP) {
+      return false;
+    }
+
+    MapTypeInfo mapTypeInfo = (MapTypeInfo) typeInfo;
+    if (!mapTypeInfo.getMapKeyTypeInfo().equals(TypeInfoFactory.stringTypeInfo)) {
+      return false;
+    }
+
+    TypeInfo valueTypeInfo = mapTypeInfo.getMapValueTypeInfo();
+    try {
+      HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(valueTypeInfo);
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
+    return true;
   }
 
   @Override
