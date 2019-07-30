@@ -175,11 +175,40 @@ public class DynamoDBStorageHandlerTest {
     storageHandler.checkTableSchemaType(description, table);
   }
 
+  @Test
+  public void testCheckListTableSchemaTypeValid() throws MetaException {
+    TableDescription description = getHashRangeTable();
+
+    Table table = new Table();
+    Map<String, String> parameters = Maps.newHashMap();
+    parameters.put(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING, "col1:dynamo_col1$," +
+            "col2:dynamo_col2#,col3:dynamo_col3#,col4:dynamo_col4#,col5:dynamo_col5#," +
+            "col6:dynamo_col6#,col7:dynamo_col7#,hashKey:hashKey");
+    table.setParameters(parameters);
+    StorageDescriptor sd = new StorageDescriptor();
+    List<FieldSchema> cols = Lists.newArrayList();
+    cols.add(new FieldSchema("col1", "map<string,bigint>", ""));
+    cols.add(new FieldSchema("col2", "array<map<string,bigint>>", ""));
+    cols.add(new FieldSchema("col3", "array<map<string,double>>", ""));
+    cols.add(new FieldSchema("col4", "array<map<string,string>>", ""));
+    cols.add(new FieldSchema("col5", "array<bigint>", ""));
+    cols.add(new FieldSchema("col6", "array<double>", ""));
+    cols.add(new FieldSchema("col7", "array<string>", ""));
+    cols.add(new FieldSchema("hashKey", "string", ""));
+    sd.setCols(cols);
+    table.setSd(sd);
+    // This check is expected to pass for the given input
+    storageHandler.checkTableSchemaType(description, table);
+  }
+
   private TableDescription getHashRangeTable() {
-    TableDescription description = new TableDescription().withKeySchema(Arrays.asList(new
-        KeySchemaElement().withAttributeName("hashKey"), new KeySchemaElement().withAttributeName
-        ("rangeKey"))).withAttributeDefinitions(Arrays.asList(new AttributeDefinition("hashKey",
-        ScalarAttributeType.S), new AttributeDefinition("rangeKey", ScalarAttributeType.N)));
+    TableDescription description = new TableDescription().withKeySchema(Arrays.asList(
+            new KeySchemaElement().withAttributeName("hashKey"),
+            new KeySchemaElement().withAttributeName("rangeKey"))
+    ).withAttributeDefinitions(Arrays.asList(
+            new AttributeDefinition("hashKey", ScalarAttributeType.S),
+            new AttributeDefinition("rangeKey", ScalarAttributeType.N))
+    );
     return description;
   }
 }
