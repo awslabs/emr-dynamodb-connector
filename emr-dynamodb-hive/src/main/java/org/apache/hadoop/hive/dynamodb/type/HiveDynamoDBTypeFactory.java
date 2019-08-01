@@ -28,24 +28,28 @@ public class HiveDynamoDBTypeFactory extends DynamoDBTypeFactory {
   /* Hive Map type encapsulates a DynamoDB item */
   private static final HiveDynamoDBType DYNAMODB_ITEM_TYPE = new HiveDynamoDBItemType();
 
-  private static final Set<HiveDynamoDBType> HIVE_DYNAMODB_TYPES = Sets.newHashSet(
+  private static final Set<HiveDynamoDBType> DEFAULT_HIVE_DYNAMODB_TYPES = Sets.newHashSet(
           new HiveDynamoDBStringType(),
           new HiveDynamoDBBinaryType(),
           new HiveDynamoDBNumberType(),
           new HiveDynamoDBBooleanType(),
 
-          new HiveDynamoDBStringSetType(),
-          new HiveDynamoDBBinarySetType(),
-          new HiveDynamoDBNumberSetType(),
+          new HiveDynamoDBListType(),
 
           new HiveDynamoDBItemType(),
           new HiveDynamoDBMapType()
   );
 
+  private static final Set<HiveDynamoDBType> ALTERNATE_HIVE_DYNAMODB_TYPES = Sets.newHashSet(
+          new HiveDynamoDBStringSetType(),
+          new HiveDynamoDBBinarySetType(),
+          new HiveDynamoDBNumberSetType()
+  );
+
   private static final Map<TypeInfo, HiveDynamoDBType> SIMPLE_HIVE_DYNAMODB_TYPES_MAP = Maps.newHashMap();
   private static final Set<HiveDynamoDBType> COMPLEX_HIVE_DYNAMODB_TYPES_SET = Sets.newHashSet();
   static {
-    for (HiveDynamoDBType type : HIVE_DYNAMODB_TYPES) {
+    for (HiveDynamoDBType type : DEFAULT_HIVE_DYNAMODB_TYPES) {
       try {
         SIMPLE_HIVE_DYNAMODB_TYPES_MAP.put(type.getSupportedHiveType(), type);
       } catch (UnsupportedOperationException e) {

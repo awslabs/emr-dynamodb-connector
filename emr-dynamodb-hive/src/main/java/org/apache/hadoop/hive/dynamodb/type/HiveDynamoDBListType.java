@@ -41,7 +41,7 @@ public class HiveDynamoDBListType extends DynamoDBListType implements HiveDynamo
 
     TypeInfo elementTypeInfo = ((ListTypeInfo) typeInfo).getListElementTypeInfo();
     try {
-      HiveDynamoDBListTypeFactory.getTypeObjectFromHiveType(elementTypeInfo);
+      HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(elementTypeInfo);
     } catch (IllegalArgumentException e) {
       return false;
     }

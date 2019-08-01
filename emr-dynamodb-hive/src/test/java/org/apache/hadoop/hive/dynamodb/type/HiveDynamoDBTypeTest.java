@@ -226,7 +226,7 @@ public class HiveDynamoDBTypeTest {
     avList.add(new AttributeValue().withN(STRING_LIST.get(0)));
     AttributeValue av = new AttributeValue().withL(avList);
 
-    HiveDynamoDBType ddType = HiveDynamoDBListTypeFactory.getTypeObjectFromHiveType(STRING_LIST_OBJECT_INSPECTOR);
+    HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(STRING_LIST_OBJECT_INSPECTOR);
     List<String> expectedStringList = Lists.newArrayList(STRING_LIST.get(0), null);
     Object actualList = ddType.getHiveData(av, STRING_LIST_OBJECT_INSPECTOR);
     assertEquals(expectedStringList, actualList);
