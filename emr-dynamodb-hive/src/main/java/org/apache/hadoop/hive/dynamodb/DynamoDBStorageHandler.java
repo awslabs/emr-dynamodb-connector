@@ -254,14 +254,6 @@ public class DynamoDBStorageHandler
     configureTableJobProperties(tableDesc, jobProperties);
   }
 
-  protected boolean isHiveDynamoDBItemMapType(String type) {
-    return HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(type);
-  }
-
-  protected HiveDynamoDBType getTypeObjectFromHiveType(String type) {
-    return HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(type);
-  }
-
   void checkTableSchemaMapping(TableDescription tableDescription, Table table) throws
       MetaException {
     String mapping = table.getParameters().get(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING);
@@ -271,7 +263,7 @@ public class DynamoDBStorageHandler
     for (FieldSchema fieldSchema : tableSchema) {
       String fieldSchemaName = fieldSchema.getName().toLowerCase();
 
-      if (isHiveDynamoDBItemMapType(fieldSchema.getType())) {
+      if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(fieldSchema.getType())) {
         // We don't need column mapping as this column contains full
         // DynamoDB row
         columnMapping.remove(fieldSchemaName);
@@ -299,7 +291,7 @@ public class DynamoDBStorageHandler
     }
   }
 
-  public void checkTableSchemaType(TableDescription tableDescription, Table table) throws
+  void checkTableSchemaType(TableDescription tableDescription, Table table) throws
       MetaException {
     List<FieldSchema> tableSchema = table.getSd().getCols();
     boolean hasItemMapType = false;
@@ -309,7 +301,7 @@ public class DynamoDBStorageHandler
       String fieldType = fieldSchema.getType();
       HiveDynamoDBType ddType;
       try {
-        ddType = getTypeObjectFromHiveType(fieldType);
+        ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(fieldType);
       } catch (IllegalArgumentException e){
         throw new MetaException("The hive type " + fieldSchema.getType() + " is not supported in "
             + "DynamoDB");

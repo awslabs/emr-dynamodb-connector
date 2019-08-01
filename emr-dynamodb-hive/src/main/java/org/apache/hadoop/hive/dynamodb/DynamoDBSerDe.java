@@ -67,14 +67,10 @@ public class DynamoDBSerDe extends AbstractSerDe {
         tbl.getProperty(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING)
     );
     columnNames = serdeParams.getColumnNames();
-    objectInspector = newObjectInspector(serdeParams.getColumnNames(), serdeParams.getColumnTypes(), columnMappings);
+    objectInspector = new DynamoDBObjectInspector(serdeParams.getColumnNames(), serdeParams.getColumnTypes(),
+            columnMappings);
 
     verifyDynamoDBWriteThroughput(conf, tbl);
-  }
-
-  protected DynamoDBObjectInspector newObjectInspector(List<String> columnNames, List<TypeInfo> columnTypes,
-                                                       Map<String,String> columnMappings) {
-    return new DynamoDBObjectInspector(columnNames, columnTypes, columnMappings);
   }
 
   @Override
@@ -112,7 +108,7 @@ public class DynamoDBSerDe extends AbstractSerDe {
       ObjectInspector fieldObjectInspector = field.getFieldObjectInspector();
 
       // Get the Hive to DynamoDB mapper
-      HiveDynamoDBType ddType = objectInspector.getTypeObjectFromHiveType(fieldObjectInspector);
+      HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(fieldObjectInspector);
 
       // Check if this column maps a DynamoDB item.
       if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(fieldObjectInspector)) {

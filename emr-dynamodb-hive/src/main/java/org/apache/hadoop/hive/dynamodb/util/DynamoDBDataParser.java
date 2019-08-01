@@ -16,7 +16,6 @@ package org.apache.hadoop.hive.dynamodb.util;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBListTypeFactory;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBType;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
 import org.apache.hadoop.hive.serde.serdeConstants;
@@ -95,7 +94,7 @@ public class DynamoDBDataParser {
     }
 
     ObjectInspector itemObjectInspector = listObjectInspector.getListElementObjectInspector();
-    HiveDynamoDBType itemType = HiveDynamoDBListTypeFactory.getTypeObjectFromHiveType(itemObjectInspector);
+    HiveDynamoDBType itemType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(itemObjectInspector);
     List<AttributeValue> itemList = new ArrayList<>();
     for (Object dataItem : dataList) {
       if (dataItem == null) {
@@ -194,7 +193,7 @@ public class DynamoDBDataParser {
   public static Object getListObject(List<AttributeValue> data, ObjectInspector objectInspector) {
     ListObjectInspector listOI = (ListObjectInspector) objectInspector;
     ObjectInspector elementOI = listOI.getListElementObjectInspector();
-    HiveDynamoDBType elementType = HiveDynamoDBListTypeFactory.getTypeObjectFromHiveType(elementOI);
+    HiveDynamoDBType elementType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(elementOI);
 
     List<Object> values = new ArrayList<>();
     for (AttributeValue av : data) {

@@ -30,7 +30,7 @@ public class HiveDynamoDBNumberType extends DynamoDBNumberType implements HiveDy
 
   @Override
   public TypeInfo getSupportedHiveType() {
-    throw new UnsupportedOperationException(getClass().toString() + "does not support this operation.");
+    throw new UnsupportedOperationException(getClass().toString() + " does not support this operation.");
   }
 
   @Override

@@ -32,7 +32,7 @@ public class HiveDynamoDBNumberSetType extends DynamoDBNumberSetType implements 
 
   @Override
   public TypeInfo getSupportedHiveType() {
-    throw new UnsupportedOperationException(getClass().toString() + "does not support this operation.");
+    throw new UnsupportedOperationException(getClass().toString() + " does not support this operation.");
   }
 
   @Override
