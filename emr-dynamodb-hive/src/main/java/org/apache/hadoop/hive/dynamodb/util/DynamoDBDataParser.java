@@ -23,6 +23,8 @@ import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.MapObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.StructField;
+import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.BinaryObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.BooleanObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.DoubleObjectInspector;
@@ -65,23 +67,45 @@ public class DynamoDBDataParser {
   }
 
   public static Map<String, AttributeValue> getMapAttribute(Object data, ObjectInspector objectInspector) {
-    MapObjectInspector mapOI = (MapObjectInspector) objectInspector;
-    Map<?, ?> dataMap = mapOI.getMap(data);
-
-    if (dataMap == null) {
-      return null;
-    }
-
     Map<String, AttributeValue> itemMap = new HashMap<>();
-    StringObjectInspector mapKeyOI = (StringObjectInspector) mapOI.getMapKeyObjectInspector();
-    ObjectInspector mapValueOI = mapOI.getMapValueObjectInspector();
-    HiveDynamoDBType valueType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(mapValueOI);
+    switch (objectInspector.getCategory()) {
+      case MAP:
+        MapObjectInspector mapOI = (MapObjectInspector) objectInspector;
+        Map<?, ?> dataMap = mapOI.getMap(data);
 
-    // borrowed from HiveDynamoDBItemType
-    for (Map.Entry<?,?> entry : dataMap.entrySet()) {
-      String attributeName = mapKeyOI.getPrimitiveJavaObject(entry.getKey());
-      AttributeValue attributeValue = valueType.getDynamoDBData(entry.getValue(), mapValueOI);
-      itemMap.put(attributeName, attributeValue);
+        if (dataMap == null) {
+          return null;
+        }
+
+        StringObjectInspector mapKeyOI = (StringObjectInspector) mapOI.getMapKeyObjectInspector();
+        ObjectInspector mapValueOI = mapOI.getMapValueObjectInspector();
+        HiveDynamoDBType valueType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(mapValueOI);
+
+        // borrowed from HiveDynamoDBItemType
+        for (Map.Entry<?, ?> entry : dataMap.entrySet()) {
+          String attributeName = mapKeyOI.getPrimitiveJavaObject(entry.getKey());
+          AttributeValue attributeValue = valueType.getDynamoDBData(entry.getValue(), mapValueOI);
+          itemMap.put(attributeName, attributeValue);
+        }
+
+        break;
+      case STRUCT:
+        StructObjectInspector structOI = (StructObjectInspector) objectInspector;
+        List<? extends StructField> fields = structOI.getAllStructFieldRefs();
+
+        for (StructField field : fields) {
+          Object fieldData = structOI.getStructFieldData(data, field);
+          ObjectInspector fieldOI = field.getFieldObjectInspector();
+          HiveDynamoDBType fieldType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(fieldOI);
+
+          String attributeName = field.getFieldName();
+          AttributeValue attributeValue = fieldType.getDynamoDBData(fieldData, fieldOI);
+          itemMap.put(attributeName, attributeValue);
+        }
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown object inspector type: " + objectInspector.getCategory()
+            + " Type name: " + objectInspector.getTypeName());
     }
     return itemMap;
   }
@@ -215,5 +239,29 @@ public class DynamoDBDataParser {
     }
 
     return values;
+  }
+
+  public static Object getStructObject(Map<String, AttributeValue> data, ObjectInspector objectInspector) {
+    StructObjectInspector structOI = (StructObjectInspector) objectInspector;
+    List<? extends StructField> structFields = structOI.getAllStructFieldRefs();
+
+    List<Object> values = new ArrayList<>();
+    for (StructField field : structFields) {
+      values.add(getStructFieldObject(data, field));
+    }
+
+    return values;
+  }
+
+  private static Object getStructFieldObject(Map<String, AttributeValue> data, StructField field) {
+    String fieldName = field.getFieldName();
+    ObjectInspector fieldOI = field.getFieldObjectInspector();
+    HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(fieldOI);
+    for (Map.Entry<String, AttributeValue> entry : data.entrySet()) {
+      if (entry.getKey().equalsIgnoreCase(fieldName)) {
+        return ddType.getHiveData(entry.getValue(), fieldOI);
+      }
+    }
+    throw new NullPointerException("Field name not found in map: " + fieldName);
   }
 }

@@ -43,13 +43,19 @@ public class DynamoDBObjectInspectorTest {
   private static final TypeInfo LIST_MAP_TYPE_INFO = TypeInfoFactory.getMapTypeInfo(STRING_TYPE_INFO,
       STRING_LIST_TYPE_INFO);
 
+  private static final List<String> PRIMITIVE_FIELDS = Lists.newArrayList("animal", "height", "weight", "endangered");
+  private static final List<TypeInfo> PRIMITIVE_TYPE_INFOS = Lists.newArrayList(STRING_TYPE_INFO,
+      DOUBLE_TYPE_INFO, LONG_TYPE_INFO, BOOLEAN_TYPE_INFO);
+  private static final List<String> PRIMITIVE_STRING_DATA = Lists.newArrayList("giraffe", "5.5", "1360", "true");
+  private static final TypeInfo PRIMITIVE_STRUCT_TYPE_INFO = TypeInfoFactory
+      .getStructTypeInfo(PRIMITIVE_FIELDS, PRIMITIVE_TYPE_INFOS);
+
   @Test
   public void testPrimitives() {
-    List<String> attributeNames = Lists.newArrayList("animal", "height", "weight", "endangered");
-    List<TypeInfo> colTypeInfos = Lists.newArrayList(STRING_TYPE_INFO, DOUBLE_TYPE_INFO, LONG_TYPE_INFO,
-        BOOLEAN_TYPE_INFO);
+    List<String> attributeNames = PRIMITIVE_FIELDS;
+    List<TypeInfo> colTypeInfos = PRIMITIVE_TYPE_INFOS;
 
-    List<String> data = Lists.newArrayList("giraffe", "5.5", "1360", "true");
+    List<String> data = PRIMITIVE_STRING_DATA;
 
     List<Object> expectedRowData = Lists.newArrayList();
     expectedRowData.add(data.get(0));
@@ -151,18 +157,51 @@ public class DynamoDBObjectInspectorTest {
   }
 
   @Test
+  public void testStruct() {
+    List<String> attributeNames = Lists.newArrayList("struct", "data");
+    List<TypeInfo> colTypeInfos = Lists.newArrayList(STRING_TYPE_INFO, PRIMITIVE_STRUCT_TYPE_INFO);
+
+    String struct = "animal";
+    List<String> data = PRIMITIVE_STRING_DATA;
+
+    List<Object> structData = Lists.newArrayList();
+    structData.add(data.get(0));
+    structData.add(Double.parseDouble(data.get(1)));
+    structData.add(Long.parseLong(data.get(2)));
+    structData.add(Boolean.valueOf(data.get(3)));
+
+    List<Object> expectedRowData = Lists.newArrayList();
+    expectedRowData.add(struct);
+    expectedRowData.add(structData);
+
+    Map<String, AttributeValue> dataAV = Maps.newHashMap();
+    dataAV.put(PRIMITIVE_FIELDS.get(0), new AttributeValue(data.get(0)));
+    dataAV.put(PRIMITIVE_FIELDS.get(1), new AttributeValue().withN(data.get(1)));
+    dataAV.put(PRIMITIVE_FIELDS.get(2), new AttributeValue().withN(data.get(2)));
+    dataAV.put(PRIMITIVE_FIELDS.get(3), new AttributeValue().withBOOL(Boolean.valueOf(data.get(3))));
+
+    Map<String, AttributeValue> itemMap = Maps.newHashMap();
+    itemMap.put(attributeNames.get(0), new AttributeValue(struct));
+    itemMap.put(attributeNames.get(1), new AttributeValue().withM(dataAV));
+
+    List<Object> actualRowData = getDeserializedRow(attributeNames, colTypeInfos, itemMap);
+
+    assertEquals(expectedRowData, actualRowData);
+  }
+
+  @Test
   public void testItem() {
     List<String> colNames = Lists.newArrayList("ddbitem");
     List<TypeInfo> colTypeInfos = Lists.newArrayList(STRING_MAP_TYPE_INFO);
 
-    List<String> attributeNames = Lists.newArrayList("animal", "height", "weight", "endangered");
+    List<String> attributeNames = PRIMITIVE_FIELDS;
     List<String> attributeTypes = DynamoDBTestUtils.toAttributeValueFieldFormatList(
         DynamoDBTypeConstants.STRING,
         DynamoDBTypeConstants.NUMBER,
         DynamoDBTypeConstants.NUMBER,
         DynamoDBTypeConstants.BOOLEAN
     );
-    List<String> data = Lists.newArrayList("giraffe", "5.5", "1360", "true");
+    List<String> data = PRIMITIVE_STRING_DATA;
     Map<String, String> colItemMap = Maps.newHashMap();
     for (int i = 0; i < attributeNames.size(); i++) {
       String type = attributeTypes.get(i);

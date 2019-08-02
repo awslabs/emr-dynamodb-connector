@@ -225,6 +225,27 @@ public class HiveDynamoDBTypeTest {
   }
 
   @Test
+  public void testStruct() {
+    List<Object> struct = Lists.newArrayList((Object) STRING_LIST.get(0), LONG_LIST.get(1), TEST_DOUBLE);
+    Map<String, AttributeValue> structAVMap = new HashMap<>();
+    structAVMap.put(STRING_LIST.get(0), new AttributeValue(STRING_LIST.get(0)));
+    structAVMap.put(STRING_LIST.get(1), new AttributeValue().withN(Long.toString(LONG_LIST.get(1))));
+    structAVMap.put(STRING_LIST.get(2), new AttributeValue().withN(Double.toString(TEST_DOUBLE)));
+    List<String> structFieldNames = STRING_LIST.subList(0, 3);
+    List<ObjectInspector> structFieldOIs = Lists.newArrayList(STRING_OBJECT_INSPECTOR, LONG_OBJECT_INSPECTOR,
+            DOUBLE_OBJECT_INSPECTOR);
+    ObjectInspector structObjectInspector = ObjectInspectorFactory
+            .getStandardStructObjectInspector(structFieldNames, structFieldOIs);
+
+    HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(structObjectInspector);
+    AttributeValue expectedAV = new AttributeValue().withM(structAVMap);
+    AttributeValue actualAV = ddType.getDynamoDBData(struct, structObjectInspector);
+    assertEquals(expectedAV, actualAV);
+    Object actualStruct = ddType.getHiveData(actualAV, structObjectInspector);
+    assertEquals(struct, actualStruct);
+  }
+
+  @Test
   public void testMultipleTypeList() {
     List<AttributeValue> avList = new ArrayList<>();
     avList.add(new AttributeValue(STRING_LIST.get(0)));

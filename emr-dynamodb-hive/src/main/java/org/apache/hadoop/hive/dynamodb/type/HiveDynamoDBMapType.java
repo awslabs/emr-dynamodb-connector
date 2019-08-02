@@ -16,6 +16,7 @@ import org.apache.hadoop.dynamodb.type.DynamoDBMapType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
@@ -36,27 +37,47 @@ public class HiveDynamoDBMapType extends DynamoDBMapType implements HiveDynamoDB
 
   @Override
   public boolean supportsHiveType(TypeInfo typeInfo) {
-    if (typeInfo.getCategory() != ObjectInspector.Category.MAP) {
-      return false;
-    }
-
-    MapTypeInfo mapTypeInfo = (MapTypeInfo) typeInfo;
-    if (!mapTypeInfo.getMapKeyTypeInfo().equals(TypeInfoFactory.stringTypeInfo)) {
-      return false;
-    }
-
-    TypeInfo valueTypeInfo = mapTypeInfo.getMapValueTypeInfo();
     try {
-      HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(valueTypeInfo);
+      switch (typeInfo.getCategory()) {
+        case MAP:
+          MapTypeInfo mapTypeInfo = (MapTypeInfo) typeInfo;
+          if (!mapTypeInfo.getMapKeyTypeInfo().equals(TypeInfoFactory.stringTypeInfo)) {
+            return false;
+          }
+
+          TypeInfo valueTypeInfo = mapTypeInfo.getMapValueTypeInfo();
+          HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(valueTypeInfo);
+          return true;
+
+        case STRUCT:
+          StructTypeInfo structTypeInfo = (StructTypeInfo) typeInfo;
+          for (TypeInfo fieldTypeInfo : structTypeInfo.getAllStructFieldTypeInfos()) {
+            HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(fieldTypeInfo);
+          }
+          return true;
+
+        default:
+          return false;
+      }
     } catch (IllegalArgumentException e) {
       return false;
     }
-    return true;
   }
 
   @Override
   public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
-    return data.getM() == null ? null : DynamoDBDataParser.getMapObject(data.getM(), objectInspector);
+    Map<String, AttributeValue> dataMap = data.getM();
+    if (dataMap == null) {
+      return null;
+    }
+    switch (objectInspector.getCategory()) {
+      case MAP:
+        return DynamoDBDataParser.getMapObject(dataMap, objectInspector);
+      case STRUCT:
+        return DynamoDBDataParser.getStructObject(dataMap, objectInspector);
+      default:
+        throw new IllegalArgumentException("Unsupported Hive type: " + objectInspector.getTypeName());
+    }
   }
 
 }
