@@ -21,6 +21,7 @@ Currently, the connector supports the following data types:
 | array | list (L) | number set (NS), string set (SS), binary set (BS) |
 | map<string,string> | item (ITEM) | map (M) |
 | map<string,?> | map (M) | |
+| struct | map (M) | |
 
 ### Hive StorageHandler Implementation
 For more information, see [Hive Commands Examples for Exporting, Importing, and Querying Data in

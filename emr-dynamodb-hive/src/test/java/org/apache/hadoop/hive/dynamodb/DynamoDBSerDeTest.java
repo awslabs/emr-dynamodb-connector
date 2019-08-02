@@ -55,13 +55,19 @@ public class DynamoDBSerDeTest {
   private static final ObjectInspector LIST_MAP_OBJECT_INSPECTOR = ObjectInspectorFactory
       .getStandardMapObjectInspector(STRING_OBJECT_INSPECTOR, STRING_LIST_OBJECT_INSPECTOR);
 
+  private static final List<String> PRIMITIVE_FIELDS = Lists.newArrayList("animal", "height", "weight", "endangered");
+  private static final List<ObjectInspector> PRIMITIVE_OIS = Lists.newArrayList(STRING_OBJECT_INSPECTOR,
+      DOUBLE_OBJECT_INSPECTOR, LONG_OBJECT_INSPECTOR, BOOLEAN_OBJECT_INSPECTOR);
+  private static final List<String> PRIMITIVE_STRING_DATA = Lists.newArrayList("giraffe", "5.5", "1360", "true");
+  private static final ObjectInspector PRIMITIVE_STRUCT_OBJECT_INSPECTOR = ObjectInspectorFactory
+      .getStandardStructObjectInspector(PRIMITIVE_FIELDS, PRIMITIVE_OIS);
+
   @Test
   public void testPrimitives() throws SerDeException {
-    List<String> attributeNames = Lists.newArrayList("animal", "height", "weight", "endangered");
-    List<ObjectInspector> colOIs = Lists.newArrayList(STRING_OBJECT_INSPECTOR, DOUBLE_OBJECT_INSPECTOR,
-        LONG_OBJECT_INSPECTOR, BOOLEAN_OBJECT_INSPECTOR);
+    List<String> attributeNames = PRIMITIVE_FIELDS;
+    List<ObjectInspector> colOIs = PRIMITIVE_OIS;
 
-    List<String> data = Lists.newArrayList("giraffe", "5.5", "1360", "true");
+    List<String> data = PRIMITIVE_STRING_DATA;
 
     Map<String, AttributeValue> expectedItemMap = Maps.newHashMap();
     expectedItemMap.put(attributeNames.get(0), new AttributeValue(data.get(0)));
@@ -170,18 +176,50 @@ public class DynamoDBSerDeTest {
   }
 
   @Test
+  public void testStruct() throws SerDeException {
+    List<String> attributeNames = Lists.newArrayList("struct", "data");
+    List<ObjectInspector> colOIs = Lists.newArrayList(STRING_OBJECT_INSPECTOR, PRIMITIVE_STRUCT_OBJECT_INSPECTOR);
+
+    String struct = "animal";
+    List<String> data = PRIMITIVE_STRING_DATA;
+    Map<String, AttributeValue> dataAV = Maps.newHashMap();
+    dataAV.put(PRIMITIVE_FIELDS.get(0), new AttributeValue(data.get(0)));
+    dataAV.put(PRIMITIVE_FIELDS.get(1), new AttributeValue().withN(data.get(1)));
+    dataAV.put(PRIMITIVE_FIELDS.get(2), new AttributeValue().withN(data.get(2)));
+    dataAV.put(PRIMITIVE_FIELDS.get(3), new AttributeValue().withBOOL(Boolean.valueOf(data.get(3))));
+
+    Map<String, AttributeValue> expectedItemMap = Maps.newHashMap();
+    expectedItemMap.put(attributeNames.get(0), new AttributeValue(struct));
+    expectedItemMap.put(attributeNames.get(1), new AttributeValue().withM(dataAV));
+
+    List<Object> structData = Lists.newArrayList();
+    structData.add(data.get(0));
+    structData.add(Double.parseDouble(data.get(1)));
+    structData.add(Long.parseLong(data.get(2)));
+    structData.add(Boolean.valueOf(data.get(3)));
+
+    List<Object> rowData = Lists.newArrayList();
+    rowData.add(struct);
+    rowData.add(structData);
+
+    Map<String, AttributeValue> actualItemMap = getSerializedItem(attributeNames, colOIs, rowData);
+
+    assertEquals(expectedItemMap, actualItemMap);
+  }
+
+  @Test
   public void testItem() throws SerDeException {
     List<String> colNames = Lists.newArrayList("ddbitem");
     List<ObjectInspector> colOIs = Lists.newArrayList(STRING_MAP_OBJECT_INSPECTOR);
 
-    List<String> attributeNames = Lists.newArrayList("animal", "height", "weight", "endangered");
+    List<String> attributeNames = PRIMITIVE_FIELDS;
     List<String> attributeTypes = DynamoDBTestUtils.toAttributeValueFieldFormatList(
         DynamoDBTypeConstants.STRING,
         DynamoDBTypeConstants.NUMBER,
         DynamoDBTypeConstants.NUMBER,
         DynamoDBTypeConstants.BOOLEAN
     );
-    List<String> data = Lists.newArrayList("giraffe", "5.5", "1360", "true");
+    List<String> data = PRIMITIVE_STRING_DATA;
     Map<String, AttributeValue> expectedItemMap = Maps.newHashMap();
     expectedItemMap.put(attributeNames.get(0), new AttributeValue(data.get(0)));
     expectedItemMap.put(attributeNames.get(1), new AttributeValue().withN(data.get(1)));

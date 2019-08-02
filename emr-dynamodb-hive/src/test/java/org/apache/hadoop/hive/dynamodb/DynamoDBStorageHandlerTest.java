@@ -200,6 +200,49 @@ public class DynamoDBStorageHandlerTest {
   }
 
   @Test
+  public void testCheckStructTableSchemaTypeInvalid() throws MetaException {
+    TableDescription description = getHashRangeTable();
+
+    Table table = new Table();
+    Map<String, String> parameters = Maps.newHashMap();
+    parameters.put(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING, "col1:dynamo_col1$," +
+        "col2:dynamo_col2#,hashKey:hashKey");
+    table.setParameters(parameters);
+    StorageDescriptor sd = new StorageDescriptor();
+    List<FieldSchema> cols = Lists.newArrayList();
+    cols.add(new FieldSchema("col1", "struct<bignum:bigint,smallnum:tinyint>", ""));
+    cols.add(new FieldSchema("col2", "array<map<string,bigint>>", ""));
+    cols.add(new FieldSchema("hashKey", "string", ""));
+    sd.setCols(cols);
+    table.setSd(sd);
+
+    exceptionRule.expect(MetaException.class);
+    exceptionRule.expectMessage("The hive type struct<bignum:bigint,smallnum:tinyint> is not " +
+        "supported in DynamoDB");
+    storageHandler.checkTableSchemaType(description, table);
+  }
+
+  @Test
+  public void testCheckStructTableSchemaTypeValid() throws MetaException {
+    TableDescription description = getHashRangeTable();
+
+    Table table = new Table();
+    Map<String, String> parameters = Maps.newHashMap();
+    parameters.put(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING, "col1:dynamo_col1$," +
+        "col2:dynamo_col2#,hashKey:hashKey");
+    table.setParameters(parameters);
+    StorageDescriptor sd = new StorageDescriptor();
+    List<FieldSchema> cols = Lists.newArrayList();
+    cols.add(new FieldSchema("col1", "struct<numarray:array<bigint>,num:double>", ""));
+    cols.add(new FieldSchema("col2", "array<struct<numarray:array<bigint>,num:double>>", ""));
+    cols.add(new FieldSchema("hashKey", "string", ""));
+    sd.setCols(cols);
+    table.setSd(sd);
+    // This check is expected to pass for the given input
+    storageHandler.checkTableSchemaType(description, table);
+  }
+
+  @Test
   public void testCheckTableSchemaTypeMappingInvalid() throws MetaException {
     TableDescription description = getHashRangeTable();
 
