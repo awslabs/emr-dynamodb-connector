@@ -73,6 +73,10 @@ public final class HiveDynamoDBUtil {
     return typeMappings;
   }
 
+  public static boolean getHiveToDynamoDBNullSerialization(Properties tbl) {
+    return Boolean.parseBoolean(tbl.getProperty(DynamoDBConstants.DYNAMODB_NULL_SERIALIZATION));
+  }
+
   public static String toJsonString(Map<String, String> dynamoDBTypeMapping) {
     return gson.toJson(dynamoDBTypeMapping, MAP_TYPE);
   }

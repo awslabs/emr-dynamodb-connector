@@ -42,7 +42,7 @@ public class HiveDynamoDBItemType implements DynamoDBItemType, HiveDynamoDBType 
   }
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
     throw new UnsupportedOperationException("DynamoDBItemType does not support this operation.");
   }
 

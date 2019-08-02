@@ -28,9 +28,11 @@ import java.util.List;
 public class HiveDynamoDBBinarySetType extends DynamoDBBinarySetType implements HiveDynamoDBType {
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
     List<ByteBuffer> values = DynamoDBDataParser.getByteBuffers(data, objectInspector, getDynamoDBType());
-    return (values == null || values.isEmpty()) ? null : new AttributeValue().withBS(values);
+    return (values == null || values.isEmpty()) ?
+        DynamoDBDataParser.getNullAttribute(nullSerialization) :
+        new AttributeValue().withBS(values);
   }
 
   @Override

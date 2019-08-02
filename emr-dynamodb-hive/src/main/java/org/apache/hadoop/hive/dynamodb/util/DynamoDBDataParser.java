@@ -66,7 +66,8 @@ public class DynamoDBDataParser {
     return ByteBuffer.wrap(result);
   }
 
-  public static Map<String, AttributeValue> getMapAttribute(Object data, ObjectInspector objectInspector) {
+  public static Map<String, AttributeValue> getMapAttribute(Object data, ObjectInspector objectInspector,
+                                                            boolean nullSerialization) {
     Map<String, AttributeValue> itemMap = new HashMap<>();
     switch (objectInspector.getCategory()) {
       case MAP:
@@ -84,7 +85,16 @@ public class DynamoDBDataParser {
         // borrowed from HiveDynamoDBItemType
         for (Map.Entry<?, ?> entry : dataMap.entrySet()) {
           String attributeName = mapKeyOI.getPrimitiveJavaObject(entry.getKey());
-          AttributeValue attributeValue = valueType.getDynamoDBData(entry.getValue(), mapValueOI);
+
+          Object valueData = entry.getValue();
+          AttributeValue attributeValue = valueData == null ?
+              getNullAttribute(nullSerialization) :
+              valueType.getDynamoDBData(valueData, mapValueOI, nullSerialization);
+
+          if (attributeValue == null) {
+            throw new NullPointerException("Null field found in map: " + dataMap);
+          }
+
           itemMap.put(attributeName, attributeValue);
         }
 
@@ -99,7 +109,14 @@ public class DynamoDBDataParser {
           HiveDynamoDBType fieldType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(fieldOI);
 
           String attributeName = field.getFieldName();
-          AttributeValue attributeValue = fieldType.getDynamoDBData(fieldData, fieldOI);
+          AttributeValue attributeValue = fieldData == null ?
+              getNullAttribute(nullSerialization) :
+              fieldType.getDynamoDBData(fieldData, fieldOI, nullSerialization);
+
+          if (attributeValue == null) {
+            throw new NullPointerException("Null field found in struct: " + structOI.getStructFieldsDataAsList(data));
+          }
+
           itemMap.put(attributeName, attributeValue);
         }
         break;
@@ -110,7 +127,8 @@ public class DynamoDBDataParser {
     return itemMap;
   }
 
-  public static List<AttributeValue> getListAttribute(Object data, ObjectInspector objectInspector) {
+  public static List<AttributeValue> getListAttribute(Object data, ObjectInspector objectInspector,
+                                                      boolean nullSerialization) {
     ListObjectInspector listObjectInspector = (ListObjectInspector) objectInspector;
     List<?> dataList = listObjectInspector.getList(data);
 
@@ -122,10 +140,15 @@ public class DynamoDBDataParser {
     HiveDynamoDBType itemType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(itemObjectInspector);
     List<AttributeValue> itemList = new ArrayList<>();
     for (Object dataItem : dataList) {
-      if (dataItem == null) {
+      AttributeValue item = dataItem == null ?
+          getNullAttribute(nullSerialization) :
+          itemType.getDynamoDBData(dataItem, itemObjectInspector, nullSerialization);
+
+      if (item == null) {
         throw new NullPointerException("Null element found in list: " + dataList);
       }
-      itemList.add(itemType.getDynamoDBData(dataItem, itemObjectInspector));
+
+      itemList.add(item);
     }
 
     return itemList;
@@ -189,6 +212,12 @@ public class DynamoDBDataParser {
     }
 
     return itemList;
+  }
+
+  public static AttributeValue getNullAttribute(boolean nullSerialization) {
+    return nullSerialization ?
+        HiveDynamoDBTypeFactory.getTypeObjectFromDynamoDBType(DynamoDBTypeConstants.NULL).getAttributeValue() :
+        null;
   }
 
   public static Object getNumberObjectList(List<String> data, ObjectInspector objectInspector) {

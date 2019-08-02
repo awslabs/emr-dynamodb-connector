@@ -44,7 +44,8 @@ public class HiveDynamoDBTypeFactory extends DynamoDBTypeFactory {
   private static final Set<HiveDynamoDBType> ALTERNATE_HIVE_DYNAMODB_TYPES = Sets.newHashSet(
       new HiveDynamoDBStringSetType(),
       new HiveDynamoDBBinarySetType(),
-      new HiveDynamoDBNumberSetType()
+      new HiveDynamoDBNumberSetType(),
+      new HiveDynamoDBNullType()
   );
 
   private static final Map<TypeInfo, HiveDynamoDBType> SIMPLE_HIVE_DYNAMODB_TYPES_MAP = Maps.newHashMap();

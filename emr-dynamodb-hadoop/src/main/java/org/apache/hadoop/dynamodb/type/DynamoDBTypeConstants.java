@@ -18,6 +18,7 @@ public final class DynamoDBTypeConstants {
   public static final String ITEM = "ITEM";
   public static final String LIST = "L";
   public static final String MAP = "M";
+  public static final String NULL = "NULL";
   public static final String NUMBER_SET = "NS";
   public static final String NUMBER = "N";
   public static final String STRING_SET = "SS";

@@ -25,9 +25,9 @@ import java.util.Map;
 public class HiveDynamoDBMapType extends DynamoDBMapType implements HiveDynamoDBType {
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
-    Map<String, AttributeValue> values = DynamoDBDataParser.getMapAttribute(data, objectInspector);
-    return values == null ? null : new AttributeValue().withM(values);
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
+    Map<String, AttributeValue> values = DynamoDBDataParser.getMapAttribute(data, objectInspector, nullSerialization);
+    return values == null ? DynamoDBDataParser.getNullAttribute(nullSerialization) : new AttributeValue().withM(values);
   }
 
   @Override

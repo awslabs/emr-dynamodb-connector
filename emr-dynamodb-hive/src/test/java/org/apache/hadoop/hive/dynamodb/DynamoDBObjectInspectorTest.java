@@ -74,6 +74,25 @@ public class DynamoDBObjectInspectorTest {
   }
 
   @Test
+  public void testNull() {
+    List<String> attributeNames = PRIMITIVE_FIELDS.subList(0, 2);
+    List<TypeInfo> colTypeInfos = PRIMITIVE_TYPE_INFOS.subList(0, 2);
+
+    List<String> data = Lists.newArrayList(PRIMITIVE_STRING_DATA.subList(0, 2));
+    data.set(1, null);
+
+    List<Object> expectedRowData = Lists.newArrayList();
+    expectedRowData.addAll(data);
+
+    Map<String, AttributeValue> itemMap = Maps.newHashMap();
+    itemMap.put(attributeNames.get(0), new AttributeValue(data.get(0)));
+    itemMap.put(attributeNames.get(1), new AttributeValue().withNULL(true));
+    List<Object> actualRowData = getDeserializedRow(attributeNames, colTypeInfos, itemMap);
+
+    assertEquals(expectedRowData, actualRowData);
+  }
+
+  @Test
   public void testArray() {
     List<String> attributeNames = Lists.newArrayList("list", "items");
     List<TypeInfo> colTypeInfos = Lists.newArrayList(STRING_TYPE_INFO, STRING_LIST_TYPE_INFO);
