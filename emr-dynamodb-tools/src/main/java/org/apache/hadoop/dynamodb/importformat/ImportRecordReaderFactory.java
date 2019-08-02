@@ -13,7 +13,7 @@
 
 package org.apache.hadoop.dynamodb.importformat;
 
-import org.apache.hadoop.dynamodb.DynamoDBConstants;
+import org.apache.hadoop.dynamodb.constants.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.dynamodb.exportformat.ExportManifestRecordWriter;
 import org.apache.hadoop.fs.Path;

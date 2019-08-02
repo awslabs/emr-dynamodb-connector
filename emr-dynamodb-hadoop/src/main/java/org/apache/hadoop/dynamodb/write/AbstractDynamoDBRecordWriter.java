@@ -13,7 +13,7 @@
 
 package org.apache.hadoop.dynamodb.write;
 
-import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES;
+import static org.apache.hadoop.dynamodb.constants.DynamoDBConstants.DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES;
 import static org.apache.hadoop.dynamodb.DynamoDBUtil.createJobClient;
 
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
@@ -24,7 +24,7 @@ import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
-import org.apache.hadoop.dynamodb.DynamoDBConstants;
+import org.apache.hadoop.dynamodb.constants.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.dynamodb.DynamoDBOperationType;
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
