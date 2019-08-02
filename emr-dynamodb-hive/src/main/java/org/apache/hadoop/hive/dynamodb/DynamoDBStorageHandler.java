@@ -165,6 +165,11 @@ public class DynamoDBStorageHandler
             .toJsonString(hiveToDynamoDBTypeMapping));
       }
 
+      boolean hiveToDynamoDBNullSerialization = Boolean
+          .parseBoolean(tableDesc.getProperties().getProperty(DynamoDBConstants.DYNAMODB_NULL_SERIALIZATION));
+      jobProperties.put(DynamoDBConstants.DYNAMODB_NULL_SERIALIZATION,
+          Boolean.toString(hiveToDynamoDBNullSerialization));
+
       if (tableDesc.getProperties().getProperty(DynamoDBConstants.THROUGHPUT_READ_PERCENT)
           != null) {
         jobProperties.put(DynamoDBConstants.THROUGHPUT_READ_PERCENT, tableDesc.getProperties()

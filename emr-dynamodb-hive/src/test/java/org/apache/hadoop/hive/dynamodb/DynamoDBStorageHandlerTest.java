@@ -287,6 +287,28 @@ public class DynamoDBStorageHandlerTest {
     storageHandler.checkTableSchemaType(description, table);
   }
 
+  @Test
+  public void testCheckTableSchemaNullSerializationValid() throws MetaException {
+    TableDescription description = getHashRangeTable();
+
+    Table table = new Table();
+    Map<String, String> parameters = Maps.newHashMap();
+    parameters.put(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING, "col1:dynamo_col1$," +
+        "col2:dynamo_col2#,hashKey:hashKey");
+    parameters.put(DynamoDBConstants.DYNAMODB_NULL_SERIALIZATION, "true");
+    table.setParameters(parameters);
+    StorageDescriptor sd = new StorageDescriptor();
+    List<FieldSchema> cols = Lists.newArrayList();
+    cols.add(new FieldSchema("col1", "string", ""));
+    cols.add(new FieldSchema("col2", "array<bigint>", ""));
+    cols.add(new FieldSchema("hashKey", "string", ""));
+    sd.setCols(cols);
+    table.setSd(sd);
+
+    // This check is expected to pass for the given input
+    storageHandler.checkTableSchemaType(description, table);
+  }
+
   private TableDescription getHashRangeTable() {
     TableDescription description = new TableDescription().withKeySchema(Arrays.asList(
             new KeySchemaElement().withAttributeName("hashKey"),

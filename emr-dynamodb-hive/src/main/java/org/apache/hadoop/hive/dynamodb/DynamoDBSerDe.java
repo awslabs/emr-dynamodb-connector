@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.dynamodb.shims.ShimsLoader;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBItemType;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBType;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
+import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.dynamodb.util.HiveDynamoDBUtil;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
@@ -58,6 +59,7 @@ public class DynamoDBSerDe extends AbstractSerDe {
   private DynamoDBObjectInspector objectInspector;
   private Map<String, String> columnMappings;
   private Map<String, HiveDynamoDBType> typeMappings;
+  private boolean nullSerialization;
   private List<String> columnNames;
 
   @Override
@@ -71,6 +73,9 @@ public class DynamoDBSerDe extends AbstractSerDe {
     log.info("Column mapping: " + columnMappings);
     typeMappings = HiveDynamoDBUtil.getHiveToDynamoDBTypeMapping(columnNames, columnTypes, tbl);
     log.info("Type mapping: " + typeMappings);
+    nullSerialization = HiveDynamoDBUtil.getHiveToDynamoDBNullSerialization(tbl);
+    log.info("Null serialization: " + nullSerialization);
+
     objectInspector = new DynamoDBObjectInspector(columnNames, columnTypes, columnMappings, typeMappings);
 
     verifyDynamoDBWriteThroughput(conf, tbl);
@@ -132,10 +137,9 @@ public class DynamoDBSerDe extends AbstractSerDe {
       } else {
         // User has mapped individual attribute in DynamoDB to
         // corresponding Hive columns.
-        AttributeValue attributeValue = null;
-        if (data != null) {
-          attributeValue = ddType.getDynamoDBData(data, fieldOI);
-        }
+        AttributeValue attributeValue = data == null ?
+            DynamoDBDataParser.getNullAttribute(nullSerialization) :
+            ddType.getDynamoDBData(data, fieldOI, nullSerialization);
 
         if (attributeValue != null) {
           item.put(columnMappings.get(columnName), attributeValue);

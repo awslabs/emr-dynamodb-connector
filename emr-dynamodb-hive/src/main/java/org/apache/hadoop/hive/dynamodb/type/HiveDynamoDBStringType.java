@@ -22,9 +22,9 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
 public class HiveDynamoDBStringType extends DynamoDBStringType implements HiveDynamoDBType {
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
     String value = DynamoDBDataParser.getString(data, objectInspector);
-    return value == null ? null : new AttributeValue(value);
+    return value == null ? DynamoDBDataParser.getNullAttribute(nullSerialization) : new AttributeValue(value);
   }
 
   @Override

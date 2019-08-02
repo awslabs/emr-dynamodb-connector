@@ -23,9 +23,9 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 public class HiveDynamoDBNumberType extends DynamoDBNumberType implements HiveDynamoDBType {
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
     String value = DynamoDBDataParser.getNumber(data, objectInspector);
-    return value == null ? null : new AttributeValue().withN(value);
+    return value == null ? DynamoDBDataParser.getNullAttribute(nullSerialization) : new AttributeValue().withN(value);
   }
 
   @Override

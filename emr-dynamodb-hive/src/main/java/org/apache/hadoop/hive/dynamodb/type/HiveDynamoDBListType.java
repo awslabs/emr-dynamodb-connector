@@ -23,9 +23,9 @@ import java.util.List;
 public class HiveDynamoDBListType extends DynamoDBListType implements HiveDynamoDBType {
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
-    List<AttributeValue> values = DynamoDBDataParser.getListAttribute(data, objectInspector);
-    return values == null ? null : new AttributeValue().withL(values);
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
+    List<AttributeValue> values = DynamoDBDataParser.getListAttribute(data, objectInspector, nullSerialization);
+    return values == null ? DynamoDBDataParser.getNullAttribute(nullSerialization) : new AttributeValue().withL(values);
   }
 
   @Override

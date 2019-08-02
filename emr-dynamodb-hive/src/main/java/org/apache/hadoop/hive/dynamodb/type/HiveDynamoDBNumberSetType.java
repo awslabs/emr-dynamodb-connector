@@ -25,9 +25,11 @@ import java.util.List;
 public class HiveDynamoDBNumberSetType extends DynamoDBNumberSetType implements HiveDynamoDBType {
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
     List<String> values = DynamoDBDataParser.getSetAttribute(data, objectInspector, getDynamoDBType());
-    return (values == null || values.isEmpty()) ? null : new AttributeValue().withNS(values);
+    return (values == null || values.isEmpty()) ?
+        DynamoDBDataParser.getNullAttribute(nullSerialization) :
+        new AttributeValue().withNS(values);
   }
 
   @Override

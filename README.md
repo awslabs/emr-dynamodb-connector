@@ -23,6 +23,8 @@ Currently, the connector supports the following data types:
 | map<string,?> | map (M) | |
 | struct | map (M) | |
 
+The connector can serialize null values as DynamoDB null type (NULL).
+
 ### Hive StorageHandler Implementation
 For more information, see [Hive Commands Examples for Exporting, Importing, and Querying Data in
 DynamoDB][hive-commands-emr-dev-guide] in the *[Amazon DynamoDB Developer Guide][dynamodb-dev-guide]*.
@@ -42,7 +44,7 @@ This simple tool that makes use of the InputFormat and OutputFormat implementati
 
 ### Supported Versions
 Currently the project builds against Hive 2.3.0, 1.2.1, and 1.0.0. Set this by using the `hive1.version`,
-`hive1.2.version and `hive2.version` properties in the root Maven `pom.xml`, respectively.
+`hive1.2.version` and `hive2.version` properties in the root Maven `pom.xml`, respectively.
 
 ## How to Build
 After cloning, run `mvn clean install`.
@@ -60,9 +62,12 @@ TBLPROPERTIES (
     "dynamodb.column.mapping" =
         "hive_column1_name:dynamodb_attribute1_name,hive_column2_name:dynamodb_attribute2_name",
     "dynamodb.type.mapping" =
-        "hive_column1_name:dynamodb_attribute1_type_abbreviation"
+        "hive_column1_name:dynamodb_attribute1_type_abbreviation",
+    "dynamodb.null.serialization" = "true"
 );
 ```
+
+`dynamodb.type.mapping` and `dynamodb.null.serialization` are optional parameters.
 
 ## Example: Input/Output Formats with Spark
 Using the DynamoDBInputFormat and DynamoDBOutputFormat classes with `spark-shell`:

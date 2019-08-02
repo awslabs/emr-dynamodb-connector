@@ -25,9 +25,9 @@ import java.nio.ByteBuffer;
 public class HiveDynamoDBBinaryType extends DynamoDBBinaryType implements HiveDynamoDBType {
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector) {
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
     ByteBuffer value = DynamoDBDataParser.getByteBuffer(data, objectInspector);
-    return new AttributeValue().withB(value);
+    return value == null ? DynamoDBDataParser.getNullAttribute(nullSerialization) : new AttributeValue().withB(value);
   }
 
   @Override

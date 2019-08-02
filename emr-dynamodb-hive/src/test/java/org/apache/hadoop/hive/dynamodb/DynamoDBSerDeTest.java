@@ -86,6 +86,30 @@ public class DynamoDBSerDeTest {
   }
 
   @Test
+  public void testNull() throws SerDeException {
+    List<String> attributeNames = PRIMITIVE_FIELDS.subList(0, 2);
+    List<ObjectInspector> colOIs = PRIMITIVE_OIS.subList(0, 2);
+
+    List<String> data = Lists.newArrayList(PRIMITIVE_STRING_DATA.subList(0, 2));
+    data.set(1, null);
+
+    Map<String, AttributeValue> expectedItemMap = Maps.newHashMap();
+    expectedItemMap.put(attributeNames.get(0), new AttributeValue(data.get(0)));
+
+    List<Object> rowData = Lists.newArrayList();
+    rowData.addAll(data);
+
+    // no null serialization
+    Map<String, AttributeValue> actualItemMap = getSerializedItem(attributeNames, colOIs, rowData, false);
+    assertEquals(expectedItemMap, actualItemMap);
+
+    // with null serialization
+    expectedItemMap.put(attributeNames.get(1), new AttributeValue().withNULL(true));
+    actualItemMap = getSerializedItem(attributeNames, colOIs, rowData, true);
+    assertEquals(expectedItemMap, actualItemMap);
+  }
+
+  @Test
   public void testArray() throws SerDeException {
     List<String> attributeNames = Lists.newArrayList("list", "items");
     List<ObjectInspector> colOIs = Lists.newArrayList(STRING_OBJECT_INSPECTOR, STRING_LIST_OBJECT_INSPECTOR);
@@ -254,11 +278,24 @@ public class DynamoDBSerDeTest {
 
   private Map<String, AttributeValue> getSerializedItem(List<String> attributeNames, List<ObjectInspector> colOIs,
                                                         List<Object> rowData) throws SerDeException {
-    return getSerializedItem(attributeNames, colOIs, Maps.<String, String>newHashMap(), rowData);
+    return getSerializedItem(attributeNames, colOIs, Maps.<String, String>newHashMap(), rowData, false);
   }
 
   private Map<String, AttributeValue> getSerializedItem(List<String> attributeNames, List<ObjectInspector> colOIs,
                                                         Map<String, String> typeMapping, List<Object> rowData)
+      throws SerDeException {
+    return getSerializedItem(attributeNames, colOIs, typeMapping, rowData, false);
+  }
+
+  private Map<String, AttributeValue> getSerializedItem(List<String> attributeNames, List<ObjectInspector> colOIs,
+                                                        List<Object> rowData, boolean nullSerialization)
+      throws SerDeException {
+    return getSerializedItem(attributeNames, colOIs, Maps.<String, String>newHashMap(), rowData, nullSerialization);
+  }
+
+  private Map<String, AttributeValue> getSerializedItem(List<String> attributeNames, List<ObjectInspector> colOIs,
+                                                        Map<String, String> typeMapping, List<Object> rowData,
+                                                        boolean nullSerialization)
       throws SerDeException {
     List<String> colTypes = Lists.newArrayList();
     List<String> colMappings = Lists.newArrayList();
@@ -281,6 +318,7 @@ public class DynamoDBSerDeTest {
     props.setProperty(serdeConstants.LIST_COLUMN_TYPES, StringUtils.join(colTypes, ","));
     props.setProperty(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING, StringUtils.join(colMappings, ","));
     props.setProperty(DynamoDBConstants.DYNAMODB_TYPE_MAPPING, StringUtils.join(typeMapList, ","));
+    props.setProperty(DynamoDBConstants.DYNAMODB_NULL_SERIALIZATION, Boolean.toString(nullSerialization));
 
     DynamoDBSerDe serde = new DynamoDBSerDe();
     serde.initialize(null, props);
