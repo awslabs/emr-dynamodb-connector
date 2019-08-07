@@ -27,7 +27,7 @@ public class DynamoDBNumberType implements DynamoDBType {
 
   @Override
   public String getDynamoDBType() {
-    return "N";
+    return DynamoDBTypeConstants.NUMBER;
   }
 
   @Override

@@ -32,6 +32,7 @@ public interface DynamoDBConstants {
 
   // Table constants
   String DYNAMODB_COLUMN_MAPPING = "dynamodb.column.mapping";
+  String DYNAMODB_TYPE_MAPPING = "dynamodb.type.mapping";
   // JobConf constants
   String DYNAMODB_FILTER_PUSHDOWN = "dynamodb.filter.pushdown";
 

@@ -15,6 +15,8 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
+import org.apache.hadoop.dynamodb.test.DynamoDBTestUtils;
+import org.apache.hadoop.dynamodb.type.DynamoDBTypeConstants;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.SerDeException;
@@ -37,27 +39,27 @@ import static org.junit.Assert.assertEquals;
 public class DynamoDBSerDeTest {
 
   private static final ObjectInspector STRING_OBJECT_INSPECTOR = PrimitiveObjectInspectorFactory
-          .getPrimitiveJavaObjectInspector(PrimitiveObjectInspector.PrimitiveCategory.STRING);
+      .getPrimitiveJavaObjectInspector(PrimitiveObjectInspector.PrimitiveCategory.STRING);
   private static final ObjectInspector DOUBLE_OBJECT_INSPECTOR = PrimitiveObjectInspectorFactory
-          .getPrimitiveJavaObjectInspector(PrimitiveObjectInspector.PrimitiveCategory.DOUBLE);
+      .getPrimitiveJavaObjectInspector(PrimitiveObjectInspector.PrimitiveCategory.DOUBLE);
   private static final ObjectInspector LONG_OBJECT_INSPECTOR = PrimitiveObjectInspectorFactory
-          .getPrimitiveJavaObjectInspector(PrimitiveObjectInspector.PrimitiveCategory.LONG);
+      .getPrimitiveJavaObjectInspector(PrimitiveObjectInspector.PrimitiveCategory.LONG);
   private static final ObjectInspector BOOLEAN_OBJECT_INSPECTOR = PrimitiveObjectInspectorFactory
-          .getPrimitiveJavaObjectInspector(PrimitiveObjectInspector.PrimitiveCategory.BOOLEAN);
+      .getPrimitiveJavaObjectInspector(PrimitiveObjectInspector.PrimitiveCategory.BOOLEAN);
   private static final ObjectInspector STRING_LIST_OBJECT_INSPECTOR = ObjectInspectorFactory
-          .getStandardListObjectInspector(STRING_OBJECT_INSPECTOR);
+      .getStandardListObjectInspector(STRING_OBJECT_INSPECTOR);
   private static final ObjectInspector STRING_MAP_OBJECT_INSPECTOR = ObjectInspectorFactory
-          .getStandardMapObjectInspector(STRING_OBJECT_INSPECTOR, STRING_OBJECT_INSPECTOR);
+      .getStandardMapObjectInspector(STRING_OBJECT_INSPECTOR, STRING_OBJECT_INSPECTOR);
   private static final ObjectInspector LONG_MAP_OBJECT_INSPECTOR = ObjectInspectorFactory
-          .getStandardMapObjectInspector(STRING_OBJECT_INSPECTOR, LONG_OBJECT_INSPECTOR);
+      .getStandardMapObjectInspector(STRING_OBJECT_INSPECTOR, LONG_OBJECT_INSPECTOR);
   private static final ObjectInspector LIST_MAP_OBJECT_INSPECTOR = ObjectInspectorFactory
-          .getStandardMapObjectInspector(STRING_OBJECT_INSPECTOR, STRING_LIST_OBJECT_INSPECTOR);
+      .getStandardMapObjectInspector(STRING_OBJECT_INSPECTOR, STRING_LIST_OBJECT_INSPECTOR);
 
   @Test
   public void testPrimitives() throws SerDeException {
     List<String> attributeNames = Lists.newArrayList("animal", "height", "weight", "endangered");
     List<ObjectInspector> colOIs = Lists.newArrayList(STRING_OBJECT_INSPECTOR, DOUBLE_OBJECT_INSPECTOR,
-            LONG_OBJECT_INSPECTOR, BOOLEAN_OBJECT_INSPECTOR);
+        LONG_OBJECT_INSPECTOR, BOOLEAN_OBJECT_INSPECTOR);
 
     List<String> data = Lists.newArrayList("giraffe", "5.5", "1360", "true");
 
@@ -99,13 +101,23 @@ public class DynamoDBSerDeTest {
     Map<String, AttributeValue> actualItemMap = getSerializedItem(attributeNames, colOIs, rowData);
 
     assertEquals(expectedItemMap, actualItemMap);
+
+    // alternate mapping
+    Map<String, String> typeMapping = Maps.newHashMap();
+    typeMapping.put(attributeNames.get(1), DynamoDBTypeConstants.STRING_SET);
+    items = items.subList(0, 3);
+    rowData.set(1, items);
+    expectedItemMap.put(attributeNames.get(1), new AttributeValue().withSS(items));
+    actualItemMap = getSerializedItem(attributeNames, colOIs, typeMapping, rowData);
+
+    assertEquals(expectedItemMap, actualItemMap);
   }
 
   @Test
   public void testMap() throws SerDeException {
     List<String> attributeNames = Lists.newArrayList("map", "ids", "lists");
     List<ObjectInspector> colOIs = Lists.newArrayList(STRING_OBJECT_INSPECTOR, LONG_MAP_OBJECT_INSPECTOR,
-            LIST_MAP_OBJECT_INSPECTOR);
+        LIST_MAP_OBJECT_INSPECTOR);
 
     String map = "people";
     List<String> people = Lists.newArrayList("bob", "linda", "tina", "gene", "louise");
@@ -138,6 +150,23 @@ public class DynamoDBSerDeTest {
     Map<String, AttributeValue> actualItemMap = getSerializedItem(attributeNames, colOIs, rowData);
 
     assertEquals(expectedItemMap, actualItemMap);
+
+    // alternate mapping
+    attributeNames.add("names");
+    colOIs.add(STRING_MAP_OBJECT_INSPECTOR);
+    Map<String, String> typeMapping = Maps.newHashMap();
+    typeMapping.put(attributeNames.get(3), DynamoDBTypeConstants.MAP);
+    Map<String, String> names = Maps.newHashMap();
+    Map<String, AttributeValue> namesAV = Maps.newHashMap();
+    for (String person : people) {
+      names.put(person, person);
+      namesAV.put(person, new AttributeValue(person));
+    }
+    rowData.add(names);
+    expectedItemMap.put(attributeNames.get(3), new AttributeValue().withM(namesAV));
+    actualItemMap = getSerializedItem(attributeNames, colOIs, typeMapping, rowData);
+
+    assertEquals(expectedItemMap, actualItemMap);
   }
 
   @Test
@@ -146,7 +175,12 @@ public class DynamoDBSerDeTest {
     List<ObjectInspector> colOIs = Lists.newArrayList(STRING_MAP_OBJECT_INSPECTOR);
 
     List<String> attributeNames = Lists.newArrayList("animal", "height", "weight", "endangered");
-    List<String> attributeTypes = Lists.newArrayList("s", "n", "n", "bOOL");
+    List<String> attributeTypes = DynamoDBTestUtils.toAttributeValueFieldFormatList(
+        DynamoDBTypeConstants.STRING,
+        DynamoDBTypeConstants.NUMBER,
+        DynamoDBTypeConstants.NUMBER,
+        DynamoDBTypeConstants.BOOLEAN
+    );
     List<String> data = Lists.newArrayList("giraffe", "5.5", "1360", "true");
     Map<String, AttributeValue> expectedItemMap = Maps.newHashMap();
     expectedItemMap.put(attributeNames.get(0), new AttributeValue(data.get(0)));
@@ -158,7 +192,7 @@ public class DynamoDBSerDeTest {
     for (int i = 0; i < attributeNames.size(); i++) {
       String type = attributeTypes.get(i);
       Object value = data.get(i);
-      if (type.equalsIgnoreCase("bool")) {
+      if (type.equalsIgnoreCase(DynamoDBTypeConstants.BOOLEAN)) {
         value = Boolean.valueOf(data.get(i));
       }
       itemCol.put(attributeNames.get(i), new JSONObject().put(type, value).toString());
@@ -181,21 +215,34 @@ public class DynamoDBSerDeTest {
   }
 
   private Map<String, AttributeValue> getSerializedItem(List<String> attributeNames, List<ObjectInspector> colOIs,
-                                                        List<Object> rowData)
-          throws SerDeException {
+                                                        List<Object> rowData) throws SerDeException {
+    return getSerializedItem(attributeNames, colOIs, Maps.<String, String>newHashMap(), rowData);
+  }
+
+  private Map<String, AttributeValue> getSerializedItem(List<String> attributeNames, List<ObjectInspector> colOIs,
+                                                        Map<String, String> typeMapping, List<Object> rowData)
+      throws SerDeException {
     List<String> colTypes = Lists.newArrayList();
     List<String> colMappings = Lists.newArrayList();
     for (int i = 0; i < attributeNames.size(); i++) {
+      String attributeName = attributeNames.get(i);
       colTypes.add(colOIs.get(i).getTypeName());
-      if (!HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(colOIs.get(i))) {
-        colMappings.add(attributeNames.get(i) + ":" + attributeNames.get(i));
+      if (!HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(colOIs.get(i)) ||
+          typeMapping.containsKey(attributeName)) {
+        colMappings.add(attributeName + ":" + attributeName);
       }
+    }
+
+    List<String> typeMapList = Lists.newArrayList();
+    for (Map.Entry<String, String> colType : typeMapping.entrySet()) {
+      typeMapList.add(colType.getKey() + ":" + colType.getValue());
     }
 
     Properties props = new Properties();
     props.setProperty(serdeConstants.LIST_COLUMNS, StringUtils.join(attributeNames, ","));
     props.setProperty(serdeConstants.LIST_COLUMN_TYPES, StringUtils.join(colTypes, ","));
     props.setProperty(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING, StringUtils.join(colMappings, ","));
+    props.setProperty(DynamoDBConstants.DYNAMODB_TYPE_MAPPING, StringUtils.join(typeMapList, ","));
 
     DynamoDBSerDe serde = new DynamoDBSerDe();
     serde.initialize(null, props);

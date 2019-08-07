@@ -27,7 +27,7 @@ public class DynamoDBBinarySetType implements DynamoDBType {
 
   @Override
   public String getDynamoDBType() {
-    return "BS";
+    return DynamoDBTypeConstants.BINARY_SET;
   }
 
   @Override

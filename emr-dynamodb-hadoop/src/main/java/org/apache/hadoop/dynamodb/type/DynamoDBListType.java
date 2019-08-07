@@ -29,7 +29,7 @@ public class DynamoDBListType implements DynamoDBType {
 
   @Override
   public String getDynamoDBType() {
-    return "L";
+    return DynamoDBTypeConstants.LIST;
   }
 
   @Override

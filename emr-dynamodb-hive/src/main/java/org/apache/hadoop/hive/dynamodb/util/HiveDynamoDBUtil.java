@@ -13,20 +13,25 @@
 
 package org.apache.hadoop.hive.dynamodb.util;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.dynamodb.DynamoDBConstants;
+import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBType;
+import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
+import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.mapred.JobConf;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.hadoop.mapred.JobConf;
-
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 public final class HiveDynamoDBUtil {
 
@@ -45,8 +50,27 @@ public final class HiveDynamoDBUtil {
     }
   }
 
-  public static Map<String, String> getHiveToDynamoDBSchemaMapping(String mapping) {
-    return getSchemaMapping(mapping, false);
+  public static Map<String, String> getHiveToDynamoDBColumnMapping(Properties props) {
+    return getHiveToDynamoDBMapping(props.getProperty(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING));
+  }
+
+  public static Map<String, HiveDynamoDBType> getHiveToDynamoDBTypeMapping(List<String> columnNames,
+                                                                           List<TypeInfo> columnTypes,
+                                                                           Properties props) {
+    Map<String, HiveDynamoDBType> typeMappings = Maps.newHashMap();
+    Map<String, String> altTypeMappings = HiveDynamoDBUtil.getHiveToDynamoDBMapping(
+        props.getProperty(DynamoDBConstants.DYNAMODB_TYPE_MAPPING)
+    );
+
+    for (int i = 0; i < columnNames.size(); i++) {
+      String columnName = columnNames.get(i);
+      HiveDynamoDBType ddType = altTypeMappings.containsKey(columnName) ?
+          HiveDynamoDBTypeFactory.getTypeObjectFromDynamoDBType(altTypeMappings.get(columnName)) :
+          HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(columnTypes.get(i));
+      typeMappings.put(columnName, ddType);
+    }
+
+    return typeMappings;
   }
 
   public static String toJsonString(Map<String, String> dynamoDBTypeMapping) {
@@ -58,33 +82,25 @@ public final class HiveDynamoDBUtil {
   }
 
   /**
-   * Please note that this method converts the hive column names to lower case for consistency
+   * Please note that this method converts the hive column names (map keys) to lower case for consistency
    * with other Hive code
    */
-  private static Map<String, String> getSchemaMapping(String mapping, boolean reverseMapping) {
+  public static Map<String, String> getHiveToDynamoDBMapping(String mapping) {
     if ((mapping == null) || (mapping.isEmpty())) {
-      /*
-       * User may have chosen to map entire DynamoDB item to a single hive
-       * column of map<string, string> type.
-       */
       return Maps.newHashMap();
     }
 
-    String[] colMapArr = mapping.split(",");
-    Map<String, String> columnMapping = new HashMap<>();
-    for (String colMap : colMapArr) {
-      String[] nameMap = colMap.split(":", 2);
-      if (nameMap.length != 2) {
-        throw new RuntimeException("Invalid column mapping " + colMap);
+    String[] mapArray = mapping.split(",");
+    Map<String, String> map = new HashMap<>();
+    for (String entry : mapArray) {
+      String[] keyValue = entry.split(":", 2);
+      if (keyValue.length != 2) {
+        throw new IllegalArgumentException("Invalid entry in mapping " + entry);
       }
-      if (reverseMapping) {
-        columnMapping.put(nameMap[1], nameMap[0].toLowerCase());
-      } else {
-        columnMapping.put(nameMap[0].toLowerCase(), nameMap[1]);
-      }
+      map.put(keyValue[0].toLowerCase(), keyValue[1]);
     }
 
-    return columnMapping;
+    return map;
   }
 
   /**
@@ -162,5 +178,4 @@ public final class HiveDynamoDBUtil {
 
     return result;
   }
-
 }

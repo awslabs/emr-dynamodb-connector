@@ -16,6 +16,7 @@ package org.apache.hadoop.hive.dynamodb.util;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.dynamodb.type.DynamoDBTypeConstants;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBType;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
 import org.apache.hadoop.hive.serde.serdeConstants;
@@ -125,9 +126,9 @@ public class DynamoDBDataParser {
         throw new NullPointerException("Null element found in list: " + dataList);
       }
 
-      if (ddType.equals("SS")) {
+      if (ddType.equals(DynamoDBTypeConstants.STRING_SET)) {
         itemList.add(getString(dataItem, itemObjectInspector));
-      } else if (ddType.equals("NS")) {
+      } else if (ddType.equals(DynamoDBTypeConstants.NUMBER_SET)) {
         itemList.add(getNumber(dataItem, itemObjectInspector));
       } else {
         throw new IllegalArgumentException("Expecting NumberSet or StringSet type: " + ddType);
@@ -156,7 +157,7 @@ public class DynamoDBDataParser {
         throw new NullPointerException("Null element found in list: " + dataList);
       }
 
-      if (ddType.equals("BS")) {
+      if (ddType.equals(DynamoDBTypeConstants.BINARY_SET)) {
         itemList.add(getByteBuffer(dataItem, itemObjectInspector));
       } else {
         throw new IllegalArgumentException("Expecting BinarySet type: " + ddType);

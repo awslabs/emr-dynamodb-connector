@@ -28,7 +28,7 @@ public class DynamoDBMapType implements DynamoDBType {
 
   @Override
   public String getDynamoDBType() {
-    return "M";
+    return DynamoDBTypeConstants.MAP;
   }
 
   @Override

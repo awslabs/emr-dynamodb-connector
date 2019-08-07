@@ -27,7 +27,7 @@ public class DynamoDBStringType implements DynamoDBType {
 
   @Override
   public String getDynamoDBType() {
-    return "S";
+    return DynamoDBTypeConstants.STRING;
   }
 
   @Override
