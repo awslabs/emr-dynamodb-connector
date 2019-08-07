@@ -13,7 +13,10 @@ package org.apache.hadoop.hive.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
-import org.apache.hadoop.hive.dynamodb.DynamoDBObjectInspector;
+import org.apache.hadoop.dynamodb.test.DynamoDBTestUtils;
+import org.apache.hadoop.dynamodb.type.DynamoDBTypeConstants;
+import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBType;
+import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.json.JSONObject;
@@ -34,17 +37,17 @@ public class DynamoDBObjectInspectorTest {
   private static final TypeInfo BOOLEAN_TYPE_INFO = TypeInfoFactory.booleanTypeInfo;
   private static final TypeInfo STRING_LIST_TYPE_INFO = TypeInfoFactory.getListTypeInfo(STRING_TYPE_INFO);
   private static final TypeInfo STRING_MAP_TYPE_INFO = TypeInfoFactory.getMapTypeInfo(STRING_TYPE_INFO,
-          STRING_TYPE_INFO);
+      STRING_TYPE_INFO);
   private static final TypeInfo LONG_MAP_TYPE_INFO = TypeInfoFactory.getMapTypeInfo(STRING_TYPE_INFO,
-          LONG_TYPE_INFO);
+      LONG_TYPE_INFO);
   private static final TypeInfo LIST_MAP_TYPE_INFO = TypeInfoFactory.getMapTypeInfo(STRING_TYPE_INFO,
-          STRING_LIST_TYPE_INFO);
+      STRING_LIST_TYPE_INFO);
 
   @Test
   public void testPrimitives() {
     List<String> attributeNames = Lists.newArrayList("animal", "height", "weight", "endangered");
     List<TypeInfo> colTypeInfos = Lists.newArrayList(STRING_TYPE_INFO, DOUBLE_TYPE_INFO, LONG_TYPE_INFO,
-            BOOLEAN_TYPE_INFO);
+        BOOLEAN_TYPE_INFO);
 
     List<String> data = Lists.newArrayList("giraffe", "5.5", "1360", "true");
 
@@ -83,6 +86,17 @@ public class DynamoDBObjectInspectorTest {
     List<Object> actualRowData = getDeserializedRow(attributeNames, colTypeInfos, itemMap);
 
     assertEquals(expectedRowData, actualRowData);
+
+    // alternate mapping
+    Map<String, HiveDynamoDBType> typeMapping = Maps.newHashMap();
+    typeMapping.put(attributeNames.get(1),
+        HiveDynamoDBTypeFactory.getTypeObjectFromDynamoDBType(DynamoDBTypeConstants.STRING_SET));
+    items = items.subList(0, 3);
+    itemMap.put(attributeNames.get(1), new AttributeValue().withSS(items));
+    expectedRowData.set(1, items);
+    actualRowData = getDeserializedRow(attributeNames, colTypeInfos, typeMapping, itemMap);
+
+    assertEquals(expectedRowData, actualRowData);
   }
 
   @Test
@@ -116,6 +130,24 @@ public class DynamoDBObjectInspectorTest {
     List<Object> actualRowData = getDeserializedRow(attributeNames, colTypeInfos, itemMap);
 
     assertEquals(expectedRowData, actualRowData);
+
+    // alternate mapping
+    attributeNames.add("names");
+    colTypeInfos.add(STRING_MAP_TYPE_INFO);
+    Map<String, HiveDynamoDBType> altTypeMapping = Maps.newHashMap();
+    altTypeMapping.put(attributeNames.get(3),
+        HiveDynamoDBTypeFactory.getTypeObjectFromDynamoDBType(DynamoDBTypeConstants.MAP));
+    Map<String, String> names = Maps.newHashMap();
+    Map<String, AttributeValue> namesAV = Maps.newHashMap();
+    for (String person : people) {
+      names.put(person, person);
+      namesAV.put(person, new AttributeValue(person));
+    }
+    itemMap.put(attributeNames.get(3), new AttributeValue().withM(namesAV));
+    expectedRowData.add(names);
+    actualRowData = getDeserializedRow(attributeNames, colTypeInfos, altTypeMapping, itemMap);
+
+    assertEquals(expectedRowData, actualRowData);
   }
 
   @Test
@@ -124,13 +156,18 @@ public class DynamoDBObjectInspectorTest {
     List<TypeInfo> colTypeInfos = Lists.newArrayList(STRING_MAP_TYPE_INFO);
 
     List<String> attributeNames = Lists.newArrayList("animal", "height", "weight", "endangered");
-    List<String> attributeTypes = Lists.newArrayList("s", "n", "n", "bOOL");
+    List<String> attributeTypes = DynamoDBTestUtils.toAttributeValueFieldFormatList(
+        DynamoDBTypeConstants.STRING,
+        DynamoDBTypeConstants.NUMBER,
+        DynamoDBTypeConstants.NUMBER,
+        DynamoDBTypeConstants.BOOLEAN
+    );
     List<String> data = Lists.newArrayList("giraffe", "5.5", "1360", "true");
     Map<String, String> colItemMap = Maps.newHashMap();
     for (int i = 0; i < attributeNames.size(); i++) {
       String type = attributeTypes.get(i);
       Object value = data.get(i);
-      if (type.equalsIgnoreCase("bool")) {
+      if (type.equalsIgnoreCase(DynamoDBTypeConstants.BOOLEAN)) {
         value = Boolean.valueOf(data.get(i));
       }
       colItemMap.put(attributeNames.get(i), new JSONObject().put(type, value).toString());
@@ -159,12 +196,24 @@ public class DynamoDBObjectInspectorTest {
 
   private List<Object> getDeserializedRow(List<String> attributeNames, List<TypeInfo> colTypeInfos,
                                           Map<String, AttributeValue> itemMap) {
+    return getDeserializedRow(attributeNames, colTypeInfos, Maps.<String, HiveDynamoDBType>newHashMap(), itemMap);
+  }
+
+  private List<Object> getDeserializedRow(List<String> attributeNames, List<TypeInfo> colTypeInfos,
+                                          Map<String, HiveDynamoDBType> altTypeMapping,
+                                          Map<String, AttributeValue> itemMap) {
     Map<String, String> colMapping = Maps.newHashMap();
-    for (String name : attributeNames) {
+    Map<String, HiveDynamoDBType> typeMapping = Maps.newHashMap();
+    for (int i = 0; i < attributeNames.size(); i++) {
+      String name = attributeNames.get(i);
       colMapping.put(name, name);
+
+      HiveDynamoDBType ddType = altTypeMapping.containsKey(name) ? altTypeMapping.get(name) :
+          HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(colTypeInfos.get(i));
+      typeMapping.put(name, ddType);
     }
 
-    DynamoDBObjectInspector ddbOI = new DynamoDBObjectInspector(attributeNames, colTypeInfos, colMapping);
+    DynamoDBObjectInspector ddbOI = new DynamoDBObjectInspector(attributeNames, colTypeInfos, colMapping, typeMapping);
     return ddbOI.getStructFieldsDataAsList(new DynamoDBItemWritable(itemMap));
   }
 }

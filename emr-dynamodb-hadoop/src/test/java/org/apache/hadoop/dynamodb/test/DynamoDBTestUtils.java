@@ -13,11 +13,10 @@
 
 package org.apache.hadoop.dynamodb.test;
 
-import static org.junit.Assert.assertEquals;
-
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.hadoop.dynamodb.type.DynamoDBTypeConstants;
+import com.google.common.collect.Lists;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -26,9 +25,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import static org.junit.Assert.assertEquals;
+
 public class DynamoDBTestUtils {
 
-  private static final String[] attributeTypes = new String[]{"S", "SS", "N", "NS", "L", "B", "BS"};
+  private static final String[] attributeTypes = new String[]{
+      DynamoDBTypeConstants.STRING,
+      DynamoDBTypeConstants.STRING_SET,
+      DynamoDBTypeConstants.NUMBER,
+      DynamoDBTypeConstants.NUMBER_SET,
+      DynamoDBTypeConstants.LIST,
+      DynamoDBTypeConstants.BINARY,
+      DynamoDBTypeConstants.BINARY_SET
+  };
   private static final int SEED = 87394;
   private static final int MAX_BYTE_ARRAY_LENGTH = 2048;
   private static final int STRING_LENGTH = 1024;
@@ -94,13 +103,13 @@ public class DynamoDBTestUtils {
 
   public static Map<String, AttributeValue> getRandomItem() {
     Map<String, AttributeValue> item = new HashMap<>();
-    item.put("S", new AttributeValue().withS(getRandomString()));
-    item.put("SS", new AttributeValue().withSS(getRandomStrings()));
-    item.put("N", new AttributeValue().withN(getRandomNumber()));
-    item.put("L", new AttributeValue().withL(new AttributeValue().withM(aRandomMap)));
-    item.put("NS", new AttributeValue().withNS(getRandomNumbers()));
-    item.put("B", new AttributeValue().withB(getRandomByteBuffer()));
-    item.put("BS", new AttributeValue().withBS(getRandomByteBuffers()));
+    item.put(DynamoDBTypeConstants.STRING, new AttributeValue().withS(getRandomString()));
+    item.put(DynamoDBTypeConstants.STRING_SET, new AttributeValue().withSS(getRandomStrings()));
+    item.put(DynamoDBTypeConstants.NUMBER, new AttributeValue().withN(getRandomNumber()));
+    item.put(DynamoDBTypeConstants.LIST, new AttributeValue().withL(new AttributeValue().withM(aRandomMap)));
+    item.put(DynamoDBTypeConstants.NUMBER_SET, new AttributeValue().withNS(getRandomNumbers()));
+    item.put(DynamoDBTypeConstants.BINARY, new AttributeValue().withB(getRandomByteBuffer()));
+    item.put(DynamoDBTypeConstants.BINARY_SET, new AttributeValue().withBS(getRandomByteBuffers()));
     return item;
   }
 
@@ -111,5 +120,17 @@ public class DynamoDBTestUtils {
       String message = "Element with key [" + attributeType + "]:";
       assertEquals(message, expectedItem.get(attributeType), actualItem.get(attributeType));
     }
+  }
+
+  public static String toAttributeValueFieldFormat(String typeConstant) {
+    return typeConstant.substring(0, 1).toLowerCase() + typeConstant.substring(1).toUpperCase();
+  }
+
+  public static List<String> toAttributeValueFieldFormatList(String... typeConstants) {
+    List<String> attributeValueFields = Lists.newArrayList();
+    for (String typeConstant : typeConstants) {
+      attributeValueFields.add(toAttributeValueFieldFormat(typeConstant));
+    }
+    return attributeValueFields;
   }
 }

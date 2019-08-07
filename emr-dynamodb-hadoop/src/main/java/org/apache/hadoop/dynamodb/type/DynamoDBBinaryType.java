@@ -29,7 +29,7 @@ public class DynamoDBBinaryType implements DynamoDBType {
 
   @Override
   public String getDynamoDBType() {
-    return "B";
+    return DynamoDBTypeConstants.BINARY;
   }
 
   @Override

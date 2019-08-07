@@ -40,9 +40,9 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import com.google.common.collect.Maps;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -54,21 +54,24 @@ public class DynamoDBSerDe extends AbstractSerDe {
   // user is warned exactly once
   private static boolean warningPrinted;
 
+  protected SerDeParametersShim serdeParams;
   private DynamoDBObjectInspector objectInspector;
-  private SerDeParametersShim serdeParams;
   private Map<String, String> columnMappings;
+  private Map<String, HiveDynamoDBType> typeMappings;
   private List<String> columnNames;
 
   @Override
   public void initialize(Configuration conf, Properties tbl) throws SerDeException {
-    serdeParams = ShimsLoader.getHiveShims()
-        .getSerDeParametersShim(conf, tbl, getClass().getName());
-    columnMappings = HiveDynamoDBUtil.getHiveToDynamoDBSchemaMapping(
-        tbl.getProperty(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING)
-    );
+    serdeParams = ShimsLoader.getHiveShims().getSerDeParametersShim(conf, tbl,
+        getClass().getName());
     columnNames = serdeParams.getColumnNames();
-    objectInspector = new DynamoDBObjectInspector(serdeParams.getColumnNames(), serdeParams.getColumnTypes(),
-            columnMappings);
+    List<TypeInfo> columnTypes = serdeParams.getColumnTypes();
+
+    columnMappings = HiveDynamoDBUtil.getHiveToDynamoDBColumnMapping(tbl);
+    log.info("Column mapping: " + columnMappings);
+    typeMappings = HiveDynamoDBUtil.getHiveToDynamoDBTypeMapping(columnNames, columnTypes, tbl);
+    log.info("Type mapping: " + typeMappings);
+    objectInspector = new DynamoDBObjectInspector(columnNames, columnTypes, columnMappings, typeMappings);
 
     verifyDynamoDBWriteThroughput(conf, tbl);
   }
@@ -83,7 +86,7 @@ public class DynamoDBSerDe extends AbstractSerDe {
   }
 
   @Override
-  public ObjectInspector getObjectInspector() throws SerDeException {
+  public ObjectInspector getObjectInspector() {
     return objectInspector;
   }
 
@@ -98,23 +101,23 @@ public class DynamoDBSerDe extends AbstractSerDe {
     StructObjectInspector soi = (StructObjectInspector) objInspector;
     List<? extends StructField> fields = soi.getAllStructFieldRefs();
     List<Object> rowData = soi.getStructFieldsDataAsList(obj);
-    Map<String, AttributeValue> item = new HashMap<>();
+    Map<String, AttributeValue> item = Maps.newHashMap();
 
     validateData(fields, rowData);
 
     for (int i = 0; i < fields.size(); i++) {
       StructField field = fields.get(i);
       Object data = rowData.get(i);
-      ObjectInspector fieldObjectInspector = field.getFieldObjectInspector();
+      String columnName = columnNames.get(i);
+      ObjectInspector fieldOI = field.getFieldObjectInspector();
 
       // Get the Hive to DynamoDB mapper
-      HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(fieldObjectInspector);
+      HiveDynamoDBType ddType = typeMappings.get(columnName);
 
       // Check if this column maps a DynamoDB item.
-      if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(fieldObjectInspector)) {
+      if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(ddType)) {
         HiveDynamoDBItemType ddItemType = (HiveDynamoDBItemType) ddType;
-        Map<String, AttributeValue> backupItem = ddItemType.parseDynamoDBData(data,
-            fieldObjectInspector);
+        Map<String, AttributeValue> backupItem = ddItemType.parseDynamoDBData(data, fieldOI);
 
         // We give higher priority to attributes directly mapped to
         // columns. So we do not update the value of an attribute if
@@ -131,11 +134,11 @@ public class DynamoDBSerDe extends AbstractSerDe {
         // corresponding Hive columns.
         AttributeValue attributeValue = null;
         if (data != null) {
-          attributeValue = ddType.getDynamoDBData(data, fieldObjectInspector);
+          attributeValue = ddType.getDynamoDBData(data, fieldOI);
         }
 
         if (attributeValue != null) {
-          item.put(columnMappings.get(columnNames.get(i)), attributeValue);
+          item.put(columnMappings.get(columnName), attributeValue);
         }
       }
     }
@@ -198,7 +201,7 @@ public class DynamoDBSerDe extends AbstractSerDe {
 
     BillingModeSummary billingModeSummary = client.describeTable(dynamoDBTableName).getBillingModeSummary();
     if (maxMapTasks > writesPerSecond &&
-            (billingModeSummary == null || billingModeSummary.getBillingMode().equals(DynamoDBConstants.BILLING_MODE_PROVISIONED))) {
+        (billingModeSummary == null || billingModeSummary.getBillingMode().equals(DynamoDBConstants.BILLING_MODE_PROVISIONED))) {
       String message = "WARNING: Configured write throughput of the dynamodb table "
           + dynamoDBTableName + " is less than the cluster map capacity." + " ClusterMapCapacity: "
           + maxMapTasks + " WriteThroughput: " + writesPerSecond + "\nWARNING: Writes to this "
@@ -211,5 +214,4 @@ public class DynamoDBSerDe extends AbstractSerDe {
       warningPrinted = true;
     }
   }
-
 }

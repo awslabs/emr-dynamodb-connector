@@ -17,6 +17,7 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.dynamodb.key.DynamoDBKey;
 import org.apache.hadoop.dynamodb.type.DynamoDBItemType;
+import org.apache.hadoop.dynamodb.type.DynamoDBTypeConstants;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.objectinspector.MapObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -62,7 +63,7 @@ public class HiveDynamoDBItemType implements DynamoDBItemType, HiveDynamoDBType 
 
   @Override
   public String getDynamoDBType() {
-    throw new UnsupportedOperationException("DynamoDBItemType does not support this operation.");
+    return DynamoDBTypeConstants.ITEM;
   }
 
   @Override
@@ -155,12 +156,12 @@ public class HiveDynamoDBItemType implements DynamoDBItemType, HiveDynamoDBType 
     return item;
   }
 
-  private String serializeAttributeValue(AttributeValue value) {
+  private static String serializeAttributeValue(AttributeValue value) {
     Gson gson = DynamoDBUtil.getGson();
     return gson.toJson(value, TYPE);
   }
 
-  public AttributeValue deserializeAttributeValue(String value) {
+  public static AttributeValue deserializeAttributeValue(String value) {
     Gson gson = DynamoDBUtil.getGson();
 
     Object fromJson = gson.fromJson(value, TYPE);

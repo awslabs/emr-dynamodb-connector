@@ -10,14 +10,21 @@ accessed by Amazon EMR.
 - [Using Apache Hive in Amazon EMR with Amazon DynamoDB][emr-dynamodb-hive-docs]
 - [Accessing data in Amazon DynamoDB with Apache Spark][dynamodb-spark-blog-post]
 
-For more information about supported data types in DynamoDB, see
-[Data Types for Hive and DynamoDB][hive-dynamodb-data-types] in the
-*[Amazon EMR Release Guide][emr-release-guide]*.
+Currently, the connector supports the following data types:
+
+| Hive type | Default DynamoDB type | Alternate DynamoDb type(s) |
+| --- | --- | --- |
+| string | string (S) | |
+| bigint or double | number (N) | |
+| binary | binary (B) | |
+| boolean | boolean (BOOL) | |
+| array | list (L) | number set (NS), string set (SS), binary set (BS) |
+| map<string,string> | item (ITEM) | map (M) |
+| map<string,?> | map (M) | |
 
 ### Hive StorageHandler Implementation
 For more information, see [Hive Commands Examples for Exporting, Importing, and Querying Data in
-DynamoDB][hive-commands-emr-dev-guide] in the *[Amazon DynamoDB Developer Guide]
-[dynamodb-dev-guide]*.
+DynamoDB][hive-commands-emr-dev-guide] in the *[Amazon DynamoDB Developer Guide][dynamodb-dev-guide]*.
 
 ### Hadoop InputFormat and OutputFormat Implementation
 An implementation of [Apache Hadoop InputFormat interface][input-format-javadoc] and
@@ -26,7 +33,7 @@ An implementation of [Apache Hadoop InputFormat interface][input-format-javadoc]
 an example of how to use these classes, see
 [Set Up a Hive Table to Run Hive Commands][set-up-hive-table] in the
 *[Amazon EMR Release Guide][emr-release-guide]*, as well as their usage in the Import/Export tool
-classes in [DynamoDBExport.java] [export-tool-source] and [DynamoDBImport.java][import-tool-source].
+classes in [DynamoDBExport.java][export-tool-source] and [DynamoDBImport.java][import-tool-source].
 
 ### Import/Export Tool
 This simple tool that makes use of the InputFormat and OutputFormat implementations provides an easy
@@ -50,7 +57,9 @@ STORED BY 'org.apache.hadoop.hive.dynamodb.DynamoDBStorageHandler'
 TBLPROPERTIES (
     "dynamodb.table.name" = "dynamodb_tablename",
     "dynamodb.column.mapping" =
-        "hive_column1_name:dynamodb_attribute1_name,hive_column2_name:dynamodb_attribute2_name"
+        "hive_column1_name:dynamodb_attribute1_name,hive_column2_name:dynamodb_attribute2_name",
+    "dynamodb.type.mapping" =
+        "hive_column1_name:dynamodb_attribute1_type_abbreviation"
 );
 ```
 

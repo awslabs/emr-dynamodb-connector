@@ -28,7 +28,7 @@ public class DynamoDBBooleanType implements DynamoDBType {
 
     @Override
     public String getDynamoDBType() {
-        return "BOOL";
+        return DynamoDBTypeConstants.BOOLEAN;
     }
 
     @Override

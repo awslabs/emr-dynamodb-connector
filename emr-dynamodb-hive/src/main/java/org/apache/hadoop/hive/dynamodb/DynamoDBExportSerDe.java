@@ -13,71 +13,29 @@
 
 package org.apache.hadoop.hive.dynamodb;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
-
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
-import org.apache.hadoop.hive.dynamodb.shims.SerDeParametersShim;
-import org.apache.hadoop.hive.dynamodb.shims.ShimsLoader;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBItemType;
-import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
-import org.apache.hadoop.hive.dynamodb.util.HiveDynamoDBUtil;
-import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
-import org.apache.hadoop.hive.serde2.SerDeStats;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * This class is used to read the DynamoDB backup format and allow querying individual columns from
  * the schemaless backup.
  */
-public class DynamoDBExportSerDe extends AbstractSerDe {
+public class DynamoDBExportSerDe extends DynamoDBSerDe {
 
   private static final Log log = LogFactory.getLog(DynamoDBExportSerDe.class);
-
-  private DynamoDBObjectInspector objectInspector;
-  private Map<String, String> columnMappings;
-  private SerDeParametersShim serdeParams;
-
-  @Override
-  public void initialize(Configuration conf, Properties tbl) throws SerDeException {
-    serdeParams = ShimsLoader.getHiveShims()
-        .getSerDeParametersShim(conf, tbl, getClass().getName());
-    String specifiedColumnMapping = tbl.getProperty(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING);
-
-    for (TypeInfo type : serdeParams.getColumnTypes()) {
-      try {
-        HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(type);
-      } catch (IllegalArgumentException e) {
-        throw new SerDeException("Unsupported Hive type: " + type.getTypeName());
-      }
-    }
-
-    log.info("Provided column mapping: " + specifiedColumnMapping);
-    columnMappings = Maps.newHashMap();
-    if (!Strings.isNullOrEmpty(specifiedColumnMapping)) {
-      columnMappings = HiveDynamoDBUtil.getHiveToDynamoDBSchemaMapping(specifiedColumnMapping);
-    }
-    addDefaultColumnMappings(serdeParams.getColumnNames());
-
-    log.info("Final column mapping: " + columnMappings);
-    objectInspector = new DynamoDBObjectInspector(serdeParams.getColumnNames(), serdeParams
-        .getColumnTypes(), columnMappings);
-  }
 
   @Override
   public Object deserialize(Writable inputData) throws SerDeException {
@@ -112,38 +70,21 @@ public class DynamoDBExportSerDe extends AbstractSerDe {
         String dynamoDBAttributeValue = values.get(1);
 
         /* Deserialize the AttributeValue string */
-        AttributeValue deserializedAttributeValue = new HiveDynamoDBItemType()
+        AttributeValue deserializedAttributeValue = HiveDynamoDBItemType
             .deserializeAttributeValue(dynamoDBAttributeValue);
 
         item.put(dynamoDBAttributeName, deserializedAttributeValue);
       }
 
-      DynamoDBItemWritable dynamoDBItem = new DynamoDBItemWritable(item);
-      return dynamoDBItem;
+      return new DynamoDBItemWritable(item);
     } else {
       throw new SerDeException(getClass().toString() + ": expects Text object!");
     }
   }
 
   @Override
-  public ObjectInspector getObjectInspector() throws SerDeException {
-    return objectInspector;
-  }
-
-  @Override
-  public Class<? extends Writable> getSerializedClass() {
-    return Text.class;
-  }
-
-  @Override
   public Writable serialize(Object obj, ObjectInspector objInspector) throws SerDeException {
-    throw new UnsupportedOperationException("The SerDe supports only reading data");
-  }
-
-  @Override
-  public SerDeStats getSerDeStats() {
-    // no support for statistics
-    return null;
+    throw new UnsupportedOperationException("The DynamoDBExportSerDe only supports deserializing data");
   }
 
   private String byteToString(int separatorIndex) {
@@ -151,13 +92,4 @@ public class DynamoDBExportSerDe extends AbstractSerDe {
     charArray[0] = (char) serdeParams.getSeparators()[separatorIndex];
     return new String(charArray);
   }
-
-  private void addDefaultColumnMappings(List<String> hiveColumnNames) {
-    for (String hiveColumnName : hiveColumnNames) {
-      if (!columnMappings.containsKey(hiveColumnName)) {
-        columnMappings.put(hiveColumnName, hiveColumnName);
-      }
-    }
-  }
-
 }
