@@ -17,10 +17,18 @@ public final class CredentialPairName {
 
   private final String accessKeyName;
   private final String secretKeyName;
+  private final String sessionkeyName;
 
   public CredentialPairName(String accessKeyName, String secretKeyName) {
     this.accessKeyName = accessKeyName;
     this.secretKeyName = secretKeyName;
+    this.sessionkeyName = null;
+  }
+
+  public CredentialPairName(String accessKeyName, String secretKeyName, String sessionkeyName) {
+    this.accessKeyName = accessKeyName;
+    this.secretKeyName = secretKeyName;
+    this.sessionkeyName = sessionkeyName;
   }
 
   public String getAccessKeyName() {
@@ -29,5 +37,9 @@ public final class CredentialPairName {
 
   public String getSecretKeyName() {
     return secretKeyName;
+  }
+
+  public String getSessionKeyName() {
+    return sessionkeyName;
   }
 }

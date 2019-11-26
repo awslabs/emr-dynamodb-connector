@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSSessionCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
@@ -120,6 +121,25 @@ public class DynamoDBClientTest {
     DynamoDBClient dynamoDBClient = new DynamoDBClient();
     expectedException.expect(ClassCastException.class);
     dynamoDBClient.getAWSCredentialsProvider(conf);
+  }
+
+  @Test
+  public void testBasicSessionCredentials(){
+    final String DYNAMODB_ACCESS_KEY = "abc";
+    final String DYNAMODB_SECRET_KEY = "xyz";
+    final String DYNAMODB_SESSION_KEY = "007";
+    Configuration conf = new Configuration();
+    conf.set(DynamoDBConstants.DYNAMODB_ACCESS_KEY_CONF, DYNAMODB_ACCESS_KEY);
+    conf.set(DynamoDBConstants.DYNAMODB_SECRET_KEY_CONF, DYNAMODB_SECRET_KEY);
+    conf.set(DynamoDBConstants.DYNAMODB_SESSION_TOKEN_CONF, DYNAMODB_SESSION_KEY);
+
+    DynamoDBClient dynamoDBClient = new DynamoDBClient();
+    AWSCredentialsProvider provider = dynamoDBClient.getAWSCredentialsProvider(conf);
+    AWSSessionCredentials sessionCredentials = (AWSSessionCredentials) provider.getCredentials();
+    Assert.assertEquals(DYNAMODB_ACCESS_KEY, sessionCredentials.getAWSAccessKeyId());
+    Assert.assertEquals(DYNAMODB_SECRET_KEY, sessionCredentials.getAWSSecretKey());
+    Assert.assertEquals(DYNAMODB_SESSION_KEY, sessionCredentials.getSessionToken());
+
   }
 
   @Test
