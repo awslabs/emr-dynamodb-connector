@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 
+import java.util.Set;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
 import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;
@@ -53,6 +54,7 @@ public final class ScanRecordReadRequestTest {
   private void stubScanTableWith(RetryResult<ScanResult> scanResultRetryResult) {
     when(client.scanTable(
         anyString(),
+        any(Set.class),
         any(DynamoDBQueryFilter.class),
         anyInt(),
         anyInt(),

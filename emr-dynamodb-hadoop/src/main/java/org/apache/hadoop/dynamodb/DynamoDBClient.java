@@ -53,6 +53,8 @@ import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.amazonaws.thirdparty.joda.time.Duration;
 
+import java.util.Collection;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -145,7 +147,8 @@ public class DynamoDBClient {
   }
 
   public RetryResult<ScanResult> scanTable(
-      String tableName, DynamoDBQueryFilter dynamoDBQueryFilter, Integer segment, Integer
+      String tableName, final Collection<String> attributes,
+      DynamoDBQueryFilter dynamoDBQueryFilter, Integer segment, Integer
       totalSegments, Map<String, AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
     final ScanRequest scanRequest = new ScanRequest(tableName)
         .withExclusiveStartKey(exclusiveStartKey)
@@ -153,6 +156,11 @@ public class DynamoDBClient {
         .withSegment(segment)
         .withTotalSegments(totalSegments)
         .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
+
+    if (!attributes.isEmpty()) {
+      final String projection = StringUtils.join(attributes.toArray(), ",");
+      scanRequest.setProjectionExpression(projection);
+    }
 
     if (dynamoDBQueryFilter != null) {
       Map<String, Condition> scanFilter = dynamoDBQueryFilter.getScanFilter();
