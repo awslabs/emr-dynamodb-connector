@@ -37,7 +37,7 @@ public class ScanRecordReadRequest extends AbstractRecordReadRequest {
   @Override
   protected PageResults<Map<String, AttributeValue>> fetchPage(RequestLimit lim) {
     // Read from DynamoDB
-    RetryResult<ScanResult> retryResult = context.getClient().scanTable(tableName, null, segment,
+    RetryResult<ScanResult> retryResult = context.getClient().scanTable(tableName, context.getAttributes(),null, segment,
         context.getSplit().getTotalSegments(), lastEvaluatedKey, lim.items, context.getReporter());
 
     ScanResult result = retryResult.result;

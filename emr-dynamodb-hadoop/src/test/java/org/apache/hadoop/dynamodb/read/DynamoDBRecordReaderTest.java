@@ -25,6 +25,7 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 
+import java.util.Collection;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
@@ -70,7 +71,8 @@ public class DynamoDBRecordReaderTest {
       }
 
       @Override
-      public RetryResult<ScanResult> scanTable(String tableName, DynamoDBQueryFilter
+      public RetryResult<ScanResult> scanTable(String tableName,
+          final Collection<String> attributes, DynamoDBQueryFilter
           dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
           AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
 
@@ -133,7 +135,8 @@ public class DynamoDBRecordReaderTest {
       }
 
       @Override
-      public RetryResult<ScanResult> scanTable(String tableName, DynamoDBQueryFilter
+      public RetryResult<ScanResult> scanTable(String tableName,
+          final Collection<String> attributes, DynamoDBQueryFilter
           dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
           AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
         return new RetryResult<>(getHashNumberRangeKeyItems(HASH_KEYS, "S"), 0);
@@ -175,7 +178,8 @@ public class DynamoDBRecordReaderTest {
       }
 
       @Override
-      public RetryResult<ScanResult> scanTable(String tableName, DynamoDBQueryFilter
+      public RetryResult<ScanResult> scanTable(String tableName,
+          final Collection<String> attributes, DynamoDBQueryFilter
           dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
           AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
         assertNull(exclusiveStartKey);
@@ -217,7 +221,8 @@ public class DynamoDBRecordReaderTest {
       }
 
       @Override
-      public RetryResult<ScanResult> scanTable(String tableName, DynamoDBQueryFilter
+      public RetryResult<ScanResult> scanTable(String tableName,
+          final Collection<String> attributes, DynamoDBQueryFilter
           dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
           AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
         assertEquals(0, (int) segment);
@@ -256,7 +261,8 @@ public class DynamoDBRecordReaderTest {
       }
 
       @Override
-      public RetryResult<ScanResult> scanTable(String tableName, DynamoDBQueryFilter
+      public RetryResult<ScanResult> scanTable(String tableName,
+          final Collection<String> attributes, DynamoDBQueryFilter
           dynamoDBQueryFilter, Integer segment, Integer totalSegments, Map<String,
           AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
         throw new RuntimeException("Unrecoverable Exception");
