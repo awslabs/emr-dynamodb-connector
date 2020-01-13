@@ -16,8 +16,6 @@ package org.apache.hadoop.dynamodb;
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEMS_PER_BATCH;
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_ITEMS_PER_BATCH;
 
-import com.amazonaws.thirdparty.joda.time.DateTime;
-import com.amazonaws.thirdparty.joda.time.DateTimeZone;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -46,6 +44,8 @@ import org.apache.hadoop.dynamodb.util.TaskCalculator;
 import org.apache.hadoop.dynamodb.util.YarnContainerAllocator;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

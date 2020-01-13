@@ -51,7 +51,6 @@ import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
-import com.amazonaws.thirdparty.joda.time.Duration;
 
 import java.util.Collection;
 import org.apache.commons.lang.StringUtils;
@@ -62,6 +61,7 @@ import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
 import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.joda.time.Duration;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
