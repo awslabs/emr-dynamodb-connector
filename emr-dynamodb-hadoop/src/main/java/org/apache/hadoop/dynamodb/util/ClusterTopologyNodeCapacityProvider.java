@@ -13,8 +13,8 @@
 
 package org.apache.hadoop.dynamodb.util;
 
-import com.amazonaws.util.json.Jackson;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapred.JobConf;
@@ -103,8 +103,9 @@ public class ClusterTopologyNodeCapacityProvider implements NodeCapacityProvider
     return new String(Files.readAllBytes(Paths.get("/mnt/var/lib/info/job-flow.json")));
   }
 
-  private String extractInstanceType(String jobFlowJsonString, String targetInstanceRole) {
-    JsonNode jobFlowJson = Jackson.jsonNodeOf(jobFlowJsonString);
+  private String extractInstanceType(String jobFlowJsonString, String targetInstanceRole)
+      throws IOException {
+    JsonNode jobFlowJson = readFromJsonString(jobFlowJsonString);
     JsonNode instanceGroups = jobFlowJson.get("instanceGroups");
 
     for (int i = 0; i < instanceGroups.size(); i++) {
@@ -117,5 +118,17 @@ public class ClusterTopologyNodeCapacityProvider implements NodeCapacityProvider
       }
     }
     return null;
+  }
+
+  // TODO in hadoop3 with emr6, aws-java-sdk-core and aws-java-sdk-bundle will be co-exist
+  // as part of `yarn.application.classpath` which will be easily made user program find one conflict
+  // with another when using Jackson API, our change here is to remove this classpath conflict
+  // such reading json object without package-dependent issue.
+  private JsonNode readFromJsonString(String jobFlowJsonString) throws IOException {
+    if (jobFlowJsonString == null) {
+      return null;
+    }
+    ObjectMapper mapper = new ObjectMapper();
+    return mapper.readValue(jobFlowJsonString, JsonNode.class);
   }
 }

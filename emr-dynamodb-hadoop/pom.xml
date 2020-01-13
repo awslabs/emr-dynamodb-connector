@@ -33,6 +33,21 @@
             <artifactId>gson</artifactId>
         </dependency>
 
+        <!-- this need to be added for hadoop-2.9+ support because HADOOP-14040
+        HADOOP-14126 used aws-java-sdk-bundle instead of aws-java-sdk-core,
+        such these libraries were remove from ${BUILD_DIR}/share/hadoop/tools/lib/*.jar -->
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>${joda-time.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson-databind.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-dynamodb</artifactId>
