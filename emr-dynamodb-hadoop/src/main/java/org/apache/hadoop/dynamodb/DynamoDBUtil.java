@@ -28,7 +28,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
 import com.amazonaws.regions.RegionUtils;
-import com.amazonaws.regions.ServiceAbbreviations;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.amazonaws.util.EC2MetadataUtils;
@@ -250,7 +250,7 @@ public final class DynamoDBUtil {
       if (Strings.isNullOrEmpty(region)) {
         region = DynamoDBConstants.DEFAULT_AWS_REGION;
       }
-      endpoint = RegionUtils.getRegion(region).getServiceEndpoint(ServiceAbbreviations.Dynamodb);
+      endpoint = RegionUtils.getRegion(region).getServiceEndpoint(AmazonDynamoDB.ENDPOINT_PREFIX);
     }
     log.info("Using endpoint for DynamoDB: " + endpoint);
     return endpoint;

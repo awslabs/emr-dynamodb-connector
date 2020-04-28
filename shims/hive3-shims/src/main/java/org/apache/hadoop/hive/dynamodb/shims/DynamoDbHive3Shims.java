@@ -24,7 +24,7 @@ import java.util.Properties;
 
 final class DynamoDbHive3Shims implements DynamoDbHiveShims {
 
-  private static final String HIVE_3_VERSION = "3.1.0";
+  private static final String HIVE_3_VERSION = "3.1";
 
   static boolean supportsVersion(String version) {
     return version.startsWith(HIVE_3_VERSION);
