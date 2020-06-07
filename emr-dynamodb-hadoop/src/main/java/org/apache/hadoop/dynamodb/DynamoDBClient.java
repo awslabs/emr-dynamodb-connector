@@ -38,6 +38,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
+import com.amazonaws.services.dynamodbv2.model.Capacity;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.ConsumedCapacity;
 import com.amazonaws.services.dynamodbv2.model.DescribeTableRequest;
@@ -253,7 +254,7 @@ public class DynamoDBClient {
   private BatchWriteItemResult writeBatch(Reporter reporter, final int roomNeeded) {
     final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest()
         .withRequestItems(writeBatchMap)
-        .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
+        .withReturnConsumedCapacity(ReturnConsumedCapacity.INDEXES);
 
     RetryResult<BatchWriteItemResult> retryResult = getRetryDriver().runWithRetry(
         new Callable<BatchWriteItemResult>() {
@@ -292,7 +293,12 @@ public class DynamoDBClient {
 
               double consumed = 0.0;
               for (ConsumedCapacity consumedCapacity : result.getConsumedCapacity()) {
-                consumed = consumedCapacity.getCapacityUnits();
+                consumed = consumedCapacity.getTable().getCapacityUnits();
+                if(consumedCapacity.getLocalSecondaryIndexes() != null) {
+                  for (Capacity lsiConsumedCapacity  : consumedCapacity.getLocalSecondaryIndexes().values()) {
+                    consumed += lsiConsumedCapacity.getCapacityUnits();
+                  }
+                }
               }
 
               int batchSize = 0;

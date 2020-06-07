@@ -17,6 +17,7 @@ import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_AVERAGE_ITEM_
 import static org.apache.hadoop.dynamodb.DynamoDBUtil.createJobClient;
 
 import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
+import com.amazonaws.services.dynamodbv2.model.Capacity;
 import com.amazonaws.services.dynamodbv2.model.ConsumedCapacity;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
@@ -118,7 +119,12 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
     if (result != null) {
       if (result.getConsumedCapacity() != null) {
         for (ConsumedCapacity consumedCapacity : result.getConsumedCapacity()) {
-          double consumedUnits = consumedCapacity.getCapacityUnits();
+          double consumedUnits = consumedCapacity.getTable().getCapacityUnits();
+          if (consumedCapacity.getLocalSecondaryIndexes() != null) {
+            for (Capacity lsiConsumedCapacity  : consumedCapacity.getLocalSecondaryIndexes().values()) {
+              consumedUnits += lsiConsumedCapacity.getCapacityUnits();
+            }
+          }
           totalIOPSConsumed += consumedUnits;
         }
       }
