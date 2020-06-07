@@ -253,7 +253,7 @@ public class DynamoDBClient {
   private BatchWriteItemResult writeBatch(Reporter reporter, final int roomNeeded) {
     final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest()
         .withRequestItems(writeBatchMap)
-        .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
+        .withReturnConsumedCapacity(ReturnConsumedCapacity.INDEXES);
 
     RetryResult<BatchWriteItemResult> retryResult = getRetryDriver().runWithRetry(
         new Callable<BatchWriteItemResult>() {
