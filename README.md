@@ -69,6 +69,15 @@ TBLPROPERTIES (
 
 `dynamodb.type.mapping` and `dynamodb.null.serialization` are optional parameters.
 
+Hive query will automatically choose the most suitable secondary index if there is any based on the
+search condition. For an index that can be chosen, it should have following properties:
+1. It has all its index keys in Hive query search condition;
+2. It contains all the DynamoDB attributes mentioned in `dynamodb.column.mapping`. (If you have to
+map more columns than index attributes in your Hive table but still want to use an index when
+running queries that only select the attributes within that index, consider create another
+Hive table and narrow down the mappings to only include the index attributes. Use that table for
+reading the index attributes to reduce table scans)
+
 ## Example: Input/Output Formats with Spark
 Using the DynamoDBInputFormat and DynamoDBOutputFormat classes with `spark-shell`:
 ```

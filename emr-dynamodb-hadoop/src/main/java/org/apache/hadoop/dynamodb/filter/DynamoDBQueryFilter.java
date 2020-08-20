@@ -22,6 +22,16 @@ public class DynamoDBQueryFilter {
   private final Map<String, Condition> keyConditions = new HashMap<>();
   private final Map<String, Condition> scanFilter = new HashMap<>();
 
+  private DynamoDBIndexInfo index;
+
+  public DynamoDBIndexInfo getIndex() {
+    return index;
+  }
+
+  public void setIndex(DynamoDBIndexInfo index) {
+    this.index = index;
+  }
+
   public Map<String, Condition> getKeyConditions() {
     return keyConditions;
   }

@@ -13,7 +13,7 @@
 
 package org.apache.hadoop.hive.dynamodb.read;
 
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
+import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -149,10 +149,13 @@ public class HiveDynamoDBInputFormat extends DynamoDBInputFormat {
         ShimsLoader.getHiveShims().deserializeExpression(filterExprSerialized);
 
     DynamoDBFilterPushdown pushdown = new DynamoDBFilterPushdown();
-    List<KeySchemaElement> schema =
-        client.describeTable(conf.get(DynamoDBConstants.TABLE_NAME)).getKeySchema();
+    TableDescription tableDescription =
+        client.describeTable(conf.get(DynamoDBConstants.TABLE_NAME));
     DynamoDBQueryFilter queryFilter = pushdown.predicateToDynamoDBFilter(
-        schema, hiveDynamoDBMapping, hiveTypeMapping, filterExpr);
+        tableDescription.getKeySchema(),
+        tableDescription.getLocalSecondaryIndexes(),
+        tableDescription.getGlobalSecondaryIndexes(),
+        hiveDynamoDBMapping, hiveTypeMapping, filterExpr);
     return queryFilter;
   }
 
