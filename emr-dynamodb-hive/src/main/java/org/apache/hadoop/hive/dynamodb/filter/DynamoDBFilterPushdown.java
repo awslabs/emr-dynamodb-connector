@@ -13,7 +13,11 @@
 
 package org.apache.hadoop.hive.dynamodb.filter;
 
+import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndexDescription;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
+import com.amazonaws.services.dynamodbv2.model.LocalSecondaryIndexDescription;
+import com.amazonaws.services.dynamodbv2.model.Projection;
+import com.amazonaws.services.dynamodbv2.model.ProjectionType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,10 +25,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.filter.DynamoDBFilter;
 import org.apache.hadoop.dynamodb.filter.DynamoDBFilterOperator;
+import org.apache.hadoop.dynamodb.filter.DynamoDBIndexInfo;
 import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;
 import org.apache.hadoop.hive.ql.index.IndexPredicateAnalyzer;
 import org.apache.hadoop.hive.ql.index.IndexSearchCondition;
@@ -39,13 +45,19 @@ public class DynamoDBFilterPushdown {
 
   private final Set<String> eligibleHiveTypes = new HashSet<>();
   private final Set<DynamoDBFilterOperator> eligibleOperatorsForRange = new HashSet<>();
+  private final IndexPredicateAnalyzer analyzer = new IndexPredicateAnalyzer();
+
+  private static final int HASH_KEY_INDEX = 0;
+  private static final int RANGE_KEY_INDEX = 1;
+  private static final String DYNAMODB_KEY_TYPE_HASH = "HASH";
 
   public DynamoDBFilterPushdown() {
     eligibleHiveTypes.add(serdeConstants.DOUBLE_TYPE_NAME);
     eligibleHiveTypes.add(serdeConstants.BIGINT_TYPE_NAME);
     eligibleHiveTypes.add(serdeConstants.STRING_TYPE_NAME);
+    eligibleHiveTypes.add(serdeConstants.BINARY_TYPE_NAME);
 
-    // Not all scan operators are supported by DynanoDB Query API
+    // Not all scan operators are supported by DynamoDB Query API
     eligibleOperatorsForRange.add(DynamoDBFilterOperator.EQ);
     eligibleOperatorsForRange.add(DynamoDBFilterOperator.LE);
     eligibleOperatorsForRange.add(DynamoDBFilterOperator.LT);
@@ -65,7 +77,6 @@ public class DynamoDBFilterPushdown {
     } else {
       List<IndexSearchCondition> finalSearchCondition =
           prioritizeSearchConditions(searchConditions);
-      IndexPredicateAnalyzer analyzer = new IndexPredicateAnalyzer();
       DecomposedPredicate decomposedPredicate = new DecomposedPredicate();
       decomposedPredicate.pushedPredicate =
           analyzer.translateSearchConditions(finalSearchCondition);
@@ -74,8 +85,12 @@ public class DynamoDBFilterPushdown {
     }
   }
 
-  public DynamoDBQueryFilter predicateToDynamoDBFilter(List<KeySchemaElement> schema, Map<String,
-      String> hiveDynamoDBMapping, Map<String, String> hiveTypeMapping, ExprNodeDesc predicate) {
+  public DynamoDBQueryFilter predicateToDynamoDBFilter(List<KeySchemaElement> schema,
+      List<LocalSecondaryIndexDescription> localSecondaryIndexes,
+      List<GlobalSecondaryIndexDescription> globalSecondaryIndexes,
+      Map<String, String> hiveDynamoDBMapping,
+      Map<String, String> hiveTypeMapping,
+      ExprNodeDesc predicate) {
     List<IndexSearchCondition> searchConditions = getGenericSearchConditions(hiveTypeMapping,
         predicate);
 
@@ -111,7 +126,11 @@ public class DynamoDBFilterPushdown {
       }
     }
 
-    return getDynamoDBQueryFilter(schema, filterMap);
+    return getDynamoDBQueryFilter(schema,
+        localSecondaryIndexes,
+        globalSecondaryIndexes,
+        hiveDynamoDBMapping,
+        filterMap);
   }
 
   private boolean isBetweenFilter(DynamoDBFilterOperator op1, DynamoDBFilterOperator op2) {
@@ -139,7 +158,7 @@ public class DynamoDBFilterPushdown {
   private List<IndexSearchCondition> getGenericSearchConditions(Map<String, String> hiveTypeMapping,
       ExprNodeDesc predicate) {
 
-    IndexPredicateAnalyzer analyzer = new IndexPredicateAnalyzer();
+    analyzer.clearAllowedColumnNames();
 
     // DynamoDB does not support filters on columns of types set
     for (Entry<String, String> entry : hiveTypeMapping.entrySet()) {
@@ -204,40 +223,166 @@ public class DynamoDBFilterPushdown {
   }
 
   /*
-   * This method sets the query filter / scan filter parameters appropriately
+   * This method sets the query filter / scan filter parameters appropriately.
+   * It first check table key schema if any query condition match with table hash and range key.
+   * If not all of table keys are found in query conditions, check following cases:
+   *
+   *  1. If no table key is found matching with the query conditions, iterate through GSIs
+   * (Global Secondary Indexes) to see if we can find both hash key and range key of a GSI in the
+   * query conditions. NOTE: If we only find GSI hash key but not range key (for GSI has 2 keys), we
+   * still cannot use this GSI because items might be missed in the query result.
+   *     e.g. item {'hk': 'hash key value', 'rk': 'range key value', 'column1': 'value'}
+   *          will not exist in a GSI with 'column1' as hash key and 'column2' as range key.
+   *          So query with "where column1 = 'value'" will not return the item if we use this GSI
+   *          since the item is not written to the GSI due to missing of index range key 'column2'
+   *
+   *  2. If only table hash key is found, iterate through LSIs (Local Secondary Indexes) to see if
+   * we can find a LSI having index range key match with any query condition.
    */
-  private DynamoDBQueryFilter getDynamoDBQueryFilter(List<KeySchemaElement> schema, Map<String,
-      DynamoDBFilter> filterMap) {
+  private DynamoDBQueryFilter getDynamoDBQueryFilter(List<KeySchemaElement> schema,
+      List<LocalSecondaryIndexDescription> localSecondaryIndexes,
+      List<GlobalSecondaryIndexDescription> globalSecondaryIndexes,
+      Map<String, String> hiveDynamoDBMapping,
+      Map<String, DynamoDBFilter> filterMap) {
+
     DynamoDBQueryFilter filter = new DynamoDBQueryFilter();
 
+    List<DynamoDBFilter> keyFiltersUseForQuery = getDynamoDBFiltersFromSchema(schema, filterMap);
+    DynamoDBIndexInfo indexUseForQuery = null;
+
+    if (keyFiltersUseForQuery.size() < schema.size()) {
+      if (keyFiltersUseForQuery.size() == 0 && globalSecondaryIndexes != null) {
+        // Hash key not found. Check GSIs.
+        indexUseForQuery = getIndexUseForQuery(
+            schema,
+            globalSecondaryIndexes.stream()
+                .map(index -> new DynamoDBIndexInfo(index.getIndexName(),
+                    index.getKeySchema(), index.getProjection()))
+                .collect(Collectors.toList()),
+            hiveDynamoDBMapping,
+            filterMap,
+            keyFiltersUseForQuery);
+
+        // Don't use GSI when it is not a fully match.
+        // Refer to method comment for detailed explanation
+        if (indexUseForQuery != null
+            && indexUseForQuery.getIndexSchema().size() > keyFiltersUseForQuery.size()) {
+          indexUseForQuery = null;
+          keyFiltersUseForQuery.clear();
+        }
+      } else if (keyFiltersUseForQuery.size() == 1 && localSecondaryIndexes != null) {
+        // Hash key found but Range key not found. Check LSIs.
+        indexUseForQuery = getIndexUseForQuery(
+            schema,
+            localSecondaryIndexes.stream()
+                .map(index -> new DynamoDBIndexInfo(index.getIndexName(),
+                    index.getKeySchema(), index.getProjection()))
+                .collect(Collectors.toList()),
+            hiveDynamoDBMapping,
+            filterMap,
+            keyFiltersUseForQuery);
+      }
+    }
+
+    if (indexUseForQuery != null) {
+      log.info("Setting index name used for query: " + indexUseForQuery.getIndexName());
+      filter.setIndex(indexUseForQuery);
+    }
+    for (DynamoDBFilter f : keyFiltersUseForQuery) {
+      filter.addKeyCondition(f);
+    }
+    for (DynamoDBFilter f : filterMap.values()) {
+      if (!filter.getKeyConditions().containsKey(f.getColumnName())) {
+        filter.addScanFilter(f);
+      }
+    }
+    return filter;
+  }
+
+  /*
+   * This method has side effect to update keyFiltersUseForQuery to be the optimal combination
+   * seen so far.
+   * The return value is the most efficient index for querying the matched items.
+   */
+  private DynamoDBIndexInfo getIndexUseForQuery(List<KeySchemaElement> tableSchema,
+      List<DynamoDBIndexInfo> indexes,
+      Map<String, String> hiveDynamoDBMapping,
+      Map<String, DynamoDBFilter> filterMap,
+      List<DynamoDBFilter> keyFiltersUseForQuery) {
+    DynamoDBIndexInfo indexUseForQuery = null;
+    for (DynamoDBIndexInfo index : indexes) {
+      List<DynamoDBFilter> indexFilterList =
+          getDynamoDBFiltersFromSchema(index.getIndexSchema(), filterMap);
+      if (indexFilterList.size() > keyFiltersUseForQuery.size()
+          && indexIncludesAllMappedAttributes(tableSchema, index, hiveDynamoDBMapping)) {
+        keyFiltersUseForQuery.clear();
+        keyFiltersUseForQuery.addAll(indexFilterList);
+        indexUseForQuery = index;
+        if (keyFiltersUseForQuery.size() == 2) {
+          break;
+        }
+      }
+    }
+    return indexUseForQuery;
+  }
+
+  private boolean indexIncludesAllMappedAttributes(List<KeySchemaElement> tableSchema,
+      DynamoDBIndexInfo index, Map<String, String> hiveDynamoDBMapping) {
+    Projection indexProjection = index.getIndexProjection();
+    if (ProjectionType.ALL.toString().equals(indexProjection.getProjectionType())) {
+      return true;
+    }
+
+    Set<String> projectionAttributes = new HashSet<>();
+    for (KeySchemaElement keySchemaElement: tableSchema) {
+      projectionAttributes.add(keySchemaElement.getAttributeName());
+    }
+    for (KeySchemaElement keySchemaElement: index.getIndexSchema()) {
+      projectionAttributes.add(keySchemaElement.getAttributeName());
+    }
+    if (ProjectionType.INCLUDE.toString().equals(indexProjection.getProjectionType())) {
+      projectionAttributes.addAll(indexProjection.getNonKeyAttributes());
+    }
+
+    log.info("Checking if all mapped attributes " + hiveDynamoDBMapping.values()
+        + " are included in the index " + index.getIndexName()
+        + " having attributes " + projectionAttributes);
+    for (String queriedAttribute : hiveDynamoDBMapping.values()) {
+      if (!projectionAttributes.contains(queriedAttribute)) {
+        log.info("Not all mapped attributes are included in the index. Won't use index: "
+            + index.getIndexName());
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private List<DynamoDBFilter> getDynamoDBFiltersFromSchema(List<KeySchemaElement> schema,
+      Map<String, DynamoDBFilter> filterMap) {
+    List<DynamoDBFilter> dynamoDBFilters = new ArrayList<>();
+
     boolean hashKeyFilterExists = false;
-    if (schema.size() > 0 && "HASH".equals(schema.get(0).getKeyType())) {
-      String hashKeyName = schema.get(0).getAttributeName();
+    if (schema.size() > 0
+        && DYNAMODB_KEY_TYPE_HASH.equals(schema.get(HASH_KEY_INDEX).getKeyType())) {
+      String hashKeyName = schema.get(HASH_KEY_INDEX).getAttributeName();
       if (filterMap.containsKey(hashKeyName)) {
         DynamoDBFilter hashKeyFilter = filterMap.get(hashKeyName);
         if (DynamoDBFilterOperator.EQ.equals(hashKeyFilter.getOperator())) {
-          filter.addKeyCondition(hashKeyFilter);
+          dynamoDBFilters.add(hashKeyFilter);
           hashKeyFilterExists = true;
         }
       }
     }
 
     if (hashKeyFilterExists && schema.size() > 1) {
-      String rangeKeyName = schema.get(1).getAttributeName();
+      String rangeKeyName = schema.get(RANGE_KEY_INDEX).getAttributeName();
       if (filterMap.containsKey(rangeKeyName)) {
         DynamoDBFilter rangeKeyFilter = filterMap.get(rangeKeyName);
         if (eligibleOperatorsForRange.contains(rangeKeyFilter.getOperator())) {
-          filter.addKeyCondition(rangeKeyFilter);
+          dynamoDBFilters.add(rangeKeyFilter);
         }
       }
     }
-
-    for (DynamoDBFilter f : filterMap.values()) {
-      if (!filter.getKeyConditions().containsKey(f.getColumnName())) {
-        filter.addScanFilter(f);
-      }
-    }
-
-    return filter;
+    return dynamoDBFilters;
   }
 }

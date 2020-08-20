@@ -63,6 +63,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
+import org.apache.hadoop.dynamodb.filter.DynamoDBIndexInfo;
 import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -178,6 +179,12 @@ public class DynamoDBClient {
         .withKeyConditions(dynamoDBQueryFilter.getKeyConditions())
         .withLimit(Ints.checkedCast(limit))
         .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
+
+    DynamoDBIndexInfo index = dynamoDBQueryFilter.getIndex();
+    if (index != null) {
+      log.debug("Using DynamoDB index: " + index.getIndexName());
+      queryRequest.setIndexName(index.getIndexName());
+    }
 
     RetryResult<QueryResult> retryResult = getRetryDriver().runWithRetry(
         new Callable<QueryResult>() {
