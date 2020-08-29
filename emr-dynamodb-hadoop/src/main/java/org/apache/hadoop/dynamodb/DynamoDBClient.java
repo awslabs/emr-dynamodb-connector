@@ -292,7 +292,10 @@ public class DynamoDBClient {
 
               double consumed = 0.0;
               for (ConsumedCapacity consumedCapacity : result.getConsumedCapacity()) {
-                consumed = consumedCapacity.getCapacityUnits();
+                consumed = consumedCapacity.getTable().getCapacityUnits();
+                for(String name: consumedCapacity.getLocalSecondaryIndexes().keySet()) {
+                  consumed+=consumedCapacity.getLocalSecondaryIndexes().get(name).getCapacityUnits();
+                }
               }
 
               int batchSize = 0;

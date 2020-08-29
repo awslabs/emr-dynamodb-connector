@@ -120,6 +120,9 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
         for (ConsumedCapacity consumedCapacity : result.getConsumedCapacity()) {
           double consumedUnits = consumedCapacity.getTable().getCapacityUnits();
           totalIOPSConsumed += consumedUnits;
+          for(String name: consumedCapacity.getLocalSecondaryIndexes().keySet()) {
+            totalIOPSConsumed+=consumedCapacity.getLocalSecondaryIndexes().get(name).getCapacityUnits();
+          }
         }
       }
 
