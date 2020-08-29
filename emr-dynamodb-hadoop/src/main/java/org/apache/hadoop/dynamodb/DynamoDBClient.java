@@ -21,6 +21,7 @@ import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_ITEMS_PER_BATCH;
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_ITEM_SIZE;
 import static org.apache.hadoop.dynamodb.DynamoDBUtil.getDynamoDBEndpoint;
 
+import com.amazonaws.services.dynamodbv2.model.*;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -35,22 +36,6 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
-import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.dynamodbv2.model.ConsumedCapacity;
-import com.amazonaws.services.dynamodbv2.model.DescribeTableRequest;
-import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
-import com.amazonaws.services.dynamodbv2.model.PutRequest;
-import com.amazonaws.services.dynamodbv2.model.DeleteRequest;
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
-import com.amazonaws.services.dynamodbv2.model.QueryResult;
-import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
-import com.amazonaws.services.dynamodbv2.model.ScanRequest;
-import com.amazonaws.services.dynamodbv2.model.ScanResult;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
-import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -293,9 +278,9 @@ public class DynamoDBClient {
               double consumed = 0.0;
               for (ConsumedCapacity consumedCapacity : result.getConsumedCapacity()) {
                 consumed = consumedCapacity.getTable().getCapacityUnits();
-                if(null!=consumedCapacity.getLocalSecondaryIndexes()) {
-                  for (String name : consumedCapacity.getLocalSecondaryIndexes().keySet()) {
-                    consumed += consumedCapacity.getLocalSecondaryIndexes().get(name).getCapacityUnits();
+                if(consumedCapacity.getLocalSecondaryIndexes() != null) {
+                  for (Capacity lsiConsumedCapacity  : consumedCapacity.getLocalSecondaryIndexes().values()) {
+                    consumed += lsiConsumedCapacity.getCapacityUnits();
                   }
                 }
               }

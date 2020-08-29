@@ -16,10 +16,7 @@ package org.apache.hadoop.dynamodb.write;
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES;
 import static org.apache.hadoop.dynamodb.DynamoDBUtil.createJobClient;
 
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
-import com.amazonaws.services.dynamodbv2.model.ConsumedCapacity;
-import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.amazonaws.services.dynamodbv2.model.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -119,12 +116,12 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
       if (result.getConsumedCapacity() != null) {
         for (ConsumedCapacity consumedCapacity : result.getConsumedCapacity()) {
           double consumedUnits = consumedCapacity.getTable().getCapacityUnits();
-          totalIOPSConsumed += consumedUnits;
-          if (null != consumedCapacity.getLocalSecondaryIndexes()) {
-            for (String name : consumedCapacity.getLocalSecondaryIndexes().keySet()) {
-              totalIOPSConsumed += consumedCapacity.getLocalSecondaryIndexes().get(name).getCapacityUnits();
+          if (consumedCapacity.getLocalSecondaryIndexes() != null) {
+            for (Capacity lsiConsumedCapacity  : consumedCapacity.getLocalSecondaryIndexes().values()) {
+              consumedUnits += lsiConsumedCapacity.getCapacityUnits();
             }
           }
+          totalIOPSConsumed += consumedUnits;
         }
       }
 
