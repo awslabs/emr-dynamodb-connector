@@ -22,7 +22,8 @@ public interface HiveDynamoDBType extends DynamoDBType {
 
   Object getHiveData(AttributeValue data, ObjectInspector objectInspector);
 
-  AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization);
+  AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector,
+      boolean nullSerialization);
 
   TypeInfo getSupportedHiveType();
 

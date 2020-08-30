@@ -16,7 +16,12 @@ package org.apache.hadoop.dynamodb.importformat;
 import com.google.common.base.Charsets;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
-
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
@@ -35,13 +40,6 @@ import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.lib.CombineFileSplit;
 import org.apache.hadoop.mapreduce.security.TokenCache;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 public class ImportInputFormat extends FileInputFormat<NullWritable, DynamoDBItemWritable> {
 

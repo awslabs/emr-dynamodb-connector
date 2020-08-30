@@ -13,13 +13,12 @@
 
 package org.apache.hadoop.hive.dynamodb.split;
 
+import java.util.List;
 import org.apache.hadoop.dynamodb.split.DynamoDBSplit;
 import org.apache.hadoop.dynamodb.split.DynamoDBSplitGenerator;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.JobConf;
-
-import java.util.List;
 
 public class HiveDynamoDBSplitGenerator extends DynamoDBSplitGenerator {
 

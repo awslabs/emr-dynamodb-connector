@@ -1,12 +1,11 @@
 package org.apache.hadoop.hive.dynamodb.shims;
 
+import java.util.List;
+import java.util.Properties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.lazy.LazySerDeParameters;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
-
-import java.util.List;
-import java.util.Properties;
 
 class Hive2SerDeParametersShim implements SerDeParametersShim {
 

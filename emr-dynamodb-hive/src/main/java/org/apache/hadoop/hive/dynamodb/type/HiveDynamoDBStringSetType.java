@@ -14,22 +14,23 @@
 package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import java.util.List;
 import org.apache.hadoop.dynamodb.type.DynamoDBStringSetType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
-import java.util.List;
-
 public class HiveDynamoDBStringSetType extends DynamoDBStringSetType implements HiveDynamoDBType {
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
-    List<String> values = DynamoDBDataParser.getSetAttribute(data, objectInspector, getDynamoDBType());
-    return (values == null || values.isEmpty()) ?
-        DynamoDBDataParser.getNullAttribute(nullSerialization) :
-        new AttributeValue().withSS(values);
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector,
+      boolean nullSerialization) {
+    List<String> values =
+        DynamoDBDataParser.getSetAttribute(data, objectInspector, getDynamoDBType());
+    return (values == null || values.isEmpty())
+        ? DynamoDBDataParser.getNullAttribute(nullSerialization)
+        : new AttributeValue().withSS(values);
   }
 
   @Override

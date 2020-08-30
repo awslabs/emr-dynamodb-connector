@@ -13,6 +13,7 @@
 
 package org.apache.hadoop.dynamodb.read;
 
+import java.io.IOException;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.dynamodb.preader.DynamoDBRecordReaderContext;
 import org.apache.hadoop.io.Text;
@@ -20,8 +21,6 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
-
-import java.io.IOException;
 
 public class DynamoDBInputFormat extends AbstractDynamoDBInputFormat<Text, DynamoDBItemWritable> {
 

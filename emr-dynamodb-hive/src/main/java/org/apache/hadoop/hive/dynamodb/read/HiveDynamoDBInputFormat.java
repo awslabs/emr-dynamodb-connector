@@ -14,7 +14,10 @@
 package org.apache.hadoop.hive.dynamodb.read;
 
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
@@ -38,11 +41,6 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 public class HiveDynamoDBInputFormat extends DynamoDBInputFormat {
 

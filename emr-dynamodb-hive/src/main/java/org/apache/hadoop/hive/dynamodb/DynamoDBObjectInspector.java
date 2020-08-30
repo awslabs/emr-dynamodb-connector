@@ -14,6 +14,11 @@
 package org.apache.hadoop.hive.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBItemType;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBType;
@@ -24,12 +29,6 @@ import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public class DynamoDBObjectInspector extends StructObjectInspector {
 
@@ -37,8 +36,8 @@ public class DynamoDBObjectInspector extends StructObjectInspector {
   private List<StructField> structFields;
   private Map<String, DynamoDBField> columnNameStructFieldMap;
 
-  DynamoDBObjectInspector(List<String> columnNames, List<TypeInfo> columnTypes, Map<String, String> columnMappings,
-                          Map<String, HiveDynamoDBType> typeMappings) {
+  DynamoDBObjectInspector(List<String> columnNames, List<TypeInfo> columnTypes,
+      Map<String, String> columnMappings, Map<String, HiveDynamoDBType> typeMappings) {
     this.columnNames = columnNames;
 
     if (columnNames == null) {
@@ -55,8 +54,8 @@ public class DynamoDBObjectInspector extends StructObjectInspector {
     // Constructing struct field list for each column
     for (int i = 0; i < columnNames.size(); i++) {
       String columnName = columnNames.get(i);
-      DynamoDBField field = new DynamoDBField(i, columnName, columnMappings.get(columnName), columnTypes.get(i),
-          typeMappings.get(columnName));
+      DynamoDBField field = new DynamoDBField(i, columnName, columnMappings.get(columnName),
+          columnTypes.get(i), typeMappings.get(columnName));
       structFields.add(field);
       columnNameStructFieldMap.put(columnName, field);
     }
@@ -139,7 +138,8 @@ public class DynamoDBObjectInspector extends StructObjectInspector {
     private final ObjectInspector objectInspector;
     private final HiveDynamoDBType ddType;
 
-    DynamoDBField(int fieldID, String fieldName, String attributeName, TypeInfo typeInfo, HiveDynamoDBType ddType) {
+    DynamoDBField(int fieldID, String fieldName, String attributeName, TypeInfo typeInfo,
+        HiveDynamoDBType ddType) {
       super();
       this.fieldID = fieldID;
       this.fieldName = fieldName;

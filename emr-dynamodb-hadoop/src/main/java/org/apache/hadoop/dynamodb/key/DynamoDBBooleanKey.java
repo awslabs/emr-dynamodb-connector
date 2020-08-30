@@ -18,13 +18,13 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 public class DynamoDBBooleanKey  extends AbstractDynamoDBKey {
 
-    public DynamoDBBooleanKey(String key) {
-        super(key);
-    }
+  public DynamoDBBooleanKey(String key) {
+    super(key);
+  }
 
-    @Override
-    public int compareValue(AttributeValue attribute) {
-        return new Boolean(key).compareTo(attribute.getBOOL());
-    }
+  @Override
+  public int compareValue(AttributeValue attribute) {
+    return new Boolean(key).compareTo(attribute.getBOOL());
+  }
 
 }

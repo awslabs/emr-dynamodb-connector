@@ -13,17 +13,16 @@
 
 package org.apache.hadoop.hive.dynamodb.split;
 
-import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;
-import org.apache.hadoop.dynamodb.split.DynamoDBSplit;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.FileSplit;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;
+import org.apache.hadoop.dynamodb.split.DynamoDBSplit;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.FileSplit;
 
 /**
  * This InputSplit implementation is meant to be used with Hive, where {@code path} is non-null, and

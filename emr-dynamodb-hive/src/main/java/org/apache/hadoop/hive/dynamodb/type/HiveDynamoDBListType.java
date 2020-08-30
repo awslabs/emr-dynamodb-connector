@@ -12,25 +12,29 @@
 package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import java.util.List;
 import org.apache.hadoop.dynamodb.type.DynamoDBListType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 
-import java.util.List;
-
 public class HiveDynamoDBListType extends DynamoDBListType implements HiveDynamoDBType {
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
-    List<AttributeValue> values = DynamoDBDataParser.getListAttribute(data, objectInspector, nullSerialization);
-    return values == null ? DynamoDBDataParser.getNullAttribute(nullSerialization) : new AttributeValue().withL(values);
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector,
+      boolean nullSerialization) {
+    List<AttributeValue> values =
+        DynamoDBDataParser.getListAttribute(data, objectInspector, nullSerialization);
+    return values == null
+        ? DynamoDBDataParser.getNullAttribute(nullSerialization)
+        : new AttributeValue().withL(values);
   }
 
   @Override
   public TypeInfo getSupportedHiveType() {
-    throw new UnsupportedOperationException(getClass().toString() + " does not support this operation.");
+    throw new UnsupportedOperationException(getClass().toString()
+        + " does not support this operation.");
   }
 
   @Override
@@ -50,7 +54,8 @@ public class HiveDynamoDBListType extends DynamoDBListType implements HiveDynamo
 
   @Override
   public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
-    return data.getL() == null ? null : DynamoDBDataParser.getListObject(data.getL(), objectInspector);
+    return data.getL() == null ? null
+        : DynamoDBDataParser.getListObject(data.getL(), objectInspector);
   }
 
 }

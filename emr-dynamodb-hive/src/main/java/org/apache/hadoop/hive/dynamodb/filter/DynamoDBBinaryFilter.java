@@ -15,12 +15,10 @@ package org.apache.hadoop.hive.dynamodb.filter;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.Condition;
-
-import org.apache.hadoop.dynamodb.filter.DynamoDBFilterOperator;
-import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.hadoop.dynamodb.filter.DynamoDBFilterOperator;
+import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
 
 public class DynamoDBBinaryFilter extends AbstractDynamoDBFilter {
 

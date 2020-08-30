@@ -21,7 +21,8 @@ import com.amazonaws.services.dynamodbv2.model.Capacity;
 import com.amazonaws.services.dynamodbv2.model.ConsumedCapacity;
 import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
-
+import java.io.IOException;
+import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
@@ -37,9 +38,6 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.Progressable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * AbstractDynamoDBRecordWriter does all the backend work for reading in key-value pairs from the
@@ -81,7 +79,8 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
     }
 
 
-    deletionMode = jobConf.getBoolean(DynamoDBConstants.DELETION_MODE, DynamoDBConstants.DEFAULT_DELETION_MODE);
+    deletionMode = jobConf.getBoolean(DynamoDBConstants.DELETION_MODE,
+        DynamoDBConstants.DEFAULT_DELETION_MODE);
 
     IopsCalculator iopsCalculator = new WriteIopsCalculator(createJobClient(jobConf), client,
         tableName);
@@ -121,7 +120,8 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
         for (ConsumedCapacity consumedCapacity : result.getConsumedCapacity()) {
           double consumedUnits = consumedCapacity.getTable().getCapacityUnits();
           if (consumedCapacity.getLocalSecondaryIndexes() != null) {
-            for (Capacity lsiConsumedCapacity  : consumedCapacity.getLocalSecondaryIndexes().values()) {
+            for (Capacity lsiConsumedCapacity :
+                consumedCapacity.getLocalSecondaryIndexes().values()) {
               consumedUnits += lsiConsumedCapacity.getCapacityUnits();
             }
           }

@@ -29,4 +29,16 @@
 
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <maxAllowedViolations>0</maxAllowedViolations>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

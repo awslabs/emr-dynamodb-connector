@@ -13,6 +13,8 @@
 
 package org.apache.hadoop.dynamodb.tools;
 
+import java.io.IOException;
+import java.util.UUID;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
@@ -28,9 +30,6 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.OutputFormat;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
-
-import java.io.IOException;
-import java.util.UUID;
 
 class ExportMapper extends MapReduceBase implements Mapper<Text, DynamoDBItemWritable, Text, Text> {
 

@@ -14,7 +14,6 @@
 package org.apache.hadoop.dynamodb.exportformat;
 
 import com.google.gson.Gson;
-
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
 
 public class ExportFileHeader {

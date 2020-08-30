@@ -14,7 +14,6 @@
 package org.apache.hadoop.dynamodb.filter;
 
 import com.amazonaws.services.dynamodbv2.model.Condition;
-
 import java.util.HashMap;
 import java.util.Map;
 

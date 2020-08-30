@@ -14,25 +14,26 @@
 package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.apache.hadoop.dynamodb.type.DynamoDBBinarySetType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 public class HiveDynamoDBBinarySetType extends DynamoDBBinarySetType implements HiveDynamoDBType {
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
-    List<ByteBuffer> values = DynamoDBDataParser.getByteBuffers(data, objectInspector, getDynamoDBType());
-    return (values == null || values.isEmpty()) ?
-        DynamoDBDataParser.getNullAttribute(nullSerialization) :
-        new AttributeValue().withBS(values);
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector,
+      boolean nullSerialization) {
+    List<ByteBuffer> values =
+        DynamoDBDataParser.getByteBuffers(data, objectInspector, getDynamoDBType());
+    return (values == null || values.isEmpty())
+        ? DynamoDBDataParser.getNullAttribute(nullSerialization)
+        : new AttributeValue().withBS(values);
   }
 
   @Override

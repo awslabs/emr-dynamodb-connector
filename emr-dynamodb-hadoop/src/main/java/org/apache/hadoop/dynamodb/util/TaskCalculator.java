@@ -13,13 +13,12 @@
 
 package org.apache.hadoop.dynamodb.util;
 
+import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.MRJobConfig;
-
-import java.io.IOException;
 
 public class TaskCalculator {
   private static final Log log = LogFactory.getLog(TaskCalculator.class);

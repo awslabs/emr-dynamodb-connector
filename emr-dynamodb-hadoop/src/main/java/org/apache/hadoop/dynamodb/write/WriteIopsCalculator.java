@@ -13,6 +13,7 @@ package org.apache.hadoop.dynamodb.write;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.google.common.base.Strings;
+import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
@@ -21,8 +22,6 @@ import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.dynamodb.IopsCalculator;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-
-import java.io.IOException;
 
 public class WriteIopsCalculator implements IopsCalculator {
 

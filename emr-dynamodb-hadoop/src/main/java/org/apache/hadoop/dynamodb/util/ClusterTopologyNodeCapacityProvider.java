@@ -15,13 +15,12 @@ package org.apache.hadoop.dynamodb.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.mapred.JobConf;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.mapred.JobConf;
 
 public class ClusterTopologyNodeCapacityProvider implements NodeCapacityProvider {
   private static final Log log = LogFactory.getLog(ClusterTopologyNodeCapacityProvider.class);
@@ -121,9 +120,9 @@ public class ClusterTopologyNodeCapacityProvider implements NodeCapacityProvider
   }
 
   // TODO in hadoop3 with emr6, aws-java-sdk-core and aws-java-sdk-bundle will be co-exist
-  // as part of `yarn.application.classpath` which will be easily made user program find one conflict
-  // with another when using Jackson API, our change here is to remove this classpath conflict
-  // such reading json object without package-dependent issue.
+  // as part of `yarn.application.classpath` which will be easily made user program find one
+  // conflict with another when using Jackson API, our change here is to remove this classpath
+  // conflict such reading json object without package-dependent issue.
   private JsonNode readFromJsonString(String jobFlowJsonString) throws IOException {
     if (jobFlowJsonString == null) {
       return null;

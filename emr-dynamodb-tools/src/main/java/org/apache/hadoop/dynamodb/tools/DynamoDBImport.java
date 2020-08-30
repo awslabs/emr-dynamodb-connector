@@ -14,7 +14,7 @@
 package org.apache.hadoop.dynamodb.tools;
 
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
-
+import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -32,8 +32,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.lib.IdentityReducer;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-
-import java.util.Date;
 
 public class DynamoDBImport extends Configured implements Tool {
 

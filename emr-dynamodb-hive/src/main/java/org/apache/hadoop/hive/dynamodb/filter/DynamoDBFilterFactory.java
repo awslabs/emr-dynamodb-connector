@@ -13,14 +13,13 @@
 
 package org.apache.hadoop.hive.dynamodb.filter;
 
+import java.util.List;
 import org.apache.hadoop.dynamodb.filter.DynamoDBFilter;
 import org.apache.hadoop.dynamodb.filter.DynamoDBFilterOperator;
 import org.apache.hadoop.hive.dynamodb.shims.ShimsLoader;
 import org.apache.hadoop.hive.ql.index.IndexSearchCondition;
 import org.apache.hadoop.hive.ql.plan.ExprNodeConstantDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
-
-import java.util.List;
 
 public class DynamoDBFilterFactory {
 

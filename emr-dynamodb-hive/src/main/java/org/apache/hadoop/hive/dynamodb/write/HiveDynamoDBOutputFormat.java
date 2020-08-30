@@ -13,6 +13,8 @@
 
 package org.apache.hadoop.hive.dynamodb.write;
 
+import java.io.IOException;
+import java.util.Properties;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -21,11 +23,7 @@ import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.OutputFormat;
 import org.apache.hadoop.util.Progressable;
-
-import java.io.IOException;
-import java.util.Properties;
 
 public class HiveDynamoDBOutputFormat implements HiveOutputFormat<Text, DynamoDBItemWritable> {
 

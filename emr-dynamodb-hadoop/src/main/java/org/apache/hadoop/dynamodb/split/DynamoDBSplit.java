@@ -13,10 +13,9 @@
 
 package org.apache.hadoop.dynamodb.split;
 
+import java.util.List;
 import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;
 import org.apache.hadoop.mapred.InputSplit;
-
-import java.util.List;
 
 public interface DynamoDBSplit extends InputSplit {
   long getApproxItemCount();

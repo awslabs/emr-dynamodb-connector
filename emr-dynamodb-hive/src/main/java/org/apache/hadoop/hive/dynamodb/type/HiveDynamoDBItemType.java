@@ -14,6 +14,12 @@
 package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.dynamodb.key.DynamoDBKey;
 import org.apache.hadoop.dynamodb.type.DynamoDBItemType;
@@ -24,13 +30,6 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 
 public class HiveDynamoDBItemType implements DynamoDBItemType, HiveDynamoDBType {
 
@@ -42,13 +41,15 @@ public class HiveDynamoDBItemType implements DynamoDBItemType, HiveDynamoDBType 
   }
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector,
+      boolean nullSerialization) {
     throw new UnsupportedOperationException("DynamoDBItemType does not support this operation.");
   }
 
   @Override
   public TypeInfo getSupportedHiveType() {
-    return TypeInfoFactory.getMapTypeInfo(TypeInfoFactory.stringTypeInfo, TypeInfoFactory.stringTypeInfo);
+    return TypeInfoFactory.getMapTypeInfo(TypeInfoFactory.stringTypeInfo,
+        TypeInfoFactory.stringTypeInfo);
   }
 
   @Override
@@ -146,7 +147,8 @@ public class HiveDynamoDBItemType implements DynamoDBItemType, HiveDynamoDBType 
 
       /* Get the string key, value pair */
       String dynamoDBAttributeName = mapKeyObjectInspector.getPrimitiveJavaObject(entry.getKey());
-      String dynamoDBAttributeValue = mapValueObjectInspector.getPrimitiveJavaObject(entry.getValue());
+      String dynamoDBAttributeValue =
+          mapValueObjectInspector.getPrimitiveJavaObject(entry.getValue());
 
       /* Deserialize the AttributeValue string */
       AttributeValue deserializedAttributeValue = deserializeAttributeValue(dynamoDBAttributeValue);

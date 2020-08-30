@@ -13,14 +13,13 @@
 
 package org.apache.hadoop.dynamodb.exportformat;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
-
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 class ExportRecordWriter implements RecordWriter<NullWritable, DynamoDBItemWritable> {
 

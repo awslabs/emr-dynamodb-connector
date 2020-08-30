@@ -16,7 +16,6 @@ package org.apache.hadoop.dynamodb.type;
 import static org.apache.hadoop.dynamodb.DynamoDBUtil.base64StringToByteBuffer;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.hadoop.dynamodb.key.DynamoDBBinaryKey;
 import org.apache.hadoop.dynamodb.key.DynamoDBKey;
 

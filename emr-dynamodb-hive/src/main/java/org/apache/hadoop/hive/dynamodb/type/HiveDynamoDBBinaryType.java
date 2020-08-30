@@ -14,20 +14,22 @@
 package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import java.nio.ByteBuffer;
 import org.apache.hadoop.dynamodb.type.DynamoDBBinaryType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
-import java.nio.ByteBuffer;
-
 public class HiveDynamoDBBinaryType extends DynamoDBBinaryType implements HiveDynamoDBType {
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector,
+      boolean nullSerialization) {
     ByteBuffer value = DynamoDBDataParser.getByteBuffer(data, objectInspector);
-    return value == null ? DynamoDBDataParser.getNullAttribute(nullSerialization) : new AttributeValue().withB(value);
+    return value == null
+        ? DynamoDBDataParser.getNullAttribute(nullSerialization)
+        : new AttributeValue().withB(value);
   }
 
   @Override

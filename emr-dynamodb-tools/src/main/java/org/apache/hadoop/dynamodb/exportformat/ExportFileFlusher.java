@@ -13,17 +13,16 @@
 
 package org.apache.hadoop.dynamodb.exportformat;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.dynamodb.util.AbstractTimeSource;
-import org.apache.hadoop.mapred.RecordWriter;
-import org.apache.hadoop.mapred.Reporter;
-
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.dynamodb.util.AbstractTimeSource;
+import org.apache.hadoop.mapred.RecordWriter;
+import org.apache.hadoop.mapred.Reporter;
 
 /**
  * This class is responsible for asynchronously closing export file record writers, flushing the
@@ -36,8 +35,8 @@ public class ExportFileFlusher {
 
   private static final Log log = LogFactory.getLog(ExportFileFlusher.class);
   private final ExecutorService closePool = new ThreadPoolExecutor(FILE_FLUSHER_POOL_SIZE,
-      FILE_FLUSHER_POOL_SIZE, 1L, TimeUnit.MINUTES, new SynchronousQueue<Runnable>(), new
-      ThreadPoolExecutor.CallerRunsPolicy());
+      FILE_FLUSHER_POOL_SIZE, 1L, TimeUnit.MINUTES, new SynchronousQueue<Runnable>(),
+      new ThreadPoolExecutor.CallerRunsPolicy());
   private final AbstractTimeSource time;
   private volatile Throwable exception = null;
 
@@ -58,8 +57,8 @@ public class ExportFileFlusher {
           long duration = time.getTimeSinceMs(start);
           log.info("Flushed file in " + (duration / 1000.0) + " seconds.");
         } catch (Throwable e) {
-          log.error("Exeption caught while closing stream. This exception will be thrown later.",
-              e);
+          log.error(
+              "Exception caught while closing stream. This exception will be thrown later.", e);
           exception = e;
         }
 

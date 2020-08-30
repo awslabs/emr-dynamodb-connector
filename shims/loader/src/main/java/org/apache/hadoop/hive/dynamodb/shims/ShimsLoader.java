@@ -14,7 +14,6 @@
 package org.apache.hadoop.hive.dynamodb.shims;
 
 import com.google.common.annotations.VisibleForTesting;
-
 import org.apache.hive.common.util.HiveVersionInfo;
 
 public final class ShimsLoader {

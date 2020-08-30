@@ -10,11 +10,12 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 public class HiveDynamoDBBooleanType extends DynamoDBBooleanType implements HiveDynamoDBType {
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector,
+      boolean nullSerialization) {
     Boolean value = DynamoDBDataParser.getBoolean(data, objectInspector);
-    return value == null ?
-        DynamoDBDataParser.getNullAttribute(nullSerialization) :
-        new AttributeValue().withBOOL(value);
+    return value == null
+        ? DynamoDBDataParser.getNullAttribute(nullSerialization)
+        : new AttributeValue().withBOOL(value);
   }
 
   @Override

@@ -10,18 +10,22 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 public class HiveDynamoDBNullType extends DynamoDBNullType implements HiveDynamoDBType {
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
-    throw new UnsupportedOperationException(getClass().toString() + " does not support this operation.");
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector,
+      boolean nullSerialization) {
+    throw new UnsupportedOperationException(getClass().toString()
+        + " does not support this operation.");
   }
 
   @Override
   public TypeInfo getSupportedHiveType() {
-    throw new UnsupportedOperationException(getClass().toString() + " does not support this operation.");
+    throw new UnsupportedOperationException(getClass().toString()
+        + " does not support this operation.");
   }
 
   @Override
   public boolean supportsHiveType(TypeInfo typeInfo) {
-    throw new UnsupportedOperationException(getClass().toString() + " does not support this operation.");
+    throw new UnsupportedOperationException(getClass().toString()
+        + " does not support this operation.");
   }
 
   @Override

@@ -13,6 +13,16 @@
 
 package org.apache.hadoop.hive.dynamodb.util;
 
+import com.google.common.collect.Maps;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
@@ -21,17 +31,6 @@ import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.mapred.JobConf;
-import com.google.common.collect.Maps;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 public final class HiveDynamoDBUtil {
 
@@ -39,7 +38,9 @@ public final class HiveDynamoDBUtil {
   private static final Type MAP_TYPE = new TypeToken<Map<String, String>>() {}.getType();
   private static final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
-  private HiveDynamoDBUtil() {}
+  private HiveDynamoDBUtil() {
+
+  }
 
   public static String getDynamoDBTableName(String tablePropertyDefinedTableName, String
       hiveTableName) {
@@ -54,9 +55,8 @@ public final class HiveDynamoDBUtil {
     return getHiveToDynamoDBMapping(props.getProperty(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING));
   }
 
-  public static Map<String, HiveDynamoDBType> getHiveToDynamoDBTypeMapping(List<String> columnNames,
-                                                                           List<TypeInfo> columnTypes,
-                                                                           Properties props) {
+  public static Map<String, HiveDynamoDBType> getHiveToDynamoDBTypeMapping(
+      List<String> columnNames, List<TypeInfo> columnTypes, Properties props) {
     Map<String, HiveDynamoDBType> typeMappings = Maps.newHashMap();
     Map<String, String> altTypeMappings = HiveDynamoDBUtil.getHiveToDynamoDBMapping(
         props.getProperty(DynamoDBConstants.DYNAMODB_TYPE_MAPPING)
@@ -64,9 +64,9 @@ public final class HiveDynamoDBUtil {
 
     for (int i = 0; i < columnNames.size(); i++) {
       String columnName = columnNames.get(i);
-      HiveDynamoDBType ddType = altTypeMappings.containsKey(columnName) ?
-          HiveDynamoDBTypeFactory.getTypeObjectFromDynamoDBType(altTypeMappings.get(columnName)) :
-          HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(columnTypes.get(i));
+      HiveDynamoDBType ddType = altTypeMappings.containsKey(columnName)
+          ? HiveDynamoDBTypeFactory.getTypeObjectFromDynamoDBType(altTypeMappings.get(columnName))
+          : HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(columnTypes.get(i));
       typeMappings.put(columnName, ddType);
     }
 
@@ -86,8 +86,8 @@ public final class HiveDynamoDBUtil {
   }
 
   /**
-   * Please note that this method converts the hive column names (map keys) to lower case for consistency
-   * with other Hive code
+   * Please note that this method converts the hive column names (map keys) to lower case for
+   * consistency with other Hive code
    */
   public static Map<String, String> getHiveToDynamoDBMapping(String mapping) {
     if ((mapping == null) || (mapping.isEmpty())) {
