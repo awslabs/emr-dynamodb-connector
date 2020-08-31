@@ -13,12 +13,11 @@
 
 package org.apache.hadoop.dynamodb.preader;
 
-import org.apache.hadoop.dynamodb.util.AbstractTimeSource;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import org.apache.hadoop.dynamodb.util.AbstractTimeSource;
 
 public class ScanReadManager extends AbstractReadManager {
 

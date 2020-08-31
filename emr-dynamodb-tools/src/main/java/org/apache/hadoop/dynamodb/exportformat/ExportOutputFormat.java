@@ -13,6 +13,8 @@
 
 package org.apache.hadoop.dynamodb.exportformat;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -24,9 +26,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.ReflectionUtils;
-
-import java.io.DataOutputStream;
-import java.io.IOException;
 
 public class ExportOutputFormat extends FileOutputFormat<NullWritable, DynamoDBItemWritable> {
 

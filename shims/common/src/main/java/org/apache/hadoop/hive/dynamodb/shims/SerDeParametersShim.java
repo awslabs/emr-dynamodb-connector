@@ -1,8 +1,7 @@
 package org.apache.hadoop.hive.dynamodb.shims;
 
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
-
 import java.util.List;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 
 public interface SerDeParametersShim {
 

@@ -13,11 +13,10 @@
 
 package org.apache.hadoop.dynamodb.write;
 
+import java.io.IOException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputFormat;
-
-import java.io.IOException;
 
 public abstract class AbstractDynamoDBOutputFormat<K, V> implements OutputFormat<K, V> {
 

@@ -13,6 +13,7 @@
 
 package org.apache.hadoop.dynamodb.importformat;
 
+import java.io.IOException;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -26,8 +27,6 @@ import org.apache.hadoop.io.compress.Decompressor;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.util.LineReader;
-
-import java.io.IOException;
 
 public class ImportRecordReader implements RecordReader<NullWritable, DynamoDBItemWritable> {
 

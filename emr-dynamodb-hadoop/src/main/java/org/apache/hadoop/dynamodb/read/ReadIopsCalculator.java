@@ -55,7 +55,8 @@ public class ReadIopsCalculator implements IopsCalculator {
 
   public long calculateTargetIops() {
     double configuredThroughput = Math.floor(Double.parseDouble(
-        jobConf.get(DynamoDBConstants.READ_THROUGHPUT, String.valueOf(getThroughput()))) * throughputPercent);
+        jobConf.get(DynamoDBConstants.READ_THROUGHPUT,
+            String.valueOf(getThroughput()))) * throughputPercent);
     long throughputPerTask = Math.max((long) (configuredThroughput / totalSegments
         * localSegments), 1);
 
@@ -65,8 +66,8 @@ public class ReadIopsCalculator implements IopsCalculator {
 
   private double getThroughput() {
     TableDescription tableDescription = dynamoDBClient.describeTable(tableName);
-    if (tableDescription.getBillingModeSummary() == null ||
-        tableDescription.getBillingModeSummary().getBillingMode()
+    if (tableDescription.getBillingModeSummary() == null
+        || tableDescription.getBillingModeSummary().getBillingMode()
             .equalsIgnoreCase(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
       ProvisionedThroughputDescription provisionedThroughput = tableDescription
           .getProvisionedThroughput();

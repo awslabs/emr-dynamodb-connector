@@ -13,15 +13,14 @@
 
 package org.apache.hadoop.dynamodb.split;
 
-import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;
-import org.apache.hadoop.fs.Path;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;
+import org.apache.hadoop.fs.Path;
 
 public class DynamoDBSegmentsSplit implements DynamoDBSplit {
 

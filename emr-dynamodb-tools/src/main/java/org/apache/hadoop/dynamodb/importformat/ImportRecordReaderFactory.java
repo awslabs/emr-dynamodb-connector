@@ -13,6 +13,7 @@
 
 package org.apache.hadoop.dynamodb.importformat;
 
+import java.io.IOException;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.dynamodb.exportformat.ExportManifestRecordWriter;
@@ -24,8 +25,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.lib.CombineFileSplit;
-
-import java.io.IOException;
 
 final class ImportRecordReaderFactory {
 

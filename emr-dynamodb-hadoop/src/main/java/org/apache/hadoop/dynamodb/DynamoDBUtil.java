@@ -16,6 +16,11 @@ package org.apache.hadoop.dynamodb;
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEMS_PER_BATCH;
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_ITEMS_PER_BATCH;
 
+import com.amazonaws.regions.RegionUtils;
+import com.amazonaws.regions.ServiceAbbreviations;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.TableDescription;
+import com.amazonaws.util.EC2MetadataUtils;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -26,13 +31,15 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-
-import com.amazonaws.regions.RegionUtils;
-import com.amazonaws.regions.ServiceAbbreviations;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
-import com.amazonaws.util.EC2MetadataUtils;
-
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,16 +53,6 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 public final class DynamoDBUtil {
 
@@ -188,7 +185,8 @@ public final class DynamoDBUtil {
       }
     } else if (att.getM() != null) {
       for (Entry<String, AttributeValue> entry : att.getM().entrySet()) {
-    	byteSize += getAttributeSizeBytes(entry.getValue()) + entry.getKey().getBytes(CHARACTER_ENCODING).length;
+        byteSize += getAttributeSizeBytes(entry.getValue())
+            + entry.getKey().getBytes(CHARACTER_ENCODING).length;
       }
     } else if (att.getL() != null) {
       for (AttributeValue entry : att.getL()) {
@@ -302,6 +300,8 @@ public final class DynamoDBUtil {
     }
   }
 
-  private DynamoDBUtil() {}
+  private DynamoDBUtil() {
+
+  }
 
 }

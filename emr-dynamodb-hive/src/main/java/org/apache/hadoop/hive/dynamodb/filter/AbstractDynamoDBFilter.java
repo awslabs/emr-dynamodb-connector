@@ -14,7 +14,6 @@
 package org.apache.hadoop.hive.dynamodb.filter;
 
 import com.amazonaws.services.dynamodbv2.model.Condition;
-
 import org.apache.hadoop.dynamodb.filter.DynamoDBFilter;
 import org.apache.hadoop.dynamodb.filter.DynamoDBFilterOperator;
 

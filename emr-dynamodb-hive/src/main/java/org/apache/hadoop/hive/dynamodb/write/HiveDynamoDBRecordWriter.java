@@ -13,6 +13,7 @@
 
 package org.apache.hadoop.hive.dynamodb.write;
 
+import java.io.IOException;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.dynamodb.write.DefaultDynamoDBRecordWriter;
 import org.apache.hadoop.hive.ql.exec.FileSinkOperator.RecordWriter;
@@ -21,8 +22,6 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.Progressable;
-
-import java.io.IOException;
 
 class HiveDynamoDBRecordWriter extends DefaultDynamoDBRecordWriter implements RecordWriter {
 

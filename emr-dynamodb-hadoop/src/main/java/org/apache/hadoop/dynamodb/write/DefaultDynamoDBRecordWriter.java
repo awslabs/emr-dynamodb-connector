@@ -13,12 +13,11 @@
 
 package org.apache.hadoop.dynamodb.write;
 
+import java.io.IOException;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.Progressable;
-
-import java.io.IOException;
 
 public class DefaultDynamoDBRecordWriter extends AbstractDynamoDBRecordWriter<Text,
     DynamoDBItemWritable> {

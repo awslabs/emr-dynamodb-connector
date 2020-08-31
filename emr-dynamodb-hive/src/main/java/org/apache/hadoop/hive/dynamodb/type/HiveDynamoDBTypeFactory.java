@@ -13,16 +13,15 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import java.util.Map;
+import java.util.Set;
 import org.apache.hadoop.dynamodb.type.DynamoDBTypeConstants;
 import org.apache.hadoop.dynamodb.type.DynamoDBTypeFactory;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
-import java.util.Map;
-import java.util.Set;
 
 public class HiveDynamoDBTypeFactory extends DynamoDBTypeFactory {
 
@@ -48,7 +47,8 @@ public class HiveDynamoDBTypeFactory extends DynamoDBTypeFactory {
       new HiveDynamoDBNullType()
   );
 
-  private static final Map<TypeInfo, HiveDynamoDBType> SIMPLE_HIVE_DYNAMODB_TYPES_MAP = Maps.newHashMap();
+  private static final Map<TypeInfo, HiveDynamoDBType> SIMPLE_HIVE_DYNAMODB_TYPES_MAP =
+      Maps.newHashMap();
   private static final Set<HiveDynamoDBType> COMPLEX_HIVE_DYNAMODB_TYPES_SET = Sets.newHashSet();
   private static final Map<String, HiveDynamoDBType> DYNAMODB_TYPE_MAP = Maps.newHashMap();
 
@@ -105,7 +105,8 @@ public class HiveDynamoDBTypeFactory extends DynamoDBTypeFactory {
   }
 
   public static boolean isHiveDynamoDBItemMapType(ObjectInspector objectInspector) {
-    return DYNAMODB_ITEM_TYPE.supportsHiveType(TypeInfoUtils.getTypeInfoFromObjectInspector(objectInspector));
+    return DYNAMODB_ITEM_TYPE.supportsHiveType(
+        TypeInfoUtils.getTypeInfoFromObjectInspector(objectInspector));
   }
 
   public static boolean isHiveDynamoDBItemMapType(HiveDynamoDBType ddType) {

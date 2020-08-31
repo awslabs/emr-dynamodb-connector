@@ -14,6 +14,11 @@
 package org.apache.hadoop.hive.dynamodb.util;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.type.DynamoDBTypeConstants;
@@ -32,12 +37,6 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.LongObjectInspect
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
 import org.apache.hadoop.io.BytesWritable;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 public class DynamoDBDataParser {
   private static final Log log = LogFactory.getLog(DynamoDBDataParser.class);
 
@@ -47,8 +46,8 @@ public class DynamoDBDataParser {
     } else if (objectInspector.getTypeName().equals(serdeConstants.BIGINT_TYPE_NAME)) {
       return Long.toString(((LongObjectInspector) objectInspector).get(data));
     }
-    throw new IllegalArgumentException("Unknown object inspector type: " + objectInspector.getCategory()
-            + " Type name: " + objectInspector.getTypeName());
+    throw new IllegalArgumentException("Unknown object inspector type: "
+        + objectInspector.getCategory() + " Type name: " + objectInspector.getTypeName());
   }
 
   public static Boolean getBoolean(Object data, ObjectInspector objectInspector) {
@@ -66,8 +65,8 @@ public class DynamoDBDataParser {
     return ByteBuffer.wrap(result);
   }
 
-  public static Map<String, AttributeValue> getMapAttribute(Object data, ObjectInspector objectInspector,
-                                                            boolean nullSerialization) {
+  public static Map<String, AttributeValue> getMapAttribute(Object data,
+      ObjectInspector objectInspector, boolean nullSerialization) {
     Map<String, AttributeValue> itemMap = new HashMap<>();
     switch (objectInspector.getCategory()) {
       case MAP:
@@ -87,9 +86,9 @@ public class DynamoDBDataParser {
           String attributeName = mapKeyOI.getPrimitiveJavaObject(entry.getKey());
 
           Object valueData = entry.getValue();
-          AttributeValue attributeValue = valueData == null ?
-              getNullAttribute(nullSerialization) :
-              valueType.getDynamoDBData(valueData, mapValueOI, nullSerialization);
+          AttributeValue attributeValue = valueData == null
+              ? getNullAttribute(nullSerialization)
+              : valueType.getDynamoDBData(valueData, mapValueOI, nullSerialization);
 
           if (attributeValue == null) {
             throw new NullPointerException("Null field found in map: " + dataMap);
@@ -109,20 +108,21 @@ public class DynamoDBDataParser {
           HiveDynamoDBType fieldType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(fieldOI);
 
           String attributeName = field.getFieldName();
-          AttributeValue attributeValue = fieldData == null ?
-              getNullAttribute(nullSerialization) :
-              fieldType.getDynamoDBData(fieldData, fieldOI, nullSerialization);
+          AttributeValue attributeValue = fieldData == null
+              ? getNullAttribute(nullSerialization)
+              : fieldType.getDynamoDBData(fieldData, fieldOI, nullSerialization);
 
           if (attributeValue == null) {
-            throw new NullPointerException("Null field found in struct: " + structOI.getStructFieldsDataAsList(data));
+            throw new NullPointerException("Null field found in struct: "
+                + structOI.getStructFieldsDataAsList(data));
           }
 
           itemMap.put(attributeName, attributeValue);
         }
         break;
       default:
-        throw new IllegalArgumentException("Unknown object inspector type: " + objectInspector.getCategory()
-            + " Type name: " + objectInspector.getTypeName());
+        throw new IllegalArgumentException("Unknown object inspector type: "
+            + objectInspector.getCategory() + " Type name: " + objectInspector.getTypeName());
     }
     return itemMap;
   }
@@ -137,12 +137,13 @@ public class DynamoDBDataParser {
     }
 
     ObjectInspector itemObjectInspector = listObjectInspector.getListElementObjectInspector();
-    HiveDynamoDBType itemType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(itemObjectInspector);
+    HiveDynamoDBType itemType =
+        HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(itemObjectInspector);
     List<AttributeValue> itemList = new ArrayList<>();
     for (Object dataItem : dataList) {
-      AttributeValue item = dataItem == null ?
-          getNullAttribute(nullSerialization) :
-          itemType.getDynamoDBData(dataItem, itemObjectInspector, nullSerialization);
+      AttributeValue item = dataItem == null
+          ? getNullAttribute(nullSerialization)
+          : itemType.getDynamoDBData(dataItem, itemObjectInspector, nullSerialization);
 
       if (item == null) {
         throw new NullPointerException("Null element found in list: " + dataList);
@@ -215,9 +216,10 @@ public class DynamoDBDataParser {
   }
 
   public static AttributeValue getNullAttribute(boolean nullSerialization) {
-    return nullSerialization ?
-        HiveDynamoDBTypeFactory.getTypeObjectFromDynamoDBType(DynamoDBTypeConstants.NULL).getAttributeValue() :
-        null;
+    return nullSerialization
+        ? HiveDynamoDBTypeFactory.getTypeObjectFromDynamoDBType(
+            DynamoDBTypeConstants.NULL).getAttributeValue()
+        : null;
   }
 
   public static Object getNumberObjectList(List<String> data, ObjectInspector objectInspector) {
@@ -257,7 +259,8 @@ public class DynamoDBDataParser {
     return values;
   }
 
-  public static Object getMapObject(Map<String, AttributeValue> data, ObjectInspector objectInspector) {
+  public static Object getMapObject(Map<String, AttributeValue> data,
+      ObjectInspector objectInspector) {
     MapObjectInspector mapOI = (MapObjectInspector) objectInspector;
     ObjectInspector mapValueOI = mapOI.getMapValueObjectInspector();
     HiveDynamoDBType valueType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(mapValueOI);
@@ -270,7 +273,8 @@ public class DynamoDBDataParser {
     return values;
   }
 
-  public static Object getStructObject(Map<String, AttributeValue> data, ObjectInspector objectInspector) {
+  public static Object getStructObject(Map<String, AttributeValue> data,
+      ObjectInspector objectInspector) {
     StructObjectInspector structOI = (StructObjectInspector) objectInspector;
     List<? extends StructField> structFields = structOI.getAllStructFieldRefs();
 

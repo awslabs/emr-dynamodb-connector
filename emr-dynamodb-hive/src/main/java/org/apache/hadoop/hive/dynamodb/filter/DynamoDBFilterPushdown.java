@@ -14,7 +14,13 @@
 package org.apache.hadoop.hive.dynamodb.filter;
 
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.filter.DynamoDBFilter;
@@ -26,14 +32,6 @@ import org.apache.hadoop.hive.ql.metadata.HiveStoragePredicateHandler.Decomposed
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
 import org.apache.hadoop.hive.serde.serdeConstants;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 public class DynamoDBFilterPushdown {
 

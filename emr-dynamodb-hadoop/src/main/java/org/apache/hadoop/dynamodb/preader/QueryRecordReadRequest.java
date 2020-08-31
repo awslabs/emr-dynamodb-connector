@@ -15,11 +15,9 @@ package org.apache.hadoop.dynamodb.preader;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
-
+import java.util.Map;
 import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
 import org.apache.hadoop.dynamodb.preader.RateController.RequestLimit;
-
-import java.util.Map;
 
 public class QueryRecordReadRequest extends AbstractRecordReadRequest {
 

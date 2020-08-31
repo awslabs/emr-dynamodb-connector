@@ -13,15 +13,14 @@
 
 package org.apache.hadoop.dynamodb.split;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class DynamoDBSplitGenerator {
 

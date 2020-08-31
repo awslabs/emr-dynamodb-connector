@@ -14,10 +14,8 @@
 package org.apache.hadoop.dynamodb.key;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
-import org.apache.hadoop.dynamodb.DynamoDBUtil;
-
 import java.nio.ByteBuffer;
+import org.apache.hadoop.dynamodb.DynamoDBUtil;
 
 public class DynamoDBBinaryKey extends AbstractDynamoDBKey {
 

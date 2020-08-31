@@ -15,6 +15,11 @@ package org.apache.hadoop.hive.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.BillingModeSummary;
+import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -41,12 +46,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import com.google.common.collect.Maps;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 public class DynamoDBSerDe extends AbstractSerDe {
 
@@ -76,7 +75,8 @@ public class DynamoDBSerDe extends AbstractSerDe {
     nullSerialization = HiveDynamoDBUtil.getHiveToDynamoDBNullSerialization(tbl);
     log.info("Null serialization: " + nullSerialization);
 
-    objectInspector = new DynamoDBObjectInspector(columnNames, columnTypes, columnMappings, typeMappings);
+    objectInspector =
+        new DynamoDBObjectInspector(columnNames, columnTypes, columnMappings, typeMappings);
 
     verifyDynamoDBWriteThroughput(conf, tbl);
   }
@@ -137,9 +137,9 @@ public class DynamoDBSerDe extends AbstractSerDe {
       } else {
         // User has mapped individual attribute in DynamoDB to
         // corresponding Hive columns.
-        AttributeValue attributeValue = data == null ?
-            DynamoDBDataParser.getNullAttribute(nullSerialization) :
-            ddType.getDynamoDBData(data, fieldOI, nullSerialization);
+        AttributeValue attributeValue = data == null
+            ? DynamoDBDataParser.getNullAttribute(nullSerialization)
+            : ddType.getDynamoDBData(data, fieldOI, nullSerialization);
 
         if (attributeValue != null) {
           item.put(columnMappings.get(columnName), attributeValue);
@@ -203,9 +203,12 @@ public class DynamoDBSerDe extends AbstractSerDe {
       throw new RuntimeException("Could not get cluster capacity.", e);
     }
 
-    BillingModeSummary billingModeSummary = client.describeTable(dynamoDBTableName).getBillingModeSummary();
-    if (maxMapTasks > writesPerSecond &&
-        (billingModeSummary == null || billingModeSummary.getBillingMode().equals(DynamoDBConstants.BILLING_MODE_PROVISIONED))) {
+    BillingModeSummary billingModeSummary =
+        client.describeTable(dynamoDBTableName).getBillingModeSummary();
+    if (maxMapTasks > writesPerSecond
+        && (billingModeSummary == null
+        || billingModeSummary.getBillingMode().equals(
+            DynamoDBConstants.BILLING_MODE_PROVISIONED))) {
       String message = "WARNING: Configured write throughput of the dynamodb table "
           + dynamoDBTableName + " is less than the cluster map capacity." + " ClusterMapCapacity: "
           + maxMapTasks + " WriteThroughput: " + writesPerSecond + "\nWARNING: Writes to this "

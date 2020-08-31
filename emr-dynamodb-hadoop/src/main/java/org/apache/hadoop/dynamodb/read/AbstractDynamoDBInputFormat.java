@@ -13,6 +13,7 @@
 
 package org.apache.hadoop.dynamodb.read;
 
+import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
@@ -25,8 +26,6 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
-
-import java.io.IOException;
 
 /**
  * This abstract class has a subclass DynamoDBInputFormat that returns a RecordReader that assumes

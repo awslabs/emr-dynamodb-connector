@@ -13,13 +13,12 @@
 
 package org.apache.hadoop.hive.dynamodb.shims;
 
+import java.util.Properties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.index.IndexSearchCondition;
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
 import org.apache.hadoop.hive.serde2.SerDeException;
-
-import java.util.Properties;
 
 public interface DynamoDbHiveShims {
 

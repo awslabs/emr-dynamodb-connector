@@ -12,6 +12,7 @@
 package org.apache.hadoop.hive.dynamodb.type;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import java.util.Map;
 import org.apache.hadoop.dynamodb.type.DynamoDBMapType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -20,19 +21,22 @@ import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
-import java.util.Map;
-
 public class HiveDynamoDBMapType extends DynamoDBMapType implements HiveDynamoDBType {
 
   @Override
-  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector, boolean nullSerialization) {
-    Map<String, AttributeValue> values = DynamoDBDataParser.getMapAttribute(data, objectInspector, nullSerialization);
-    return values == null ? DynamoDBDataParser.getNullAttribute(nullSerialization) : new AttributeValue().withM(values);
+  public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector,
+      boolean nullSerialization) {
+    Map<String, AttributeValue> values =
+        DynamoDBDataParser.getMapAttribute(data, objectInspector, nullSerialization);
+    return values == null
+        ? DynamoDBDataParser.getNullAttribute(nullSerialization)
+        : new AttributeValue().withM(values);
   }
 
   @Override
   public TypeInfo getSupportedHiveType() {
-    throw new UnsupportedOperationException(getClass().toString() + " does not support this operation.");
+    throw new UnsupportedOperationException(getClass().toString()
+        + " does not support this operation.");
   }
 
   @Override
@@ -76,7 +80,8 @@ public class HiveDynamoDBMapType extends DynamoDBMapType implements HiveDynamoDB
       case STRUCT:
         return DynamoDBDataParser.getStructObject(dataMap, objectInspector);
       default:
-        throw new IllegalArgumentException("Unsupported Hive type: " + objectInspector.getTypeName());
+        throw new IllegalArgumentException("Unsupported Hive type: "
+            + objectInspector.getTypeName());
     }
   }
 

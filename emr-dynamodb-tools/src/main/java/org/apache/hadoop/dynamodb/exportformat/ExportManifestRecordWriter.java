@@ -14,15 +14,13 @@
 package org.apache.hadoop.dynamodb.exportformat;
 
 import com.google.common.base.Charsets;
-
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
-
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 public class ExportManifestRecordWriter<K> implements RecordWriter<K, Text> {
 
