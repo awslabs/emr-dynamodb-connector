@@ -14,6 +14,8 @@
 package org.apache.hadoop.dynamodb.tools;
 
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
+import com.amazonaws.services.applicationautoscaling.AWSApplicationAutoScalingClient;
+import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsResult;
 import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -105,25 +107,51 @@ public class DynamoDBExport extends Configured implements Tool {
 
     DynamoDBClient client = new DynamoDBClient(jobConf);
     TableDescription description = client.describeTable(tableName);
+    AWSApplicationAutoScalingClient aaClient = new AWSApplicationAutoScalingClient();
 
     Long itemCount = description.getItemCount();
     Long tableSizeBytes = description.getTableSizeBytes();
+    String writeThroughput = null;
+    String readThroughput = null;
 
-    if (description.getBillingModeSummary() == null
-            || description.getBillingModeSummary().getBillingMode()
-        .equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
-      jobConf.set(DynamoDBConstants.READ_THROUGHPUT,
-          description.getProvisionedThroughput().getReadCapacityUnits().toString());
-      jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT,
-          description.getProvisionedThroughput().getWriteCapacityUnits().toString());
+    if (description.getBillingModeSummary() != null 
+            && description.getBillingModeSummary().getBillingMode() == DynamoDBConstants.ON_DEMAND) {
+      // For On-Demand, set throughput to default values (40,000)
+      writeThroughput = DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString();
+      readThroughput = DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString();
     } else {
-      // If not specified at the table level, set a hard coded value of 40,000
-      jobConf.set(DynamoDBConstants.READ_THROUGHPUT,
-          DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString());
-      jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT,
-          DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString());
+      // Set the throughput based on provisioned capacity
+      if (description.getBillingModeSummary().getBillingMode().equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
+        writeThroughput = description.getProvisionedThroughput().getWriteCapacityUnits().toString());
+        readThroughput description.getProvisionedThroughput().getReadCapacityUnits().toString());
+        
+      // Test for autoscale provisioning, and set throughput based on max allotment
+      ServiceNamespace ns = ServiceNamespace.Dynamodb;
+      ScalableDimension tableWCUs = ScalableDimension.DynamodbTableWriteCapacityUnits;
+      String resourceID = "table/" + tableName;
+      
+      DescribeScalableTargetsRequest dscRequest = new DescribeScalableTargetsRequest()
+            .withServiceNamespace(ns)
+            .withScalableDimension(tableWCUs)
+            .withResourceIds(resourceID);
+      
+      try {
+        DescribeScalableTargetsResult dsaResult = aaClient.describeScalableTargets(dscRequest);
+        writeThroughput = dsaResult.getScalableTargets()
+            .filter(target->"dynamodb:table:WriteCapacityUnits".equals(target.getScalableDimension()))
+            .getMaxCapacity()
+            .toString();
+        readThroughput = dsaResult.getScalableTargets()
+            .filter(target->"dynamodb:table:ReadCapacityUnits".equals(target.getScalableDimension()))
+            .getMaxCapacity()
+            .toString();
+      } catch (Exception e) {
+        System.out.println(tableName + " doesn't have autoscaling provisioning")
+      }
     }
-
+    
+    jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT, writeThroughput)
+    jobConf.set(DynamoDBConstants.READ_THROUGHPUT, readThroughput)
     jobConf.set(DynamoDBConstants.ITEM_COUNT, itemCount.toString());
     jobConf.set(DynamoDBConstants.TABLE_SIZE_BYTES, tableSizeBytes.toString());
 
