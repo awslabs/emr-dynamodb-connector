@@ -15,7 +15,9 @@ package org.apache.hadoop.dynamodb.tools;
 
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.amazonaws.services.applicationautoscaling.AWSApplicationAutoScalingClient;
-import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsResult;
+import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsRequest;
+import com.amazonaws.services.applicationautoscaling.model.ScalableDimension;
+import com.amazonaws.services.applicationautoscaling.model.ServiceNamespace;
 import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
