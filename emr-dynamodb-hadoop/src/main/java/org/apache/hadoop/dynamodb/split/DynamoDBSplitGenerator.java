@@ -35,12 +35,7 @@ public class DynamoDBSplitGenerator {
       segmentsPerSplit.add(new ArrayList<Integer>());
     }
 
-    // Round-robin which split gets which segment id
-    int mapper = 0;
-    for (int i = 0; i < numSegments; i++) {
-      segmentsPerSplit.get(mapper).add(i);
-      mapper = (mapper + 1) % numMappers;
-    }
+    assignSegmentsToSplits(segmentsPerSplit, numSegments, numMappers);
 
     long approxItemCountPerSplit = conf.getLong(DynamoDBConstants.ITEM_COUNT, 0) / ((long)
         numMappers);
@@ -59,9 +54,18 @@ public class DynamoDBSplitGenerator {
     return null;
   }
 
+  protected void assignSegmentsToSplits(List<List<Integer>> segmentsPerSplit, int numSegments,
+      int numMappers) {
+    // Round-robin which split gets which segment id
+    int mapper = 0;
+    for (int i = 0; i < numSegments; i++) {
+      segmentsPerSplit.get(mapper).add(i);
+      mapper = (mapper + 1) % numMappers;
+    }
+  }
+
   protected DynamoDBSplit createDynamoDBSplit(Path path, long approxItemCount, int splitId,
       List<Integer> segments, int totalSegments) {
     return new DynamoDBSegmentsSplit(path, approxItemCount, splitId, segments, totalSegments, null);
   }
-
 }

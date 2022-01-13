@@ -23,6 +23,7 @@ import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.dynamodb.exportformat.ExportManifestOutputFormat;
+import org.apache.hadoop.dynamodb.exportformat.MultipleRowKeyExportInputFormat;
 import org.apache.hadoop.dynamodb.read.DynamoDBInputFormat;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -84,6 +85,7 @@ public class DynamoDBExport extends Configured implements Tool {
       }
     }
     setTableProperties(jobConf, tableName, readRatio, totalSegments);
+    addMultiKeyProperties(jobConf);
 
     Date startTime = new Date();
     System.out.println("Job started: " + startTime);
@@ -95,6 +97,16 @@ public class DynamoDBExport extends Configured implements Tool {
     System.out.println("Output path: " + outputPath);
 
     return 0;
+  }
+
+  private void addMultiKeyProperties(JobConf jobConf) {
+    jobConf.setInputFormat(MultipleRowKeyExportInputFormat.class); // override defaults
+    jobConf.set(DynamoDBConstants.INDEX_NAME, "some-gsi-index");
+    jobConf.set(DynamoDBConstants.ROW_KEY_NAME, "some-row-key");
+    jobConf.set(DynamoDBConstants.SORT_KEY_NAME, "some-time-field");
+    jobConf.setDouble(DynamoDBConstants.ROW_SAMPLE_PERCENT, 0.001);
+    jobConf.setLong(DynamoDBConstants.SORT_KEY_MIN_VALUE, 1596170944L);
+    jobConf.setLong(DynamoDBConstants.SORT_KEY_MAX_VALUE, 1596310207L);
   }
 
   private void setTableProperties(JobConf jobConf, String tableName, Double readRatio, Integer

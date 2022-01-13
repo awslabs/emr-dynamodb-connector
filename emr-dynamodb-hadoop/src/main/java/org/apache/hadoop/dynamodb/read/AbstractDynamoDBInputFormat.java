@@ -78,7 +78,7 @@ public abstract class AbstractDynamoDBInputFormat<K, V> implements InputFormat<K
 
     log.info("Using " + numSegments + " segments across " + numMappers + " mappers");
 
-    return getSplitGenerator().generateSplits(numMappers, numSegments, conf);
+    return getSplitGenerator(conf).generateSplits(numMappers, numSegments, conf);
   }
 
   protected DynamoDBRecordReaderContext buildDynamoDBRecordReaderContext(InputSplit split,
@@ -155,7 +155,7 @@ public abstract class AbstractDynamoDBInputFormat<K, V> implements InputFormat<K
     return numMappers;
   }
 
-  protected DynamoDBSplitGenerator getSplitGenerator() {
+  protected DynamoDBSplitGenerator getSplitGenerator(JobConf conf) {
     return new DynamoDBSplitGenerator();
   }
 
