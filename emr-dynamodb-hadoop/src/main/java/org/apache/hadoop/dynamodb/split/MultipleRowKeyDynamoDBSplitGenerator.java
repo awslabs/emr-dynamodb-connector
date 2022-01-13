@@ -14,6 +14,12 @@
 package org.apache.hadoop.dynamodb.split;
 
 import static java.lang.String.format;
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_ROW_KEY_MAX_VALUE;
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_ROW_KEY_MIN_VALUE;
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.ROW_KEY_MAX_VALUE;
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.ROW_KEY_MIN_VALUE;
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.SORT_KEY_MAX_VALUE;
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.SORT_KEY_MIN_VALUE;
 
 import java.util.List;
 import org.apache.commons.logging.Log;
@@ -37,19 +43,19 @@ public class MultipleRowKeyDynamoDBSplitGenerator extends DynamoDBSplitGenerator
     indexName = jobConf.get(DynamoDBConstants.INDEX_NAME);
     rowKeyName = jobConf.get(DynamoDBConstants.ROW_KEY_NAME);
     sortKeyName = jobConf.get(DynamoDBConstants.SORT_KEY_NAME);
-    sortKeyMinInclusive = jobConf.getLong(DynamoDBConstants.SORT_KEY_MIN_VALUE, -1L);
-    sortKeyMaxExclusive = jobConf.getLong(DynamoDBConstants.SORT_KEY_MAX_VALUE, -1L);
+    sortKeyMinInclusive = jobConf.getLong(SORT_KEY_MIN_VALUE, -1L);
+    sortKeyMaxExclusive = jobConf.getLong(SORT_KEY_MAX_VALUE, -1L);
     if (sortKeyMinInclusive == -1) {
-      throw new IllegalArgumentException("Required value not configured: " + DynamoDBConstants.SORT_KEY_MIN_VALUE);
+      throw new IllegalArgumentException("Required value not configured: " + SORT_KEY_MIN_VALUE);
     }
     if (sortKeyMaxExclusive == -1) {
-      throw new IllegalArgumentException("Required value not configured: " + DynamoDBConstants.SORT_KEY_MAX_VALUE);
+      throw new IllegalArgumentException("Required value not configured: " + SORT_KEY_MAX_VALUE);
     }
 
     double samplingPercent = jobConf.getDouble(DynamoDBConstants.ROW_SAMPLE_PERCENT,
         DynamoDBConstants.DEFAULT_ROW_SAMPLE_PERCENT);
-    long rowKeyMinValue = jobConf.getLong(DynamoDBConstants.ROW_KEY_MIN_VALUE, 0L);
-    long rowKeyMaxValue = jobConf.getLong(DynamoDBConstants.ROW_KEY_MAX_VALUE, 9999L);
+    long rowKeyMinValue = jobConf.getLong(ROW_KEY_MIN_VALUE, DEFAULT_ROW_KEY_MIN_VALUE);
+    long rowKeyMaxValue = jobConf.getLong(ROW_KEY_MAX_VALUE, DEFAULT_ROW_KEY_MAX_VALUE);
     int numKeys =
         ((Double) Math.floor(samplingPercent * (rowKeyMaxValue - rowKeyMinValue + 1))).intValue();
     if (numKeys < 1) {
@@ -77,7 +83,7 @@ public class MultipleRowKeyDynamoDBSplitGenerator extends DynamoDBSplitGenerator
     if (rowKeyValues[rowKeyValues.length - 1] > Integer.MAX_VALUE) {
       throw new IllegalArgumentException(format(
           "The %s of %s, combined with a %s of %s produces a key that exceeds the max int value of %s",
-          DynamoDBConstants.ROW_KEY_MAX_VALUE, rowKeyMaxValue, DynamoDBConstants.ROW_SAMPLE_PERCENT,
+          ROW_KEY_MAX_VALUE, rowKeyMaxValue, DynamoDBConstants.ROW_SAMPLE_PERCENT,
           samplingPercent, Integer.MAX_VALUE));
     }
   }
