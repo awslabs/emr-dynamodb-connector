@@ -130,6 +130,9 @@ public class DynamoDBItemWritable implements Writable, Serializable {
   }
 
   public String writeStream() {
+    // Write standard json without type annotations in a way that can be consumed by JsonSerde
+    // see https://stackoverflow.com/questions/43812278/converting-dynamodb-json-to-standard-json-with-java
+    // TODO: make this configurable
     return ItemUtils.toItem(dynamoDBItem).toJSON();
     //Gson gson = DynamoDBUtil.getGson();
     //return gson.toJson(dynamoDBItem, type);
