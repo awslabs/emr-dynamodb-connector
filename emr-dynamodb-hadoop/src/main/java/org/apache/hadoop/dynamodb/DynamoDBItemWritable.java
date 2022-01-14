@@ -13,6 +13,7 @@
 
 package org.apache.hadoop.dynamodb;
 
+import com.amazonaws.services.dynamodbv2.document.ItemUtils;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -129,8 +130,9 @@ public class DynamoDBItemWritable implements Writable, Serializable {
   }
 
   public String writeStream() {
-    Gson gson = DynamoDBUtil.getGson();
-    return gson.toJson(dynamoDBItem, type);
+    return ItemUtils.toItem(dynamoDBItem).toJSON();
+    //Gson gson = DynamoDBUtil.getGson();
+    //return gson.toJson(dynamoDBItem, type);
   }
 
   public Map<String, AttributeValue> getItem() {
