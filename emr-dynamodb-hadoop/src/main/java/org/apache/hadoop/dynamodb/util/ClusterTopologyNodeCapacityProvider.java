@@ -47,7 +47,7 @@ public class ClusterTopologyNodeCapacityProvider implements NodeCapacityProvider
         isCoreNodeSameInstanceTypeAsMaster = true;
       }
     } catch (Exception e) {
-      log.warn("Exception when trying to determine instance types", e);
+      log.warn("Exception when trying to determine instance types: " + e.getMessage());
     }
 
     /*

@@ -73,6 +73,7 @@ public class MultipleRowKeyDynamoDBSplitGenerator extends DynamoDBSplitGenerator
     log.info(format("rowKeyMinValue: %s", rowKeyMinValue));
     log.info(format("rowKeyMaxValue: %s", rowKeyMaxValue));
     log.info(format("Number of row keys to select: %s", numKeys));
+    log.info(format("Output path: %s", jobConf.get("mapreduce.output.fileoutputformat.outputdir")));
 
     // simple approach to select the first N rowKeys
     rowKeyValues = new long[numKeys];

@@ -16,6 +16,7 @@ package org.apache.hadoop.dynamodb.preader;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import java.util.Map;
+import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
 import org.apache.hadoop.dynamodb.filter.DynamoDBFilterOperator;
 import org.apache.hadoop.dynamodb.preader.RateController.RequestLimit;
@@ -37,9 +38,14 @@ public class MultiKeyQueryRecordReadRequest extends AbstractRecordReadRequest {
 
   @Override
   protected PageResults<Map<String, AttributeValue>> fetchPage(RequestLimit lim) {
-    // TODO: fix this to not hardcode
+    String rowKeyName = context.getConf().get(DynamoDBConstants.ROW_KEY_NAME);
+    if (rowKeyName == null || rowKeyName.length() == 0) {
+      throw new IllegalArgumentException(
+          "required job config not found: " + DynamoDBConstants.ROW_KEY_NAME);
+    }
+
     context.getSplit().getFilterPushdown().addKeyCondition(
-        new DynamoDBNAryFilter("updated_at_hk_field", DynamoDBFilterOperator.EQ,
+        new DynamoDBNAryFilter(rowKeyName, DynamoDBFilterOperator.EQ,
             DynamoDBTypeFactory.NUMBER_TYPE, Long.toString(segment)));
 
     // Read from DynamoDB
