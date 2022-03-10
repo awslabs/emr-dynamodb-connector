@@ -50,6 +50,12 @@ public class DynamoDBRowKeySplit extends DynamoDBSegmentsSplit {
     this.sortKeyMaxExclusive = sortKeyMaxExclusive;
   }
 
+  // With length = 0, the split gets ignored by Spark
+  @Override
+  public long getLength() {
+    return 1;
+  }
+
   @Override
   public void readFields(DataInput in) throws IOException {
     super.readFields(in);

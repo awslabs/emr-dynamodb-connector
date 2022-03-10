@@ -77,6 +77,7 @@ public interface DynamoDBConstants {
   String SORT_KEY_NAME = "dynamodb.sort.key.name";
   String SORT_KEY_MIN_VALUE = "dynamodb.sort.key.min.value";
   String SORT_KEY_MAX_VALUE = "dynamodb.sort.key.max.value";
+  String ATTRIBUTES_TO_GET = "dynamodb.attributes.to.get";
 
   String DELETION_MODE = "dynamodb.deletion.mode";
   boolean DEFAULT_DELETION_MODE = false;

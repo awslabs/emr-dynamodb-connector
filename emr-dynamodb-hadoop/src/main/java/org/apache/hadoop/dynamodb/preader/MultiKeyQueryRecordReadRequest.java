@@ -48,9 +48,15 @@ public class MultiKeyQueryRecordReadRequest extends AbstractRecordReadRequest {
         new DynamoDBNAryFilter(rowKeyName, DynamoDBFilterOperator.EQ,
             DynamoDBTypeFactory.NUMBER_TYPE, Long.toString(segment)));
 
+    String attributesCsv = context.getConf().get(DynamoDBConstants.ATTRIBUTES_TO_GET);
+    String[] attributes = attributesCsv != null && attributesCsv.trim().length() > 0
+        ? attributesCsv.trim().split(",")
+        : null;
+
     // Read from DynamoDB
     RetryResult<QueryResult> retryResult = context.getClient().queryTable(tableName, context
-        .getSplit().getFilterPushdown(), lastEvaluatedKey, lim.items, context.getReporter());
+            .getSplit().getFilterPushdown(), lastEvaluatedKey, lim.items, context.getReporter(),
+        attributes);
 
     QueryResult result = retryResult.result;
     int retries = retryResult.retries;

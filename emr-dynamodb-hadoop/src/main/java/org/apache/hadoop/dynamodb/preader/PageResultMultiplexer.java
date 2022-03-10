@@ -93,16 +93,7 @@ public class PageResultMultiplexer<V> {
         }
 
         if (nextPage.exception != null) {
-          if (draining) {
-            // hack. without this we get
-            // com.amazonaws.services.dynamodbv2.model.AmazonDynamoDBException: The query can return
-            // at most one row and cannot be restarted (Service: AmazonDynamoDBv2; Status Code: 400;
-            // Error Code: ValidationException; Request ID: ...)
-            log.warn("Exception while draining", nextPage.exception);
-            return null;
-          } else {
-            throw new IOException(nextPage.exception);
-          }
+          throw new IOException(nextPage.exception);
         }
 
         V nextItem = nextPage.next();
