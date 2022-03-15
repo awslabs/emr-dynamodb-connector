@@ -23,7 +23,6 @@ import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.dynamodb.exportformat.ExportManifestOutputFormat;
-import org.apache.hadoop.dynamodb.exportformat.MultipleRowKeyExportInputFormat;
 import org.apache.hadoop.dynamodb.read.DynamoDBInputFormat;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -43,15 +42,8 @@ public class DynamoDBExport extends Configured implements Tool {
     System.exit(res);
   }
 
-  @Override
-  public int run(String[] args) throws Exception {
-    if (args.length < 2) {
-      printUsage("Not enough parameters");
-      return -1;
-    }
-
-    JobConf jobConf = new JobConf(getConf(), DynamoDBExport.class);
-
+  public JobConf initJobConf(JobConf jobConf, Path outputPath, String tableName, Double readRatio,
+      Integer totalSegments) {
     jobConf.setJobName("dynamodb-export");
     jobConf.setOutputKeyClass(Text.class);
     jobConf.setOutputValueClass(Text.class);
@@ -60,9 +52,20 @@ public class DynamoDBExport extends Configured implements Tool {
     jobConf.setInputFormat(DynamoDBInputFormat.class);
     jobConf.setOutputFormat(ExportManifestOutputFormat.class);
     jobConf.setNumReduceTasks(1);
-    Path outputPath = new Path(args[0]);
     FileOutputFormat.setOutputPath(jobConf, outputPath);
 
+    setTableProperties(jobConf, tableName, readRatio, totalSegments);
+    return jobConf;
+  }
+
+  @Override
+  public int run(String[] args) throws Exception {
+    if (args.length < 2) {
+      printUsage("Not enough parameters");
+      return -1;
+    }
+
+    Path outputPath = new Path(args[0]);
     String tableName = args[1];
     Double readRatio = null;
     if (args.length >= 3) {
@@ -84,8 +87,10 @@ public class DynamoDBExport extends Configured implements Tool {
         return -1;
       }
     }
-    setTableProperties(jobConf, tableName, readRatio, totalSegments);
-    addMultiKeyProperties(jobConf);
+
+    JobConf jobConf =
+        initJobConf(new JobConf(getConf(), DynamoDBExport.class), outputPath, tableName, readRatio,
+            totalSegments);
 
     Date startTime = new Date();
     System.out.println("Job started: " + startTime);
@@ -97,16 +102,6 @@ public class DynamoDBExport extends Configured implements Tool {
     System.out.println("Output path: " + outputPath);
 
     return 0;
-  }
-
-  private void addMultiKeyProperties(JobConf jobConf) {
-    jobConf.setInputFormat(MultipleRowKeyExportInputFormat.class); // override defaults
-    jobConf.set(DynamoDBConstants.INDEX_NAME, "some-gsi-index");
-    jobConf.set(DynamoDBConstants.ROW_KEY_NAME, "some-row-key");
-    jobConf.set(DynamoDBConstants.SORT_KEY_NAME, "some-time-field");
-    jobConf.setDouble(DynamoDBConstants.ROW_SAMPLE_PERCENT, 0.001);
-    jobConf.setLong(DynamoDBConstants.SORT_KEY_MIN_VALUE, 1596170944L);
-    jobConf.setLong(DynamoDBConstants.SORT_KEY_MAX_VALUE, 1596310207L);
   }
 
   private void setTableProperties(JobConf jobConf, String tableName, Double readRatio, Integer
