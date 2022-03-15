@@ -68,4 +68,5 @@ public class DynamoDBSplitGenerator {
       List<Integer> segments, int totalSegments) {
     return new DynamoDBSegmentsSplit(path, approxItemCount, splitId, segments, totalSegments, null);
   }
+
 }

@@ -18,5 +18,4 @@ public class DynamoDBSimpleJsonWritable extends DynamoDBItemWritable {
         "This class supports serializing DynamoDB items as json, "
             + "but not deserializing json back to items");
   }
-
 }
