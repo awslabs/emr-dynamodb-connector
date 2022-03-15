@@ -39,11 +39,34 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-core</artifactId>
         </dependency>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-mapreduce-client-common</artifactId>
-        <version>${hadoop.version}</version>
-      </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.12</artifactId>
+            <version>${spark.version}</version>
+            <!-- comment out when in localmode -->
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- otherwise: Exception in thread "main" java.lang.NoSuchMethodError:
+        'void io.netty.buffer.PooledByteBufAllocator.<init>(boolean, int, int, int, int, int, int, boolean)'
+        -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-buffer</artifactId>
+            <version>4.1.63.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+        <!-- see https://issues.apache.org/jira/browse/SPARK-26819 -->
+        <dependency>
+            <groupId>com.thoughtworks.paranamer</groupId>
+            <artifactId>paranamer</artifactId>
+            <version>2.8</version>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
@@ -65,19 +88,41 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
         <executions>
           <execution>
-            <!-- skip creation of the jar without dependencies as we generate a "fat" jar
-            using assembly plugin that includes necessary shim classes -->
-            <id>default-jar</id>
-            <phase>none</phase>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <relocations>
+                <relocation>
+                  <pattern>org.apache.hadoop.dynamodb</pattern>
+                  <shadedPattern>lyft.shaded.org.apache.hadoop.dynamodb</shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-      </plugin>
+      <!-- TOOD: remove the shaded jar above once we clean up our runtime dependencies,
+      and just create a standard fat jar with the plugins below -->
+<!--      <plugin>-->
+<!--        <artifactId>maven-jar-plugin</artifactId>-->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            &lt;!&ndash; skip creation of the jar without dependencies as we generate a "fat" jar-->
+<!--            using assembly plugin that includes necessary shim classes &ndash;&gt;-->
+<!--            <id>default-jar</id>-->
+<!--            <phase>none</phase>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--      </plugin>-->
+<!--      <plugin>-->
+<!--        <artifactId>maven-assembly-plugin</artifactId>-->
+<!--      </plugin>-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
