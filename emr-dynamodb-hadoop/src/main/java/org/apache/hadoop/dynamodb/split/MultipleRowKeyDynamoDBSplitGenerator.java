@@ -83,7 +83,8 @@ public class MultipleRowKeyDynamoDBSplitGenerator extends DynamoDBSplitGenerator
 
     if (rowKeyValues[rowKeyValues.length - 1] > Integer.MAX_VALUE) {
       throw new IllegalArgumentException(format(
-          "The %s of %s, combined with a %s of %s produces a key that exceeds the max int value of %s",
+          "The %s of %s, combined with a %s of %s produces "
+              + "a key that exceeds the max int value of %s",
           ROW_KEY_MAX_VALUE, rowKeyMaxValue, DynamoDBConstants.ROW_SAMPLE_PERCENT,
           samplingPercent, Integer.MAX_VALUE));
     }
@@ -95,7 +96,8 @@ public class MultipleRowKeyDynamoDBSplitGenerator extends DynamoDBSplitGenerator
   }
 
   @Override
-  protected void assignSegmentsToSplits(List<List<Integer>> segmentsPerSplit, int numSegments, int numMappers) {
+  protected void assignSegmentsToSplits(List<List<Integer>> segmentsPerSplit, int numSegments,
+      int numMappers) {
     // Round-robin which split gets which segment id
     int mapper = 0;
     for (long rowKeyValue : rowKeyValues) {

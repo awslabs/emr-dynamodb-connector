@@ -25,7 +25,8 @@ import org.apache.hadoop.dynamodb.type.DynamoDBTypeFactory;
 
 public class MultiKeyQueryRecordReadRequest extends AbstractRecordReadRequest {
 
-  public MultiKeyQueryRecordReadRequest(AbstractReadManager readMgr, DynamoDBRecordReaderContext context,
+  public MultiKeyQueryRecordReadRequest(AbstractReadManager readMgr,
+      DynamoDBRecordReaderContext context,
       int segment, Map<String, AttributeValue> lastEvaluatedKey) {
     super(readMgr, context, segment, lastEvaluatedKey);
   }
@@ -33,7 +34,8 @@ public class MultiKeyQueryRecordReadRequest extends AbstractRecordReadRequest {
   @Override
   protected AbstractRecordReadRequest buildNextReadRequest(PageResults<Map<String,
       AttributeValue>> pageResults) {
-    return new MultiKeyQueryRecordReadRequest(readMgr, context, segment, pageResults.lastEvaluatedKey);
+    return new MultiKeyQueryRecordReadRequest(readMgr, context, segment,
+        pageResults.lastEvaluatedKey);
   }
 
   @Override
