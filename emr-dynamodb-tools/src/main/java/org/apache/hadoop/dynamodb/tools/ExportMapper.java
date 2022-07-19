@@ -34,7 +34,9 @@ import org.apache.hadoop.mapred.Reporter;
 class ExportMapper extends MapReduceBase implements Mapper<Text, DynamoDBItemWritable, Text, Text> {
 
   private static final Log log = LogFactory.getLog(ExportMapper.class);
-  private static final int MAX_ITEM_COUNT_PER_FILE = 100000;
+  //10M/file for observations creates ~400 files and for audience identity creates ~2500 files.
+  //  good enough for now...
+  private static final int MAX_ITEM_COUNT_PER_FILE = 100000 * 100;
   private final OutputFormat<NullWritable, DynamoDBItemWritable> outputFormat = new
       ExportOutputFormat();
   private final TimeSource time = new TimeSource();
