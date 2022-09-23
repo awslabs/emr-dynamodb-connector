@@ -29,6 +29,7 @@ import org.apache.hadoop.dynamodb.read.DefaultDynamoDBRecordReader;
 import org.apache.hadoop.dynamodb.read.DynamoDBInputFormat;
 import org.apache.hadoop.dynamodb.split.DynamoDBSplit;
 import org.apache.hadoop.dynamodb.split.DynamoDBSplitGenerator;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.dynamodb.filter.DynamoDBFilterPushdown;
 import org.apache.hadoop.hive.dynamodb.shims.ShimsLoader;
 import org.apache.hadoop.hive.dynamodb.split.HiveDynamoDBSplitGenerator;
@@ -76,6 +77,11 @@ public class HiveDynamoDBInputFormat extends DynamoDBInputFormat {
         HiveDynamoDBUtil.fromJsonString(conf.get(DynamoDBConstants.DYNAMODB_COLUMN_MAPPING));
     Map<String, String> hiveTypeMapping = HiveDynamoDBUtil.extractHiveTypeMapping(conf);
     DynamoDBQueryFilter queryFilter = getQueryFilter(conf, columnMapping, hiveTypeMapping);
+    if (queryFilter.getIndex() == null
+        && conf.get("dynamodb.require.index", Boolean.FALSE.toString())
+        .equalsIgnoreCase(Boolean.TRUE.toString())) {
+      throw new IOException("Could not find index for queryFilter: " + queryFilter.getScanFilter());
+    }
     DynamoDBSplit bbSplit = (DynamoDBSplit) split;
     bbSplit.setDynamoDBFilterPushdown(queryFilter);
 
@@ -109,7 +115,7 @@ public class HiveDynamoDBInputFormat extends DynamoDBInputFormat {
   }
 
   @Override
-  protected DynamoDBSplitGenerator getSplitGenerator() {
+  protected DynamoDBSplitGenerator getSplitGenerator(JobConf conf) {
     return new HiveDynamoDBSplitGenerator();
   }
 

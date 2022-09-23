@@ -173,12 +173,22 @@ public class DynamoDBClient {
   public RetryResult<QueryResult> queryTable(
       String tableName, DynamoDBQueryFilter dynamoDBQueryFilter, Map<String, AttributeValue>
       exclusiveStartKey, long limit, Reporter reporter) {
-    final QueryRequest queryRequest = new QueryRequest()
+    return queryTable(tableName, dynamoDBQueryFilter, exclusiveStartKey, limit, reporter, null);
+  }
+
+  public RetryResult<QueryResult> queryTable(
+      String tableName, DynamoDBQueryFilter dynamoDBQueryFilter, Map<String, AttributeValue>
+      exclusiveStartKey, long limit, Reporter reporter, String... attributesToGet) {
+    QueryRequest queryRequestBuilder = new QueryRequest()
         .withTableName(tableName)
         .withExclusiveStartKey(exclusiveStartKey)
         .withKeyConditions(dynamoDBQueryFilter.getKeyConditions())
         .withLimit(Ints.checkedCast(limit))
         .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
+
+    final QueryRequest queryRequest = attributesToGet != null
+        ? queryRequestBuilder.withAttributesToGet(attributesToGet)
+        : queryRequestBuilder;
 
     DynamoDBIndexInfo index = dynamoDBQueryFilter.getIndex();
     if (index != null) {

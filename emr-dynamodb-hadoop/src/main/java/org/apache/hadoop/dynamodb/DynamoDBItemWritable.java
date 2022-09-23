@@ -14,6 +14,7 @@
 package org.apache.hadoop.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.ByteArrayInputStream;
@@ -66,7 +67,8 @@ public class DynamoDBItemWritable implements Writable, Serializable {
   // '\u0000' is always written with two bytes.  Thus the sequence 00000000
   // 00000001 00000000 will not occur as a result of DataOutput.writeUTF and so
   // we use it as a magic sequence signifying the chunked format.
-  private String readStringFromDataInput(DataInput in) throws IOException {
+  @VisibleForTesting
+  String readStringFromDataInput(DataInput in) throws IOException {
     byte[] data;
     char firstBytes = in.readChar();
 

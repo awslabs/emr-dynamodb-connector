@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.amazon.emr</groupId>
     <artifactId>emr-dynamodb-connector</artifactId>
-    <version>4.17.0-SNAPSHOT</version>
+    <version>4.16.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>EMRDynamoDBConnector</name>
     <description>EMR DynamoDB Connector</description>
@@ -19,7 +19,8 @@
     <properties>
         <java.version>1.8</java.version>
         <aws-java-sdk.version>1.11.475</aws-java-sdk.version>
-        <hadoop.version>2.7.3</hadoop.version>
+        <hadoop.version>3.3.1</hadoop.version>
+        <spark.version>3.2.0</spark.version>
         <hive1.version>1.0.0</hive1.version>
         <hive1.2.version>1.2.1</hive1.2.version>
         <hive2.version>2.3.0</hive2.version>
@@ -90,7 +91,7 @@
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-common</artifactId>
                 <version>${hadoop.version}</version>
-                <scope>provided</scope>
+<!--                <scope>provided</scope>-->
                 <exclusions>
                     <exclusion>
                         <groupId>org.apache.httpcomponents</groupId>
@@ -106,13 +107,13 @@
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-mapreduce-client-core</artifactId>
                 <version>${hadoop.version}</version>
-                <scope>provided</scope>
+<!--                <scope>provided</scope>-->
             </dependency>
-            <dependency>
+          <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-mapreduce-client-app</artifactId>
                 <version>${hadoop.version}</version>
-                <scope>provided</scope>
+<!--                <scope>provided</scope>-->
             </dependency>
             <dependency>
                 <groupId>org.apache.hive</groupId>
@@ -151,7 +152,7 @@
                 <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
                 <version>${hadoop.version}</version>
                 <type>test-jar</type>
-                <scope>test</scope>
+<!--                <scope>test</scope>-->
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>

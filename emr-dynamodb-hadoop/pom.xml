@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.amazon.emr</groupId>
         <artifactId>emr-dynamodb-connector</artifactId>
-        <version>4.17.0-SNAPSHOT</version>
+        <version>4.16.0.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
 
@@ -46,6 +46,13 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson-databind.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>commons-lang</groupId>
+          <artifactId>commons-lang</artifactId>
+          <version>2.6</version>
+          <scope>test</scope>
         </dependency>
 
         <dependency>

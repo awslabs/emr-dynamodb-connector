@@ -242,7 +242,7 @@ public final class DynamoDBUtil {
           region = EC2MetadataUtils.getEC2InstanceRegion();
         } catch (Exception e) {
           log.warn(String.format("Exception when attempting to get AWS region information. Will "
-              + "ignore and default " + "to %s", DynamoDBConstants.DEFAULT_AWS_REGION), e);
+              + "ignore and default " + "to %s: %s", DynamoDBConstants.DEFAULT_AWS_REGION, e));
         }
       }
       if (Strings.isNullOrEmpty(region)) {

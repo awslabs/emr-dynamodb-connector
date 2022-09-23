@@ -42,15 +42,8 @@ public class DynamoDBExport extends Configured implements Tool {
     System.exit(res);
   }
 
-  @Override
-  public int run(String[] args) throws Exception {
-    if (args.length < 2) {
-      printUsage("Not enough parameters");
-      return -1;
-    }
-
-    JobConf jobConf = new JobConf(getConf(), DynamoDBExport.class);
-
+  public JobConf initJobConf(JobConf jobConf, Path outputPath, String tableName, Double readRatio,
+      Integer totalSegments) {
     jobConf.setJobName("dynamodb-export");
     jobConf.setOutputKeyClass(Text.class);
     jobConf.setOutputValueClass(Text.class);
@@ -59,9 +52,20 @@ public class DynamoDBExport extends Configured implements Tool {
     jobConf.setInputFormat(DynamoDBInputFormat.class);
     jobConf.setOutputFormat(ExportManifestOutputFormat.class);
     jobConf.setNumReduceTasks(1);
-    Path outputPath = new Path(args[0]);
     FileOutputFormat.setOutputPath(jobConf, outputPath);
 
+    setTableProperties(jobConf, tableName, readRatio, totalSegments);
+    return jobConf;
+  }
+
+  @Override
+  public int run(String[] args) throws Exception {
+    if (args.length < 2) {
+      printUsage("Not enough parameters");
+      return -1;
+    }
+
+    Path outputPath = new Path(args[0]);
     String tableName = args[1];
     Double readRatio = null;
     if (args.length >= 3) {
@@ -83,7 +87,10 @@ public class DynamoDBExport extends Configured implements Tool {
         return -1;
       }
     }
-    setTableProperties(jobConf, tableName, readRatio, totalSegments);
+
+    JobConf jobConf =
+        initJobConf(new JobConf(getConf(), DynamoDBExport.class), outputPath, tableName, readRatio,
+            totalSegments);
 
     Date startTime = new Date();
     System.out.println("Job started: " + startTime);

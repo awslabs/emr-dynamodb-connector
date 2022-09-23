@@ -69,6 +69,16 @@ public interface DynamoDBConstants {
   String MAX_BATCH_SIZE = "dynamodb.max.batch.size";
   String MAX_ITEMS_PER_BATCH = "dynamodb.max.batch.items";
 
+  String INDEX_NAME = "dynamodb.index.name";
+  String ROW_KEY_NAME = "dynamodb.row.key.name";
+  String ROW_KEY_MIN_VALUE = "dynamodb.row.key.min.value";
+  String ROW_KEY_MAX_VALUE = "dynamodb.row.key.max.value";
+  String ROW_SAMPLE_PERCENT = "dynamodb.row.sample_percent";
+  String SORT_KEY_NAME = "dynamodb.sort.key.name";
+  String SORT_KEY_MIN_VALUE = "dynamodb.sort.key.min.value";
+  String SORT_KEY_MAX_VALUE = "dynamodb.sort.key.max.value";
+  String ATTRIBUTES_TO_GET = "dynamodb.attributes.to.get";
+
   String DELETION_MODE = "dynamodb.deletion.mode";
   boolean DEFAULT_DELETION_MODE = false;
 
@@ -97,4 +107,8 @@ public interface DynamoDBConstants {
 
   int DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES = 100;
   Long DEFAULT_CAPACITY_FOR_ON_DEMAND = 40000L;
+
+  Double DEFAULT_ROW_SAMPLE_PERCENT = 0.001;
+  Long DEFAULT_ROW_KEY_MIN_VALUE = 1L;
+  Long DEFAULT_ROW_KEY_MAX_VALUE = 10000L;
 }
