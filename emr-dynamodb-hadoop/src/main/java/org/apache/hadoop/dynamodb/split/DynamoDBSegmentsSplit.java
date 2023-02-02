@@ -61,6 +61,7 @@ public class DynamoDBSegmentsSplit implements DynamoDBSplit {
     }
     totalSegments = in.readInt();
     filterPushdown = new DynamoDBQueryFilter();
+    estimateLength = in.readLong();
   }
 
   @Override
@@ -72,6 +73,7 @@ public class DynamoDBSegmentsSplit implements DynamoDBSplit {
       out.writeInt(segment);
     }
     out.writeInt(totalSegments);
+    out.writeLong(estimateLength);
   }
 
   @Override
