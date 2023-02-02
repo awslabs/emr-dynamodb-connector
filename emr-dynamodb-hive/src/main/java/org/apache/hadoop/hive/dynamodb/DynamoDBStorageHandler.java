@@ -34,10 +34,10 @@ import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
 import org.apache.hadoop.hive.dynamodb.util.HiveDynamoDBUtil;
 import org.apache.hadoop.hive.dynamodb.write.HiveDynamoDBOutputFormat;
 import org.apache.hadoop.hive.metastore.HiveMetaHook;
-import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.metastore.utils.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.HiveStoragePredicateHandler;
@@ -209,6 +209,10 @@ public class DynamoDBStorageHandler
     } finally {
       client.close();
     }
+  }
+
+  public void configureInputJobCredentials(TableDesc tableDesc, Map<String, String> secrets) {
+    throw new AbstractMethodError("configureInputJobCredentials not supported");
   }
 
   private void useExplicitThroughputIfRequired(Map<String, String> jobProperties,
