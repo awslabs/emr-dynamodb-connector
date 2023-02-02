@@ -72,6 +72,10 @@ public interface DynamoDBConstants {
   String DELETION_MODE = "dynamodb.deletion.mode";
   boolean DEFAULT_DELETION_MODE = false;
 
+  // Whether current resource manager is Yarn or not
+  String YARN_RESOURCE_MANAGER_ENABLED = "dynamodb.yarn.enabled";
+  boolean DEFAULT_YARN_RESOURCE_MANAGER_ENABLED = true;
+
   // http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Limits.html
   long DEFAULT_MAX_ITEM_SIZE = 400 * 1024;
   long DEFAULT_MAX_BATCH_SIZE = 16 * 1024 * 1024;

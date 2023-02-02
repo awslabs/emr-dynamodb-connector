@@ -26,6 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
+import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.hive.dynamodb.shims.SerDeParametersShim;
 import org.apache.hadoop.hive.dynamodb.shims.ShimsLoader;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBItemType;
@@ -194,6 +195,12 @@ public class DynamoDBSerDe extends AbstractSerDe {
     DynamoDBClient client = new DynamoDBClient(conf, tbl.getProperty(DynamoDBConstants.REGION));
     long writesPerSecond = client.describeTable(dynamoDBTableName).getProvisionedThroughput()
         .getWriteCapacityUnits();
+
+    // skip verification when current resource manager is not Yarn
+    if (!DynamoDBUtil.isYarnEnabled(conf)) {
+      return;
+    }
+
     long maxMapTasks;
 
     try {

@@ -50,16 +50,22 @@ public class WriteIopsCalculator implements IopsCalculator {
 
     String taskId = jobConf.get("mapreduce.task.attempt.id");
     log.info("Task Id: " + taskId);
+
+    log.info("Number of mappers from config: " + jobConf.getNumMapTasks());
+    log.info("Number of reducers from config: " + jobConf.getNumReduceTasks());
+
+    final int totalMapTasks = jobConf.getNumMapTasks();
+    log.info("Total map tasks: " + totalMapTasks);
+
     if (Strings.isNullOrEmpty(taskId)) {
       // Running in local mode
       maxParallelTasks = 1;
-    } else {
-      int totalMapTasks = jobConf.getNumMapTasks();
-      log.info("Total map tasks: " + totalMapTasks);
-
+    } else if (DynamoDBUtil.isYarnEnabled(jobConf)) {
       maxParallelTasks = Math.min(calculateMaxMapTasks(totalMapTasks), totalMapTasks);
-      log.info("Max parallel map tasks: " + maxParallelTasks);
+    } else {
+      maxParallelTasks = totalMapTasks;
     }
+    log.info("Max parallel map tasks: " + maxParallelTasks);
   }
 
   public long calculateTargetIops() {

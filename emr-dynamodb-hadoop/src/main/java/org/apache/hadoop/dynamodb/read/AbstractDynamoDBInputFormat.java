@@ -42,13 +42,6 @@ public abstract class AbstractDynamoDBInputFormat<K, V> implements InputFormat<K
 
   @Override
   public InputSplit[] getSplits(JobConf conf, int desiredSplits) throws IOException {
-    JobClient jobClient = new JobClient(conf);
-    int maxClusterMapTasks = DynamoDBUtil.calcMaxMapTasks(jobClient);
-    if (maxClusterMapTasks < 1) {
-      throw new RuntimeException("Number of map tasks configured for the cluster less than 1. Map"
-          + " tasks: " + maxClusterMapTasks);
-    }
-
     double readPercentage = Double.parseDouble(conf.get(DynamoDBConstants
         .THROUGHPUT_READ_PERCENT, DynamoDBConstants.DEFAULT_THROUGHPUT_PERCENTAGE));
     if (readPercentage <= 0) {
@@ -72,9 +65,9 @@ public abstract class AbstractDynamoDBInputFormat<K, V> implements InputFormat<K
     }
 
     long tableSizeBytes = conf.getLong(DynamoDBConstants.TABLE_SIZE_BYTES, 1);
-    int numSegments = getNumSegments((int) maxReadThroughputAllocated, (int)
+    int numSegments = getNumSegments(configuredReadThroughput, (int)
         maxWriteThroughputAllocated, tableSizeBytes, conf);
-    int numMappers = getNumMappers(maxClusterMapTasks, configuredReadThroughput, conf);
+    int numMappers = getNumMappers(configuredReadThroughput, conf);
 
     log.info("Using " + numSegments + " segments across " + numMappers + " mappers");
 
@@ -128,8 +121,10 @@ public abstract class AbstractDynamoDBInputFormat<K, V> implements InputFormat<K
     return numSegments;
   }
 
-  protected int getNumMappers(int maxClusterMapTasks, int configuredReadThroughput, JobConf conf)
+  protected int getNumMappers(int configuredReadThroughput, JobConf conf)
       throws IOException {
+    final int maxClusterMapTasks = getMaxClusterMapTasks(conf);
+
     log.info("Max number of cluster map tasks: " + maxClusterMapTasks);
     log.info("Configured read throughput: " + configuredReadThroughput);
 
@@ -157,6 +152,19 @@ public abstract class AbstractDynamoDBInputFormat<K, V> implements InputFormat<K
 
   protected DynamoDBSplitGenerator getSplitGenerator() {
     return new DynamoDBSplitGenerator();
+  }
+
+  private int getMaxClusterMapTasks(final JobConf conf) throws IOException {
+    int maxClusterMapTasks = Integer.MAX_VALUE;
+    if (DynamoDBUtil.isYarnEnabled(conf)) {
+      final JobClient jobClient = new JobClient(conf);
+      maxClusterMapTasks = DynamoDBUtil.calcMaxMapTasks(jobClient);
+      if (maxClusterMapTasks < 1) {
+        throw new RuntimeException("Number of map tasks configured for the cluster less than 1. Map"
+          + " tasks: " + maxClusterMapTasks);
+      }
+    }
+    return maxClusterMapTasks;
   }
 
 }
