@@ -219,6 +219,40 @@ public class DynamoDBClientTest {
     }
   }
 
+  @Test
+  public void testPutBatchDeletionModeSuccessfulWithAdditionalKeysInItem() throws Exception {
+    Map<String, AttributeValue> item = ImmutableMap.of(
+        "a", new AttributeValue().withS("a"),
+        "b", new AttributeValue().withS("b")
+    );
+
+    conf.set(DynamoDBConstants.DYNAMODB_TABLE_KEY_NAMES, "a");
+
+    client.putBatch("dummyTable", item, 1, null, true);
+
+    for (Map.Entry<String, List<WriteRequest>> entry: client.getWriteBatchMap().entrySet()) {
+      for (WriteRequest req: entry.getValue()) {
+        Assert.assertNotNull(req.getDeleteRequest());
+        Assert.assertEquals(1, req.getDeleteRequest().getKey().size());
+        Assert.assertTrue(req.getDeleteRequest().getKey().containsKey("a"));
+        Assert.assertNull(req.getPutRequest());
+      }
+    }
+  }
+
+  @Test
+  public void testPutBatchDeletionFailsAsGivenItemDoesNotContainAnyKey() throws Exception {
+    Map<String, AttributeValue> item = ImmutableMap.of(
+        "c", new AttributeValue().withS("a"),
+        "d", new AttributeValue().withS("b")
+    );
+
+    conf.set(DynamoDBConstants.DYNAMODB_TABLE_KEY_NAMES, "a,b");
+
+    Assert.assertThrows(IllegalArgumentException.class, () ->
+        client.putBatch("dummyTable", item, 1, null, true));
+  }
+
   private void setTestProxyHostAndPort(Configuration conf) {
     setProxyHostAndPort(conf, TEST_PROXY_HOST, TEST_PROXY_PORT);
   }
