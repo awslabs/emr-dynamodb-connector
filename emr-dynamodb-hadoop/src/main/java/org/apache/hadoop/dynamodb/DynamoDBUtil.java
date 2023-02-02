@@ -272,6 +272,26 @@ public final class DynamoDBUtil {
   }
 
   /**
+   * Check whether current resource manager is Yarn. (JobConf)
+   * @param jobConf the configuration used by Hadoop MapReduce.
+   * @return true if current resource manager is Yarn, false otherwise.
+   */
+  public static boolean isYarnEnabled(final JobConf jobConf) {
+    return jobConf.getBoolean(DynamoDBConstants.YARN_RESOURCE_MANAGER_ENABLED,
+        DynamoDBConstants.DEFAULT_YARN_RESOURCE_MANAGER_ENABLED);
+  }
+
+  /**
+   * Check whether current resource manager is Yarn. (Configuration)
+   * @param jobConf the configuration used by Hadoop MapReduce.
+   * @return true if current resource manager is Yarn, false otherwise.
+   */
+  public static boolean isYarnEnabled(final Configuration jobConf) {
+    return jobConf.getBoolean(DynamoDBConstants.YARN_RESOURCE_MANAGER_ENABLED,
+      DynamoDBConstants.DEFAULT_YARN_RESOURCE_MANAGER_ENABLED);
+  }
+
+  /**
    * Since ByteBuffer does not have a no-arg constructor we hand serialize/deserialize them.
    */
   private static class ByteBufferSerializer implements JsonSerializer<ByteBuffer> {
