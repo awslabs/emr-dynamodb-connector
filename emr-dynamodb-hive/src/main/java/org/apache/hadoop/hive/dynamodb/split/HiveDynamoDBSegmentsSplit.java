@@ -73,6 +73,7 @@ public class HiveDynamoDBSegmentsSplit extends FileSplit implements DynamoDBSpli
     }
     totalSegments = in.readInt();
     filterPushdown = new DynamoDBQueryFilter();
+    estimateLength = in.readLong();
   }
 
   @Override
@@ -86,6 +87,7 @@ public class HiveDynamoDBSegmentsSplit extends FileSplit implements DynamoDBSpli
       out.writeInt(segment);
     }
     out.writeInt(totalSegments);
+    out.writeLong(estimateLength);
   }
 
   @Override
