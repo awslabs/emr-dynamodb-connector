@@ -47,6 +47,12 @@
             <artifactId>hive1.2-shims</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.amazon.emr</groupId>
+            <artifactId>hive3-shims</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
