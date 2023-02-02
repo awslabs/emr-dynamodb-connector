@@ -28,6 +28,7 @@ public class DynamoDBSegmentsSplit implements DynamoDBSplit {
   private int splitId;
   private List<Integer> segments;
   private int totalSegments;
+  private long estimateLength;
   private DynamoDBQueryFilter filterPushdown;
 
   public DynamoDBSegmentsSplit() {
@@ -35,17 +36,18 @@ public class DynamoDBSegmentsSplit implements DynamoDBSplit {
   }
 
   public DynamoDBSegmentsSplit(Path path, long approxItemCount, int splitId, List<Integer>
-      segments, int totalSegments, DynamoDBQueryFilter filterPushdown) {
+      segments, int totalSegments, long estimateLength, DynamoDBQueryFilter filterPushdown) {
     this.approxItemCount = approxItemCount;
     this.segments = segments;
     this.splitId = splitId;
     this.totalSegments = totalSegments;
+    this.estimateLength = estimateLength;
     this.filterPushdown = filterPushdown;
   }
 
   @Override
   public long getLength() {
-    return 0;
+    return estimateLength;
   }
 
   @Override

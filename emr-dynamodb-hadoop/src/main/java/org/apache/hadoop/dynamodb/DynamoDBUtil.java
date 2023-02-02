@@ -14,6 +14,7 @@
 package org.apache.hadoop.dynamodb;
 
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEMS_PER_BATCH;
+import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_SEGMENT_SPLIT_SIZE;
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_ITEMS_PER_BATCH;
 
 import com.amazonaws.regions.RegionUtils;
@@ -289,6 +290,21 @@ public final class DynamoDBUtil {
   public static boolean isYarnEnabled(final Configuration jobConf) {
     return jobConf.getBoolean(DynamoDBConstants.YARN_RESOURCE_MANAGER_ENABLED,
       DynamoDBConstants.DEFAULT_YARN_RESOURCE_MANAGER_ENABLED);
+  }
+
+  /**
+   * Calculate the estimate length for each split.
+   * @param jobConf the configuration used by Hadoop MapReduce.
+   * @param approxItemCountPerSplit the estimate item count for each split.
+   * @return the estimated length for each split.
+   */
+  public static long calculateEstimateLength(final Configuration jobConf,
+      long approxItemCountPerSplit) {
+    long averageItemSize = (long) jobConf.getDouble(DynamoDBConstants.AVG_ITEM_SIZE,
+        0);
+    long splitSize = jobConf.getLong(DynamoDBConstants.SEGMENT_SPLIT_SIZE,
+        DEFAULT_SEGMENT_SPLIT_SIZE);
+    return Math.max(splitSize, averageItemSize * approxItemCountPerSplit);
   }
 
   /**

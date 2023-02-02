@@ -18,6 +18,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
+import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -44,12 +45,15 @@ public class DynamoDBSplitGenerator {
 
     long approxItemCountPerSplit = conf.getLong(DynamoDBConstants.ITEM_COUNT, 0) / ((long)
         numMappers);
+    log.info("Approximate item count per split: " + approxItemCountPerSplit);
+    long estimateLength = DynamoDBUtil.calculateEstimateLength(conf, approxItemCountPerSplit);
+    log.info("Estimate length per split: " + estimateLength);
     InputSplit[] splits = new InputSplit[numMappers];
     for (int i = 0; i < numMappers; i++) {
       log.info("Assigning " + segmentsPerSplit.get(i).size() + " segments to mapper " + i + ": "
           + segmentsPerSplit.get(i));
       splits[i] = createDynamoDBSplit(getInputPath(conf), approxItemCountPerSplit, i,
-          segmentsPerSplit.get(i), numSegments);
+          segmentsPerSplit.get(i), numSegments, estimateLength);
     }
 
     return splits;
@@ -60,8 +64,9 @@ public class DynamoDBSplitGenerator {
   }
 
   protected DynamoDBSplit createDynamoDBSplit(Path path, long approxItemCount, int splitId,
-      List<Integer> segments, int totalSegments) {
-    return new DynamoDBSegmentsSplit(path, approxItemCount, splitId, segments, totalSegments, null);
+      List<Integer> segments, int totalSegments, long estimateLength) {
+    return new DynamoDBSegmentsSplit(path, approxItemCount, splitId, segments,
+      totalSegments, estimateLength, null);
   }
 
 }

@@ -56,7 +56,7 @@ public class DynamoDBRecordReaderTest {
 
   @Test
   public void testPaginatedReads() {
-    DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, new
+    DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, 0, new
         DynamoDBQueryFilter());
 
     DynamoDBRecordReaderContext context = buildContext();
@@ -120,7 +120,7 @@ public class DynamoDBRecordReaderTest {
 
   @Test
   public void testConsumingRemainingElementsIfEndKeyIsNull() {
-    DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, new
+    DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, 0, new
         DynamoDBQueryFilter());
 
     DynamoDBRecordReaderContext context = buildContext();
@@ -162,7 +162,7 @@ public class DynamoDBRecordReaderTest {
 
   @Test
   public void testConsumingAllBeginningElementsIfStartKeyIsNull() {
-    DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, new
+    DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, 0, new
         DynamoDBQueryFilter());
 
     DynamoDBRecordReaderContext context = buildContext();
@@ -205,7 +205,7 @@ public class DynamoDBRecordReaderTest {
 
   @Test
   public void testScanFirstSegment() {
-    DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, new
+    DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, 0, new
         DynamoDBQueryFilter());
 
     DynamoDBRecordReaderContext context = buildContext();
@@ -245,7 +245,7 @@ public class DynamoDBRecordReaderTest {
 
   @Test(expected = IOException.class, timeout = 10000)
   public void testExceptionInDbClient() throws IOException {
-    DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, new
+    DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, 0, new
         DynamoDBQueryFilter());
     DynamoDBRecordReaderContext context = buildContext();
     context.setSplit(split);

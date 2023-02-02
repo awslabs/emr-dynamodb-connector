@@ -72,6 +72,10 @@ public interface DynamoDBConstants {
   String DELETION_MODE = "dynamodb.deletion.mode";
   boolean DEFAULT_DELETION_MODE = false;
 
+  // The default size of segment split
+  String SEGMENT_SPLIT_SIZE = "dynamodb.split.size";
+  long DEFAULT_SEGMENT_SPLIT_SIZE = 1;
+
   // Whether current resource manager is Yarn or not
   String YARN_RESOURCE_MANAGER_ENABLED = "dynamodb.yarn.enabled";
   boolean DEFAULT_YARN_RESOURCE_MANAGER_ENABLED = true;
