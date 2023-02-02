@@ -36,9 +36,9 @@ public class HiveDynamoDBSplitGenerator extends DynamoDBSplitGenerator {
 
   @Override
   protected DynamoDBSplit createDynamoDBSplit(Path path, long approxItemCount, int splitId,
-      List<Integer> segments, int totalSegments) {
-    return new HiveDynamoDBSegmentsSplit(path, approxItemCount, splitId, segments, totalSegments,
-        null);
+      List<Integer> segments, int totalSegments, long estimateLength) {
+    return new HiveDynamoDBSegmentsSplit(path, approxItemCount, splitId, segments,
+        totalSegments, estimateLength, null);
   }
 
 }

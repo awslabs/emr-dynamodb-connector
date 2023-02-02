@@ -53,7 +53,7 @@ public class ReadManagerTest {
     List<Integer> segments = Collections.singletonList(1);
 
     DynamoDBSplit splits = new DynamoDBSegmentsSplit(null /* path */, 1 /* approxItemCount */, 1
-        /* splitId */, segments, 1 /* totalSegments */, null /* filterPushdown */);
+        /* splitId */, segments, 1 /* totalSegments */, 0, null /* filterPushdown */);
     dummyContext.setSplit(splits);
   }
 
