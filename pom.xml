@@ -19,6 +19,7 @@
     <properties>
         <java.version>1.8</java.version>
         <aws-java-sdk.version>1.11.475</aws-java-sdk.version>
+        <commons-lang3.version>3.7</commons-lang3.version>
         <hadoop.version>3.2.4</hadoop.version>
         <hive1.version>1.0.0</hive1.version>
         <hive1.2.version>1.2.1</hive1.2.version>
@@ -85,6 +86,11 @@
                 <artifactId>hamcrest-all</artifactId>
                 <version>${hamcrest-all.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.hadoop</groupId>

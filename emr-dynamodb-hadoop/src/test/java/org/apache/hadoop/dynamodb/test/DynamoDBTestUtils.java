@@ -14,7 +14,7 @@
 package org.apache.hadoop.dynamodb.test;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.hadoop.dynamodb.type.DynamoDBTypeConstants;
 import com.google.common.collect.Lists;
 

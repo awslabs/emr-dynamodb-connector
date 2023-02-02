@@ -18,6 +18,12 @@
     <description>EMR DynamoDB Hive Connector</description>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.amazon.emr</groupId>
             <artifactId>emr-dynamodb-hadoop</artifactId>
@@ -97,6 +103,13 @@
             <groupId>com.amazon.emr</groupId>
             <artifactId>shims-common</artifactId>
             <version>${project.parent.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
