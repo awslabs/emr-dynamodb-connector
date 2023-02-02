@@ -20,6 +20,7 @@
         <module>hive1-shims</module>
         <module>hive1.2-shims</module>
         <module>hive2-shims</module>
+        <module>hive3-shims</module>
         <module>loader</module>
     </modules>
 
