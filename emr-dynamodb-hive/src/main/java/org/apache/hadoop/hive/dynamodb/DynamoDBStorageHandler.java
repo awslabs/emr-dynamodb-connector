@@ -14,12 +14,14 @@
 package org.apache.hadoop.hive.dynamodb;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
+import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.google.common.base.Strings;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -144,6 +146,11 @@ public class DynamoDBStorageHandler
       jobProperties.put(DynamoDBConstants.OUTPUT_TABLE_NAME, tableName);
       jobProperties.put(DynamoDBConstants.INPUT_TABLE_NAME, tableName);
       jobProperties.put(DynamoDBConstants.TABLE_NAME, tableName);
+
+      jobProperties.put(DynamoDBConstants.DYNAMODB_TABLE_KEY_NAMES,
+          description.getKeySchema().stream()
+              .map(KeySchemaElement::getAttributeName)
+              .collect(Collectors.joining(DynamoDBConstants.DYNAMODB_TABLE_KEY_NAMES_SEPARATOR)));
 
       Map<String, String> hiveToDynamoDBSchemaMapping = HiveDynamoDBUtil
           .getHiveToDynamoDBMapping(tableDesc.getProperties().getProperty(DynamoDBConstants

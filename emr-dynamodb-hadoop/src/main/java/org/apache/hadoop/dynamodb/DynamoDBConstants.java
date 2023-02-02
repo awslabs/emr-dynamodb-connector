@@ -35,6 +35,9 @@ public interface DynamoDBConstants {
   String DYNAMODB_COLUMN_MAPPING = "dynamodb.column.mapping";
   String DYNAMODB_TYPE_MAPPING = "dynamodb.type.mapping";
   String DYNAMODB_NULL_SERIALIZATION = "dynamodb.null.serialization";
+  String DYNAMODB_TABLE_KEY_NAMES = "dynamodb.table.keyNames";
+
+  String DYNAMODB_TABLE_KEY_NAMES_SEPARATOR = ",";
 
   // JobConf constants
   String DYNAMODB_FILTER_PUSHDOWN = "dynamodb.filter.pushdown";

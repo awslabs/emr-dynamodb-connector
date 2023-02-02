@@ -53,12 +53,16 @@ import com.google.common.base.Strings;
 import com.google.common.primitives.Ints;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -229,10 +233,11 @@ public class DynamoDBClient {
       writeBatchList = writeBatchMap.get(tableName);
     }
 
-    log.debug("BatchWriteItem deletionMode " + deletionMode);
+    log.info("BatchWriteItem deletionMode " + deletionMode);
 
     if (deletionMode) {
-      writeBatchList.add(new WriteRequest().withDeleteRequest(new DeleteRequest().withKey(item)));
+      writeBatchList.add(new WriteRequest().withDeleteRequest(
+          new DeleteRequest().withKey(getKeys(item))));
     } else {
       writeBatchList.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item)));
     }
@@ -250,6 +255,28 @@ public class DynamoDBClient {
     if (dynamoDB != null) {
       dynamoDB.shutdown();
     }
+  }
+
+  private Map<String, AttributeValue> getKeys(final Map<String, AttributeValue> item) {
+    final String tableKeyNames = config.get(DynamoDBConstants.DYNAMODB_TABLE_KEY_NAMES);
+
+    if (tableKeyNames == null || tableKeyNames.isEmpty()) {
+      return item;
+    }
+
+    final Set<String> keySet = new HashSet<>(
+        Arrays.asList(tableKeyNames.split(DynamoDBConstants.DYNAMODB_TABLE_KEY_NAMES_SEPARATOR)));
+
+    final Map<String, AttributeValue> keys = item.entrySet().stream()
+        .filter(entry -> keySet.contains(entry.getKey()))
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+
+    if (keys.isEmpty()) {
+      throw new IllegalArgumentException(String.format(
+          "Given item does not contain any key for the table: %s", tableKeyNames));
+    }
+
+    return keys;
   }
 
   /**
