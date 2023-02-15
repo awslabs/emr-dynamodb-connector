@@ -11,18 +11,19 @@
 
 package org.apache.hadoop.dynamodb.type;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import java.util.ArrayList;
 import org.apache.hadoop.dynamodb.key.DynamoDBKey;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class DynamoDBListType implements DynamoDBType {
 
   @Override
   public AttributeValue getAttributeValue(String... values) {
-    AttributeValue av = new AttributeValue();
+    ArrayList<AttributeValue> avl = new ArrayList<>();
     for (String ele : values) {
-      av.withL(new AttributeValue(ele));
+      avl.add(AttributeValue.fromS(ele));
     }
-    return av;
+    return AttributeValue.fromL(avl);
   }
 
   @Override

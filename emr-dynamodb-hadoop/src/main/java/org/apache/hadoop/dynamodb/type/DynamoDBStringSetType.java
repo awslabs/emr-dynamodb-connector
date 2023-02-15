@@ -13,14 +13,15 @@
 
 package org.apache.hadoop.dynamodb.type;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import java.util.Arrays;
 import org.apache.hadoop.dynamodb.key.DynamoDBKey;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class DynamoDBStringSetType implements DynamoDBType {
 
   @Override
   public AttributeValue getAttributeValue(String... values) {
-    return new AttributeValue().withSS(values);
+    return AttributeValue.fromSs(Arrays.asList(values));
   }
 
   @Override

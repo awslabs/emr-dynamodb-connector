@@ -13,7 +13,7 @@
 
 package org.apache.hadoop.dynamodb.filter;
 
-import com.amazonaws.services.dynamodbv2.model.Condition;
+import software.amazon.awssdk.services.dynamodb.model.Condition;
 
 public interface DynamoDBFilter {
   String getColumnName();

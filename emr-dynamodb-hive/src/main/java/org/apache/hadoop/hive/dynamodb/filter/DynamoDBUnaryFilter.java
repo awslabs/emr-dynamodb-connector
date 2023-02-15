@@ -13,8 +13,8 @@
 
 package org.apache.hadoop.hive.dynamodb.filter;
 
-import com.amazonaws.services.dynamodbv2.model.Condition;
 import org.apache.hadoop.dynamodb.filter.DynamoDBFilterOperator;
+import software.amazon.awssdk.services.dynamodb.model.Condition;
 
 public class DynamoDBUnaryFilter extends AbstractDynamoDBFilter {
 
@@ -25,8 +25,9 @@ public class DynamoDBUnaryFilter extends AbstractDynamoDBFilter {
 
   @Override
   public Condition createCondition() {
-    Condition condition = new Condition();
-    condition.setComparisonOperator(operator.getDynamoDBName());
+    Condition condition = Condition.builder()
+        .comparisonOperator(operator.getDynamoDBName())
+        .build();
     return condition;
   }
 

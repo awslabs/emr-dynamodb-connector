@@ -13,8 +13,6 @@
 
 package org.apache.hadoop.dynamodb;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.HashSet;
@@ -27,6 +25,8 @@ import org.apache.hadoop.mapred.Reporter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.core.exception.SdkException;
 
 /**
  * FIXME This class is not thread safe.
@@ -91,16 +91,17 @@ public class DynamoDBFibonacciRetryer {
   }
 
   private void handleException(DateTime retryEndTime, Exception exception, Reporter reporter,
-      PrintCounter retryCounter) {
+                               PrintCounter retryCounter) {
     DateTime currentTime = new DateTime(DateTimeZone.UTC);
     long maxDelay = retryEndTime.getMillis() - currentTime.getMillis();
 
     if (verifyRetriableException(exception) && maxDelay > 0) {
-      if (exception instanceof AmazonServiceException) {
-        AmazonServiceException ase = (AmazonServiceException) exception;
-        if (throttleErrorCodes.contains(ase.getErrorCode())) {
+      if (exception instanceof AwsServiceException) {
+        AwsServiceException ase = (AwsServiceException) exception;
+        if (throttleErrorCodes.contains(ase.awsErrorDetails().errorCode())) {
           // Retry exception
-        } else if (internalErrorStatusCodes.contains(ase.getStatusCode())) {
+        } else if (internalErrorStatusCodes.contains(
+            ase.awsErrorDetails().sdkHttpResponse().statusCode())) {
           // Retry exception
         } else {
           throw new RuntimeException(exception);
@@ -121,8 +122,8 @@ public class DynamoDBFibonacciRetryer {
   }
 
   private boolean verifyRetriableException(Exception exception) {
-    return exception instanceof AmazonServiceException
-        || exception instanceof AmazonClientException
+    return exception instanceof AwsServiceException
+        || exception instanceof SdkException
         || exception instanceof SocketException
         || exception instanceof SocketTimeoutException;
   }

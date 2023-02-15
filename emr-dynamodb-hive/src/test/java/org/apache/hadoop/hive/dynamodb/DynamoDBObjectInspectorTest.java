@@ -11,7 +11,6 @@
 
 package org.apache.hadoop.hive.dynamodb;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.dynamodb.test.DynamoDBTestUtils;
 import org.apache.hadoop.dynamodb.type.DynamoDBTypeConstants;
@@ -26,6 +25,7 @@ import com.google.common.collect.Maps;
 
 import java.util.List;
 import java.util.Map;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import static org.junit.Assert.assertEquals;
 
@@ -64,10 +64,10 @@ public class DynamoDBObjectInspectorTest {
     expectedRowData.add(Boolean.valueOf(data.get(3)));
 
     Map<String, AttributeValue> itemMap = Maps.newHashMap();
-    itemMap.put(attributeNames.get(0), new AttributeValue(data.get(0)));
-    itemMap.put(attributeNames.get(1), new AttributeValue().withN(data.get(1)));
-    itemMap.put(attributeNames.get(2), new AttributeValue().withN(data.get(2)));
-    itemMap.put(attributeNames.get(3), new AttributeValue().withBOOL(Boolean.valueOf(data.get(3))));
+    itemMap.put(attributeNames.get(0), AttributeValue.fromS(data.get(0)));
+    itemMap.put(attributeNames.get(1), AttributeValue.fromN(data.get(1)));
+    itemMap.put(attributeNames.get(2), AttributeValue.fromN(data.get(2)));
+    itemMap.put(attributeNames.get(3), AttributeValue.fromBool(Boolean.valueOf(data.get(3))));
     List<Object> actualRowData = getDeserializedRow(attributeNames, colTypeInfos, itemMap);
 
     assertEquals(expectedRowData, actualRowData);
@@ -85,8 +85,8 @@ public class DynamoDBObjectInspectorTest {
     expectedRowData.addAll(data);
 
     Map<String, AttributeValue> itemMap = Maps.newHashMap();
-    itemMap.put(attributeNames.get(0), new AttributeValue(data.get(0)));
-    itemMap.put(attributeNames.get(1), new AttributeValue().withNULL(true));
+    itemMap.put(attributeNames.get(0), AttributeValue.fromS(data.get(0)));
+    itemMap.put(attributeNames.get(1), AttributeValue.fromNul(true));
     List<Object> actualRowData = getDeserializedRow(attributeNames, colTypeInfos, itemMap);
 
     assertEquals(expectedRowData, actualRowData);
@@ -101,13 +101,13 @@ public class DynamoDBObjectInspectorTest {
     List<String> items = Lists.newArrayList("milk", "bread", "eggs", "milk");
     List<AttributeValue> itemsAV = Lists.newArrayList();
     for (String item : items) {
-      itemsAV.add(new AttributeValue(item));
+      itemsAV.add(AttributeValue.fromS(item));
     }
     List<Object> expectedRowData = Lists.newArrayList(list, items);
 
     Map<String, AttributeValue> itemMap = Maps.newHashMap();
-    itemMap.put(attributeNames.get(0), new AttributeValue(list));
-    itemMap.put(attributeNames.get(1), new AttributeValue().withL(itemsAV));
+    itemMap.put(attributeNames.get(0), AttributeValue.fromS(list));
+    itemMap.put(attributeNames.get(1), AttributeValue.fromL(itemsAV));
     List<Object> actualRowData = getDeserializedRow(attributeNames, colTypeInfos, itemMap);
 
     assertEquals(expectedRowData, actualRowData);
@@ -117,7 +117,7 @@ public class DynamoDBObjectInspectorTest {
     typeMapping.put(attributeNames.get(1),
         HiveDynamoDBTypeFactory.getTypeObjectFromDynamoDBType(DynamoDBTypeConstants.STRING_SET));
     items = items.subList(0, 3);
-    itemMap.put(attributeNames.get(1), new AttributeValue().withSS(items));
+    itemMap.put(attributeNames.get(1), AttributeValue.fromSs(items));
     expectedRowData.set(1, items);
     actualRowData = getDeserializedRow(attributeNames, colTypeInfos, typeMapping, itemMap);
 
@@ -140,18 +140,18 @@ public class DynamoDBObjectInspectorTest {
       String person = people.get(i);
       long id = (long) i;
 
-      peopleAV.add(new AttributeValue(person));
+      peopleAV.add(AttributeValue.fromS(person));
       ids.put(person, id);
-      idsAV.put(person, new AttributeValue().withN(Long.toString(id)));
+      idsAV.put(person, AttributeValue.fromN(Long.toString(id)));
       lists.put(person, people.subList(0, i + 1));
-      listsAV.put(person, new AttributeValue().withL(Lists.newArrayList(peopleAV)));
+      listsAV.put(person, AttributeValue.fromL(Lists.newArrayList(peopleAV)));
     }
     List<Object> expectedRowData = Lists.newArrayList(map, ids, lists);
 
     Map<String, AttributeValue> itemMap = Maps.newHashMap();
-    itemMap.put(attributeNames.get(0), new AttributeValue(map));
-    itemMap.put(attributeNames.get(1), new AttributeValue().withM(idsAV));
-    itemMap.put(attributeNames.get(2), new AttributeValue().withM(listsAV));
+    itemMap.put(attributeNames.get(0), AttributeValue.fromS(map));
+    itemMap.put(attributeNames.get(1), AttributeValue.fromM(idsAV));
+    itemMap.put(attributeNames.get(2), AttributeValue.fromM(listsAV));
     List<Object> actualRowData = getDeserializedRow(attributeNames, colTypeInfos, itemMap);
 
     assertEquals(expectedRowData, actualRowData);
@@ -166,9 +166,9 @@ public class DynamoDBObjectInspectorTest {
     Map<String, AttributeValue> namesAV = Maps.newHashMap();
     for (String person : people) {
       names.put(person, person);
-      namesAV.put(person, new AttributeValue(person));
+      namesAV.put(person, AttributeValue.fromS(person));
     }
-    itemMap.put(attributeNames.get(3), new AttributeValue().withM(namesAV));
+    itemMap.put(attributeNames.get(3), AttributeValue.fromM(namesAV));
     expectedRowData.add(names);
     actualRowData = getDeserializedRow(attributeNames, colTypeInfos, altTypeMapping, itemMap);
 
@@ -194,14 +194,14 @@ public class DynamoDBObjectInspectorTest {
     expectedRowData.add(structData);
 
     Map<String, AttributeValue> dataAV = Maps.newHashMap();
-    dataAV.put(PRIMITIVE_FIELDS.get(0), new AttributeValue(data.get(0)));
-    dataAV.put(PRIMITIVE_FIELDS.get(1), new AttributeValue().withN(data.get(1)));
-    dataAV.put(PRIMITIVE_FIELDS.get(2), new AttributeValue().withN(data.get(2)));
-    dataAV.put(PRIMITIVE_FIELDS.get(3), new AttributeValue().withBOOL(Boolean.valueOf(data.get(3))));
+    dataAV.put(PRIMITIVE_FIELDS.get(0), AttributeValue.fromS(data.get(0)));
+    dataAV.put(PRIMITIVE_FIELDS.get(1), AttributeValue.fromN(data.get(1)));
+    dataAV.put(PRIMITIVE_FIELDS.get(2), AttributeValue.fromN(data.get(2)));
+    dataAV.put(PRIMITIVE_FIELDS.get(3), AttributeValue.fromBool(Boolean.valueOf(data.get(3))));
 
     Map<String, AttributeValue> itemMap = Maps.newHashMap();
-    itemMap.put(attributeNames.get(0), new AttributeValue(struct));
-    itemMap.put(attributeNames.get(1), new AttributeValue().withM(dataAV));
+    itemMap.put(attributeNames.get(0), AttributeValue.fromS(struct));
+    itemMap.put(attributeNames.get(1), AttributeValue.fromM(dataAV));
 
     List<Object> actualRowData = getDeserializedRow(attributeNames, colTypeInfos, itemMap);
 
@@ -234,10 +234,10 @@ public class DynamoDBObjectInspectorTest {
     expectedRowData.add(colItemMap);
 
     Map<String, AttributeValue> itemMap = Maps.newHashMap();
-    itemMap.put(attributeNames.get(0), new AttributeValue(data.get(0)));
-    itemMap.put(attributeNames.get(1), new AttributeValue().withN(data.get(1)));
-    itemMap.put(attributeNames.get(2), new AttributeValue().withN(data.get(2)));
-    itemMap.put(attributeNames.get(3), new AttributeValue().withBOOL(Boolean.valueOf(data.get(3))));
+    itemMap.put(attributeNames.get(0), AttributeValue.fromS(data.get(0)));
+    itemMap.put(attributeNames.get(1), AttributeValue.fromN(data.get(1)));
+    itemMap.put(attributeNames.get(2), AttributeValue.fromN(data.get(2)));
+    itemMap.put(attributeNames.get(3), AttributeValue.fromBool(Boolean.valueOf(data.get(3))));
 
     List<Object> actualRowData = getDeserializedRow(colNames, colTypeInfos, itemMap);
 

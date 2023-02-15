@@ -15,17 +15,8 @@ package org.apache.hadoop.dynamodb;
 
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEM_SIZE;
 
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
-import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
-
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSSessionCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -38,6 +29,13 @@ import org.junit.rules.ExpectedException;
 
 import java.util.List;
 import java.util.Map;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.http.apache.ProxyConfiguration;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 public class DynamoDBClientTest {
 
@@ -50,13 +48,11 @@ public class DynamoDBClientTest {
   public ExpectedException expectedException = ExpectedException.none();
 
   Configuration conf = new Configuration();
-  ClientConfiguration clientConf;
   DynamoDBClient client;
 
   @Before
   public void setup() {
     conf.clear();
-    clientConf = new ClientConfiguration();
     client = new DynamoDBClient(conf);
   }
 
@@ -69,9 +65,9 @@ public class DynamoDBClientTest {
     conf.set(DynamoDBConstants.DYNAMODB_SECRET_KEY_CONF, DYNAMODB_SECRET_KEY);
 
     DynamoDBClient dynamoDBClient = new DynamoDBClient();
-    AWSCredentialsProvider provider = dynamoDBClient.getAWSCredentialsProvider(conf);
-    Assert.assertEquals(DYNAMODB_ACCESS_KEY, provider.getCredentials().getAWSAccessKeyId());
-    Assert.assertEquals(DYNAMODB_SECRET_KEY, provider.getCredentials().getAWSSecretKey());
+    AwsCredentialsProvider provider = dynamoDBClient.getAwsCredentialsProvider(conf);
+    Assert.assertEquals(DYNAMODB_ACCESS_KEY, provider.resolveCredentials().accessKeyId());
+    Assert.assertEquals(DYNAMODB_SECRET_KEY, provider.resolveCredentials().secretAccessKey());
   }
 
   @Test
@@ -83,9 +79,9 @@ public class DynamoDBClientTest {
     conf.set(DynamoDBConstants.DEFAULT_SECRET_KEY_CONF, DEFAULT_SECRET_KEY);
 
     DynamoDBClient dynamoDBClient = new DynamoDBClient();
-    AWSCredentialsProvider provider = dynamoDBClient.getAWSCredentialsProvider(conf);
-    Assert.assertEquals(DEFAULT_ACCESS_KEY, provider.getCredentials().getAWSAccessKeyId());
-    Assert.assertEquals(DEFAULT_SECRET_KEY, provider.getCredentials().getAWSSecretKey());
+    AwsCredentialsProvider provider = dynamoDBClient.getAwsCredentialsProvider(conf);
+    Assert.assertEquals(DEFAULT_ACCESS_KEY, provider.resolveCredentials().accessKeyId());
+    Assert.assertEquals(DEFAULT_SECRET_KEY, provider.resolveCredentials().secretAccessKey());
   }
 
   @Test
@@ -99,9 +95,9 @@ public class DynamoDBClientTest {
         .getName());
 
     DynamoDBClient dynamoDBClient = new DynamoDBClient();
-    AWSCredentialsProvider provider = dynamoDBClient.getAWSCredentialsProvider(conf);
-    Assert.assertEquals(MY_ACCESS_KEY, provider.getCredentials().getAWSAccessKeyId());
-    Assert.assertEquals(MY_SECRET_KEY, provider.getCredentials().getAWSSecretKey());
+    AwsCredentialsProvider provider = dynamoDBClient.getAwsCredentialsProvider(conf);
+    Assert.assertEquals(MY_ACCESS_KEY, provider.resolveCredentials().accessKeyId());
+    Assert.assertEquals(MY_SECRET_KEY, provider.resolveCredentials().secretAccessKey());
   }
 
   @Test
@@ -111,7 +107,7 @@ public class DynamoDBClientTest {
         ".NonExistentCredentialsProvider");
     DynamoDBClient dynamoDBClient = new DynamoDBClient();
     expectedException.expectCause(Is.isA(ClassNotFoundException.class));
-    dynamoDBClient.getAWSCredentialsProvider(conf);
+    dynamoDBClient.getAwsCredentialsProvider(conf);
   }
 
   @Test
@@ -120,7 +116,7 @@ public class DynamoDBClientTest {
     conf.set(DynamoDBConstants.CUSTOM_CREDENTIALS_PROVIDER_CONF, Object.class.getName());
     DynamoDBClient dynamoDBClient = new DynamoDBClient();
     expectedException.expect(ClassCastException.class);
-    dynamoDBClient.getAWSCredentialsProvider(conf);
+    dynamoDBClient.getAwsCredentialsProvider(conf);
   }
 
   @Test
@@ -134,87 +130,91 @@ public class DynamoDBClientTest {
     conf.set(DynamoDBConstants.DYNAMODB_SESSION_TOKEN_CONF, DYNAMODB_SESSION_KEY);
 
     DynamoDBClient dynamoDBClient = new DynamoDBClient();
-    AWSCredentialsProvider provider = dynamoDBClient.getAWSCredentialsProvider(conf);
-    AWSSessionCredentials sessionCredentials = (AWSSessionCredentials) provider.getCredentials();
-    Assert.assertEquals(DYNAMODB_ACCESS_KEY, sessionCredentials.getAWSAccessKeyId());
-    Assert.assertEquals(DYNAMODB_SECRET_KEY, sessionCredentials.getAWSSecretKey());
-    Assert.assertEquals(DYNAMODB_SESSION_KEY, sessionCredentials.getSessionToken());
+    AwsCredentialsProvider provider = dynamoDBClient.getAwsCredentialsProvider(conf);
+    AwsSessionCredentials sessionCredentials = (AwsSessionCredentials) provider.resolveCredentials();
+    Assert.assertEquals(DYNAMODB_ACCESS_KEY, sessionCredentials.accessKeyId());
+    Assert.assertEquals(DYNAMODB_SECRET_KEY, sessionCredentials.secretAccessKey());
+    Assert.assertEquals(DYNAMODB_SESSION_KEY, sessionCredentials.sessionToken());
 
   }
 
   @Test
   public void setsClientConfigurationProxyHostAndPortWhenBothAreSupplied() {
     setTestProxyHostAndPort(conf);
-    client.applyProxyConfiguration(clientConf, conf);
-    Assert.assertEquals(TEST_PROXY_HOST, clientConf.getProxyHost());
-    Assert.assertEquals(TEST_PROXY_PORT, clientConf.getProxyPort());
+    ProxyConfiguration proxyConfig = client.applyProxyConfiguration(conf);
+    Assert.assertEquals(TEST_PROXY_HOST, proxyConfig.host());
+    Assert.assertEquals(TEST_PROXY_PORT, proxyConfig.port());
   }
 
   @Test(expected = RuntimeException.class)
   public void throwsWhenProxyPortIsMissing() {
     setProxyHostAndPort(conf, "test.proxy.host", 0);
-    client.applyProxyConfiguration(clientConf, conf);
+    client.applyProxyConfiguration(conf);
   }
 
   @Test(expected = RuntimeException.class)
   public void throwsWhenProxyHostIsMissing() {
     setProxyHostAndPort(conf, null, 5555);
-    client.applyProxyConfiguration(clientConf, conf);
+    client.applyProxyConfiguration(conf);
   }
 
   @Test
   public void
   setsClientConfigurationProxyUsernameAndPasswordWhenBothAreSuppliedWithProxyHostAndPort() {
     setTestProxyHostAndPort(conf);
-    setProxyUsernameAndPassword(conf, "username", "password");
-    client.applyProxyConfiguration(clientConf, conf);
+    setProxyUsernameAndPassword(conf, TEST_USERNAME, TEST_PASSWORD);
+    ProxyConfiguration proxyConfig = client.applyProxyConfiguration(conf);
+    Assert.assertEquals(TEST_PROXY_HOST, proxyConfig.host());
+    Assert.assertEquals(TEST_PROXY_PORT, proxyConfig.port());
+    Assert.assertEquals(TEST_USERNAME, proxyConfig.username());
+    Assert.assertEquals(TEST_PASSWORD, proxyConfig.password());
   }
 
   @Test(expected = RuntimeException.class)
   public void throwsWhenProxyUsernameIsMissing() {
     setTestProxyHostAndPort(conf);
-    setProxyUsernameAndPassword(conf, null, "password");
-    client.applyProxyConfiguration(clientConf, conf);
+    setProxyUsernameAndPassword(conf, null, TEST_PASSWORD);
+    client.applyProxyConfiguration(conf);
   }
 
   @Test(expected = RuntimeException.class)
   public void throwsWhenProxyPasswordIsMissing() {
     setTestProxyHostAndPort(conf);
-    conf.set(DynamoDBConstants.PROXY_USERNAME, "username");
-    client.applyProxyConfiguration(clientConf, conf);
+    conf.set(DynamoDBConstants.PROXY_USERNAME, TEST_USERNAME);
+    client.applyProxyConfiguration(conf);
   }
 
   @Test(expected = RuntimeException.class)
   public void throwsWhenGivenProxyUsernameAndPasswordWithoutProxyHostAndPortAreNotSupplied() {
     setProxyUsernameAndPassword(conf, TEST_USERNAME, TEST_PASSWORD);
-    client.applyProxyConfiguration(clientConf, conf);
+    client.applyProxyConfiguration(conf);
   }
 
   @Test(expected = RuntimeException.class)
   public void testPutBatchThrowsWhenItemIsTooLarge() throws Exception {
     Map<String, AttributeValue> item = ImmutableMap.of("",
-        new AttributeValue(Strings.repeat("a", (int) (DEFAULT_MAX_ITEM_SIZE + 1))));
+        AttributeValue.fromS(Strings.repeat("a", (int) (DEFAULT_MAX_ITEM_SIZE + 1))));
     client.putBatch("dummyTable", item, 1, null, false);
   }
 
   @Test
   public void testPutBatchDoesNotThrowWhenItemIsNotTooLarge() throws Exception {
     Map<String, AttributeValue> item = ImmutableMap.of("",
-        new AttributeValue(Strings.repeat("a", (int) DEFAULT_MAX_ITEM_SIZE)));
+        AttributeValue.fromS(Strings.repeat("a", (int) DEFAULT_MAX_ITEM_SIZE)));
     client.putBatch("dummyTable", item, 1, null, false);
   }
 
   @Test
   public void testPutBatchDeletionModeSuccessful() throws Exception {
     Map<String, AttributeValue> item = ImmutableMap.of("",
-            new AttributeValue(Strings.repeat("a", (int) DEFAULT_MAX_ITEM_SIZE)));
+            AttributeValue.fromS(Strings.repeat("a", (int) DEFAULT_MAX_ITEM_SIZE)));
 
     client.putBatch("dummyTable", item, 1, null, true);
 
     for (Map.Entry<String, List<WriteRequest>> entry: client.getWriteBatchMap().entrySet()) {
       for (WriteRequest req: entry.getValue()) {
-        Assert.assertNotNull(req.getDeleteRequest());
-        Assert.assertNull(req.getPutRequest());
+        Assert.assertNotNull(req.deleteRequest());
+        Assert.assertNull(req.putRequest());
       }
     }
   }
@@ -222,8 +222,8 @@ public class DynamoDBClientTest {
   @Test
   public void testPutBatchDeletionModeSuccessfulWithAdditionalKeysInItem() throws Exception {
     Map<String, AttributeValue> item = ImmutableMap.of(
-        "a", new AttributeValue().withS("a"),
-        "b", new AttributeValue().withS("b")
+        "a", AttributeValue.fromS("a"),
+        "b", AttributeValue.fromS("b")
     );
 
     conf.set(DynamoDBConstants.DYNAMODB_TABLE_KEY_NAMES, "a");
@@ -232,10 +232,10 @@ public class DynamoDBClientTest {
 
     for (Map.Entry<String, List<WriteRequest>> entry: client.getWriteBatchMap().entrySet()) {
       for (WriteRequest req: entry.getValue()) {
-        Assert.assertNotNull(req.getDeleteRequest());
-        Assert.assertEquals(1, req.getDeleteRequest().getKey().size());
-        Assert.assertTrue(req.getDeleteRequest().getKey().containsKey("a"));
-        Assert.assertNull(req.getPutRequest());
+        Assert.assertNotNull(req.deleteRequest());
+        Assert.assertEquals(1, req.deleteRequest().key().size());
+        Assert.assertTrue(req.deleteRequest().key().containsKey("a"));
+        Assert.assertNull(req.putRequest());
       }
     }
   }
@@ -243,8 +243,8 @@ public class DynamoDBClientTest {
   @Test
   public void testPutBatchDeletionFailsAsGivenItemDoesNotContainAnyKey() throws Exception {
     Map<String, AttributeValue> item = ImmutableMap.of(
-        "c", new AttributeValue().withS("a"),
-        "d", new AttributeValue().withS("b")
+        "c", AttributeValue.fromS("a"),
+        "d", AttributeValue.fromS("b")
     );
 
     conf.set(DynamoDBConstants.DYNAMODB_TABLE_KEY_NAMES, "a,b");
@@ -275,7 +275,7 @@ public class DynamoDBClientTest {
     }
   }
 
-  private static class MyAWSCredentialsProvider implements AWSCredentialsProvider, Configurable {
+  private static class MyAWSCredentialsProvider implements AwsCredentialsProvider, Configurable {
     private Configuration conf;
     private String accessKey;
     private String secretKey;
@@ -286,13 +286,8 @@ public class DynamoDBClientTest {
     }
 
     @Override
-    public AWSCredentials getCredentials() {
-      return new BasicAWSCredentials(accessKey, secretKey);
-    }
-
-    @Override
-    public void refresh() {
-
+    public AwsCredentials resolveCredentials() {
+      return AwsBasicCredentials.create(accessKey, secretKey);
     }
 
     @Override

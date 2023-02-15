@@ -13,17 +13,15 @@
 
 package org.apache.hadoop.dynamodb.test;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.hadoop.dynamodb.type.DynamoDBTypeConstants;
 import com.google.common.collect.Lists;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import static org.junit.Assert.assertEquals;
 
@@ -103,13 +101,15 @@ public class DynamoDBTestUtils {
 
   public static Map<String, AttributeValue> getRandomItem() {
     Map<String, AttributeValue> item = new HashMap<>();
-    item.put(DynamoDBTypeConstants.STRING, new AttributeValue().withS(getRandomString()));
-    item.put(DynamoDBTypeConstants.STRING_SET, new AttributeValue().withSS(getRandomStrings()));
-    item.put(DynamoDBTypeConstants.NUMBER, new AttributeValue().withN(getRandomNumber()));
-    item.put(DynamoDBTypeConstants.LIST, new AttributeValue().withL(new AttributeValue().withM(aRandomMap)));
-    item.put(DynamoDBTypeConstants.NUMBER_SET, new AttributeValue().withNS(getRandomNumbers()));
-    item.put(DynamoDBTypeConstants.BINARY, new AttributeValue().withB(getRandomByteBuffer()));
-    item.put(DynamoDBTypeConstants.BINARY_SET, new AttributeValue().withBS(getRandomByteBuffers()));
+    item.put(DynamoDBTypeConstants.STRING, AttributeValue.fromS(getRandomString()));
+    item.put(DynamoDBTypeConstants.STRING_SET, AttributeValue.fromSs(getRandomStrings()));
+    item.put(DynamoDBTypeConstants.NUMBER, AttributeValue.fromN(getRandomNumber()));
+    item.put(DynamoDBTypeConstants.LIST, AttributeValue.fromL(Arrays.asList(AttributeValue.fromM(aRandomMap))));
+    item.put(DynamoDBTypeConstants.NUMBER_SET, AttributeValue.fromNs(getRandomNumbers()));
+    item.put(DynamoDBTypeConstants.BINARY, AttributeValue.fromB(SdkBytes.fromByteBuffer(getRandomByteBuffer())));
+    item.put(DynamoDBTypeConstants.BINARY_SET, AttributeValue.fromBs(getRandomByteBuffers().stream()
+        .map(byteBuffer -> SdkBytes.fromByteBuffer(byteBuffer))
+        .collect(Collectors.toList())));
     return item;
   }
 

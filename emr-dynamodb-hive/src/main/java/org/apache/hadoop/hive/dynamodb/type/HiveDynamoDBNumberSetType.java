@@ -13,13 +13,13 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import java.util.List;
 import org.apache.hadoop.dynamodb.type.DynamoDBNumberSetType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class HiveDynamoDBNumberSetType extends DynamoDBNumberSetType implements HiveDynamoDBType {
 
@@ -30,7 +30,7 @@ public class HiveDynamoDBNumberSetType extends DynamoDBNumberSetType implements 
         getDynamoDBType());
     return (values == null || values.isEmpty())
         ? DynamoDBDataParser.getNullAttribute(nullSerialization)
-        : new AttributeValue().withNS(values);
+        : AttributeValue.fromNs(values);
   }
 
   @Override
@@ -48,8 +48,8 @@ public class HiveDynamoDBNumberSetType extends DynamoDBNumberSetType implements 
 
   @Override
   public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
-    return data.getNS() == null ? null
-        : DynamoDBDataParser.getNumberObjectList(data.getNS(), objectInspector);
+    return data.ns() == null ? null
+        : DynamoDBDataParser.getNumberObjectList(data.ns(), objectInspector);
   }
 
 }

@@ -13,10 +13,10 @@
 
 package org.apache.hadoop.dynamodb.preader;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import java.util.Map;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.preader.RateController.RequestLimit;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public abstract class AbstractRecordReadRequest {
 

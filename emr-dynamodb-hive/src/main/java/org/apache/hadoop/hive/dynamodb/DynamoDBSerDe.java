@@ -13,8 +13,6 @@
 
 package org.apache.hadoop.hive.dynamodb;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.BillingModeSummary;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.util.List;
@@ -47,6 +45,9 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
+import software.amazon.awssdk.services.dynamodb.model.BillingModeSummary;
 
 public class DynamoDBSerDe extends AbstractSerDe {
 
@@ -193,8 +194,8 @@ public class DynamoDBSerDe extends AbstractSerDe {
 
     log.info("Table Properties:" + tbl);
     DynamoDBClient client = new DynamoDBClient(conf, tbl.getProperty(DynamoDBConstants.REGION));
-    long writesPerSecond = client.describeTable(dynamoDBTableName).getProvisionedThroughput()
-        .getWriteCapacityUnits();
+    long writesPerSecond = client.describeTable(dynamoDBTableName).provisionedThroughput()
+        .writeCapacityUnits();
 
     // skip verification when current resource manager is not Yarn
     if (!DynamoDBUtil.isYarnEnabled(conf)) {
@@ -211,11 +212,10 @@ public class DynamoDBSerDe extends AbstractSerDe {
     }
 
     BillingModeSummary billingModeSummary =
-        client.describeTable(dynamoDBTableName).getBillingModeSummary();
+        client.describeTable(dynamoDBTableName).billingModeSummary();
     if (maxMapTasks > writesPerSecond
         && (billingModeSummary == null
-        || billingModeSummary.getBillingMode().equals(
-            DynamoDBConstants.BILLING_MODE_PROVISIONED))) {
+        || billingModeSummary.billingMode() == BillingMode.PROVISIONED)) {
       String message = "WARNING: Configured write throughput of the dynamodb table "
           + dynamoDBTableName + " is less than the cluster map capacity." + " ClusterMapCapacity: "
           + maxMapTasks + " WriteThroughput: " + writesPerSecond + "\nWARNING: Writes to this "

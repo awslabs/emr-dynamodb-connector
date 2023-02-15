@@ -20,38 +20,14 @@ import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_BATCH_SIZE;
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_ITEMS_PER_BATCH;
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_ITEM_SIZE;
 import static org.apache.hadoop.dynamodb.DynamoDBUtil.getDynamoDBEndpoint;
+import static org.apache.hadoop.dynamodb.DynamoDBUtil.getDynamoDBRegion;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSCredentialsProviderChain;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
-import com.amazonaws.services.dynamodbv2.model.Capacity;
-import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.dynamodbv2.model.ConsumedCapacity;
-import com.amazonaws.services.dynamodbv2.model.DeleteRequest;
-import com.amazonaws.services.dynamodbv2.model.DescribeTableRequest;
-import com.amazonaws.services.dynamodbv2.model.DescribeTableResult;
-import com.amazonaws.services.dynamodbv2.model.PutRequest;
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
-import com.amazonaws.services.dynamodbv2.model.QueryResult;
-import com.amazonaws.services.dynamodbv2.model.ReturnConsumedCapacity;
-import com.amazonaws.services.dynamodbv2.model.ScanRequest;
-import com.amazonaws.services.dynamodbv2.model.ScanResult;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
-import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.primitives.Ints;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -72,6 +48,36 @@ import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.joda.time.Duration;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
+import software.amazon.awssdk.http.apache.ProxyConfiguration;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.Capacity;
+import software.amazon.awssdk.services.dynamodb.model.Condition;
+import software.amazon.awssdk.services.dynamodb.model.ConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.DeleteRequest;
+import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
+import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
+import software.amazon.awssdk.services.dynamodb.model.PutRequest;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
+import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
+import software.amazon.awssdk.services.dynamodb.model.ReturnConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
+import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
+import software.amazon.awssdk.services.dynamodb.model.TableDescription;
+import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 public class DynamoDBClient {
 
@@ -85,18 +91,18 @@ public class DynamoDBClient {
           DynamoDBConstants.DYNAMODB_SECRET_KEY_CONF
       );
   private static final CredentialPairName DYNAMODB_SESSION_CREDENTIAL_PAIR_NAME =
-          new CredentialPairName(
-                  DYNAMODB_CREDENTIAL_PAIR_NAME.getAccessKeyName(),
-                  DYNAMODB_CREDENTIAL_PAIR_NAME.getSecretKeyName(),
-                  DynamoDBConstants.DYNAMODB_SESSION_TOKEN_CONF
-          );
+      new CredentialPairName(
+          DYNAMODB_CREDENTIAL_PAIR_NAME.getAccessKeyName(),
+          DYNAMODB_CREDENTIAL_PAIR_NAME.getSecretKeyName(),
+          DynamoDBConstants.DYNAMODB_SESSION_TOKEN_CONF
+      );
   private static final CredentialPairName DEFAULT_CREDENTIAL_PAIR_NAME =
       new CredentialPairName(
           DynamoDBConstants.DEFAULT_ACCESS_KEY_CONF,
           DynamoDBConstants.DEFAULT_SECRET_KEY_CONF
       );
   private final Map<String, List<WriteRequest>> writeBatchMap = new HashMap<>();
-  private final AmazonDynamoDBClient dynamoDB;
+  private final DynamoDbClient dynamoDB;
   private int writeBatchMapSizeBytes;
   private int batchWriteRetries;
   private final Configuration config;
@@ -118,8 +124,7 @@ public class DynamoDBClient {
   public DynamoDBClient(Configuration conf, String region) {
     Preconditions.checkNotNull(conf, "conf cannot be null.");
     config = conf;
-    dynamoDB = getDynamoDBClient(conf);
-    dynamoDB.setEndpoint(getDynamoDBEndpoint(conf, region));
+    dynamoDB = getDynamoDBClient(conf, region);
     maxBatchSize = config.getLong(MAX_BATCH_SIZE, DEFAULT_MAX_BATCH_SIZE);
     maxItemByteSize = config.getLong(MAX_ITEM_SIZE, DEFAULT_MAX_ITEM_SIZE);
   }
@@ -129,80 +134,77 @@ public class DynamoDBClient {
   }
 
   public TableDescription describeTable(String tableName) {
-    final DescribeTableRequest describeTablesRequest = new DescribeTableRequest()
-        .withTableName(tableName);
+    final DescribeTableRequest describeTablesRequest = DescribeTableRequest.builder()
+        .tableName(tableName)
+        .build();
     try {
-      RetryResult<DescribeTableResult> describeResult = getRetryDriver().runWithRetry(
-          new Callable<DescribeTableResult>() {
-            @Override
-            public DescribeTableResult call() {
-              DescribeTableResult result = dynamoDB.describeTable(describeTablesRequest);
-              log.info("Describe table output: " + result);
-              return result;
-            }
+      RetryResult<DescribeTableResponse> describeResult = getRetryDriver().runWithRetry(
+          () -> {
+            DescribeTableResponse response = dynamoDB.describeTable(describeTablesRequest);
+            log.info("Describe table output: " + response);
+            return response;
           }, null, null);
-      return describeResult.result.getTable();
+      return describeResult.result.table();
     } catch (Exception e) {
       throw new RuntimeException("Could not lookup table " + tableName + " in DynamoDB.", e);
     }
   }
 
-  public RetryResult<ScanResult> scanTable(
+  public RetryResult<ScanResponse> scanTable(
       String tableName, DynamoDBQueryFilter dynamoDBQueryFilter, Integer segment, Integer
       totalSegments, Map<String, AttributeValue> exclusiveStartKey, long limit, Reporter reporter) {
-    final ScanRequest scanRequest = new ScanRequest(tableName)
-        .withExclusiveStartKey(exclusiveStartKey)
-        .withLimit(Ints.checkedCast(limit))
-        .withSegment(segment)
-        .withTotalSegments(totalSegments)
-        .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
+    final ScanRequest.Builder scanRequestBuilder = ScanRequest.builder().tableName(tableName)
+        .exclusiveStartKey(exclusiveStartKey)
+        .limit(Ints.checkedCast(limit))
+        .segment(segment)
+        .totalSegments(totalSegments)
+        .returnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
 
     if (dynamoDBQueryFilter != null) {
       Map<String, Condition> scanFilter = dynamoDBQueryFilter.getScanFilter();
       if (!scanFilter.isEmpty()) {
-        scanRequest.setScanFilter(scanFilter);
+        scanRequestBuilder.scanFilter(scanFilter);
       }
     }
 
-    RetryResult<ScanResult> retryResult = getRetryDriver().runWithRetry(new Callable<ScanResult>() {
-      @Override
-      public ScanResult call() {
-        log.debug("Executing DynamoDB scan: " + scanRequest);
-        return dynamoDB.scan(scanRequest);
-      }
+    final ScanRequest scanRequest = scanRequestBuilder.build();
+
+    RetryResult<ScanResponse> retryResult = getRetryDriver().runWithRetry(() -> {
+      log.debug("Executing DynamoDB scan: " + scanRequest);
+      return dynamoDB.scan(scanRequest);
     }, reporter, PrintCounter.DynamoDBReadThrottle);
     return retryResult;
   }
 
-  public RetryResult<QueryResult> queryTable(
+  public RetryResult<QueryResponse> queryTable(
       String tableName, DynamoDBQueryFilter dynamoDBQueryFilter, Map<String, AttributeValue>
       exclusiveStartKey, long limit, Reporter reporter) {
-    final QueryRequest queryRequest = new QueryRequest()
-        .withTableName(tableName)
-        .withExclusiveStartKey(exclusiveStartKey)
-        .withKeyConditions(dynamoDBQueryFilter.getKeyConditions())
-        .withLimit(Ints.checkedCast(limit))
-        .withReturnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
+    final QueryRequest.Builder queryRequestBuilder = QueryRequest.builder()
+        .tableName(tableName)
+        .exclusiveStartKey(exclusiveStartKey)
+        .keyConditions(dynamoDBQueryFilter.getKeyConditions())
+        .limit(Ints.checkedCast(limit))
+        .returnConsumedCapacity(ReturnConsumedCapacity.TOTAL);
 
     DynamoDBIndexInfo index = dynamoDBQueryFilter.getIndex();
     if (index != null) {
       log.debug("Using DynamoDB index: " + index.getIndexName());
-      queryRequest.setIndexName(index.getIndexName());
+      queryRequestBuilder.indexName(index.getIndexName());
     }
 
-    RetryResult<QueryResult> retryResult = getRetryDriver().runWithRetry(
-        new Callable<QueryResult>() {
-          @Override
-          public QueryResult call() {
-            log.debug("Executing DynamoDB query: " + queryRequest);
-            return dynamoDB.query(queryRequest);
-          }
+    final QueryRequest queryRequest = queryRequestBuilder.build();
+
+    RetryResult<QueryResponse> retryResult = getRetryDriver().runWithRetry(
+        () -> {
+          log.debug("Executing DynamoDB query: " + queryRequest);
+          return dynamoDB.query(queryRequest);
         }, reporter, PrintCounter.DynamoDBReadThrottle);
     return retryResult;
   }
 
-  public BatchWriteItemResult putBatch(String tableName, Map<String, AttributeValue> item,
-      long maxItemsPerBatch, Reporter reporter, boolean deletionMode)
+  public BatchWriteItemResponse putBatch(String tableName, Map<String, AttributeValue> item,
+                                         long maxItemsPerBatch, Reporter reporter,
+                                         boolean deletionMode)
       throws UnsupportedEncodingException {
 
     int itemSizeBytes = DynamoDBUtil.getItemSizeBytes(item);
@@ -211,7 +213,7 @@ public class DynamoDBClient {
           + ". Item with size of " + itemSizeBytes + " was given.");
     }
     maxItemsPerBatch = DynamoDBUtil.getBoundedBatchLimit(config, maxItemsPerBatch);
-    BatchWriteItemResult result = null;
+    BatchWriteItemResponse response = null;
     if (writeBatchMap.containsKey(tableName)) {
 
       boolean writeRequestsForTableAtLimit =
@@ -221,7 +223,7 @@ public class DynamoDBClient {
           writeBatchMapSizeBytes + itemSizeBytes > maxBatchSize;
 
       if (writeRequestsForTableAtLimit || totalSizeOfWriteBatchesOverLimit) {
-        result = writeBatch(reporter, itemSizeBytes);
+        response = writeBatch(reporter, itemSizeBytes);
       }
     }
     // writeBatchMap could be cleared from writeBatch()
@@ -236,15 +238,22 @@ public class DynamoDBClient {
     log.info("BatchWriteItem deletionMode " + deletionMode);
 
     if (deletionMode) {
-      writeBatchList.add(new WriteRequest().withDeleteRequest(
-          new DeleteRequest().withKey(getKeys(item))));
+      writeBatchList.add(WriteRequest.builder()
+          .deleteRequest(DeleteRequest.builder()
+              .key(getKeys(item))
+              .build())
+          .build());
     } else {
-      writeBatchList.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item)));
+      writeBatchList.add(WriteRequest.builder()
+          .putRequest(PutRequest.builder()
+              .item(item)
+              .build())
+          .build());
     }
 
     writeBatchMapSizeBytes += itemSizeBytes;
 
-    return result;
+    return response;
   }
 
   public void close() {
@@ -253,7 +262,7 @@ public class DynamoDBClient {
     }
 
     if (dynamoDB != null) {
-      dynamoDB.shutdown();
+      dynamoDB.close();
     }
   }
 
@@ -282,21 +291,22 @@ public class DynamoDBClient {
   /**
    * @param roomNeeded number of bytes that writeBatch MUST make room for
    */
-  private BatchWriteItemResult writeBatch(Reporter reporter, final int roomNeeded) {
-    final BatchWriteItemRequest batchWriteItemRequest = new BatchWriteItemRequest()
-        .withRequestItems(writeBatchMap)
-        .withReturnConsumedCapacity(ReturnConsumedCapacity.INDEXES);
+  private BatchWriteItemResponse writeBatch(Reporter reporter, final int roomNeeded) {
+    final BatchWriteItemRequest batchWriteItemRequest = BatchWriteItemRequest.builder()
+        .requestItems(writeBatchMap)
+        .returnConsumedCapacity(ReturnConsumedCapacity.INDEXES)
+        .build();
 
-    RetryResult<BatchWriteItemResult> retryResult = getRetryDriver().runWithRetry(
-        new Callable<BatchWriteItemResult>() {
+    RetryResult<BatchWriteItemResponse> retryResult = getRetryDriver().runWithRetry(
+        new Callable<BatchWriteItemResponse>() {
           @Override
-          public BatchWriteItemResult call() throws
+          public BatchWriteItemResponse call() throws
               UnsupportedEncodingException,
               InterruptedException {
             pauseExponentially(batchWriteRetries);
-            BatchWriteItemResult result = dynamoDB.batchWriteItem(batchWriteItemRequest);
+            BatchWriteItemResponse result = dynamoDB.batchWriteItem(batchWriteItemRequest);
 
-            Map<String, List<WriteRequest>> unprocessedItems = result.getUnprocessedItems();
+            Map<String, List<WriteRequest>> unprocessedItems = result.unprocessedItems();
             if (unprocessedItems == null || unprocessedItems.isEmpty()) {
               batchWriteRetries = 0;
             } else {
@@ -309,7 +319,7 @@ public class DynamoDBClient {
                 int batchSizeBytes = 0;
                 for (WriteRequest request : unprocessedWriteRequests) {
                   batchSizeBytes += DynamoDBUtil.getItemSizeBytes(
-                      request.getPutRequest().getItem());
+                      request.putRequest().item());
                 }
 
                 long maxItemsPerBatch =
@@ -318,24 +328,26 @@ public class DynamoDBClient {
 
                 if (unprocessedWriteRequests.size() >= maxItemsPerBatch
                     || (maxBatchSize - batchSizeBytes) < roomNeeded) {
-                  throw new AmazonClientException("Full list of write requests not processed");
+                  throw SdkException.builder()
+                      .message("Full list of write requests not processed")
+                      .build();
                 }
               }
 
               double consumed = 0.0;
-              for (ConsumedCapacity consumedCapacity : result.getConsumedCapacity()) {
-                consumed = consumedCapacity.getTable().getCapacityUnits();
-                if (consumedCapacity.getLocalSecondaryIndexes() != null) {
+              for (ConsumedCapacity consumedCapacity : result.consumedCapacity()) {
+                consumed = consumedCapacity.table().capacityUnits();
+                if (consumedCapacity.localSecondaryIndexes() != null) {
                   for (Capacity lsiConsumedCapacity :
-                      consumedCapacity.getLocalSecondaryIndexes().values()) {
-                    consumed += lsiConsumedCapacity.getCapacityUnits();
+                      consumedCapacity.localSecondaryIndexes().values()) {
+                    consumed += lsiConsumedCapacity.capacityUnits();
                   }
                 }
               }
 
               int batchSize = 0;
               for (List<WriteRequest> writeRequests :
-                  batchWriteItemRequest.getRequestItems().values()) {
+                  batchWriteItemRequest.requestItems().values()) {
                 batchSize += writeRequests.size();
               }
 
@@ -352,12 +364,12 @@ public class DynamoDBClient {
     writeBatchMapSizeBytes = 0;
 
     // If some items failed to go through, add them back to the writeBatchMap
-    Map<String, List<WriteRequest>> unprocessedItems = retryResult.result.getUnprocessedItems();
+    Map<String, List<WriteRequest>> unprocessedItems = retryResult.result.unprocessedItems();
     for (Entry<String, List<WriteRequest>> entry : unprocessedItems.entrySet()) {
       String key = entry.getKey();
       List<WriteRequest> requests = entry.getValue();
       for (WriteRequest request : requests) {
-        writeBatchMapSizeBytes += DynamoDBUtil.getItemSizeBytes(request.getPutRequest().getItem());
+        writeBatchMapSizeBytes += DynamoDBUtil.getItemSizeBytes(request.putRequest().item());
       }
       writeBatchMap.put(key, requests);
     }
@@ -379,22 +391,37 @@ public class DynamoDBClient {
     Thread.sleep(delay);
   }
 
-  private AmazonDynamoDBClient getDynamoDBClient(Configuration conf) {
-    ClientConfiguration clientConfig = new ClientConfiguration().withMaxErrorRetry(1);
-    applyProxyConfiguration(clientConfig, conf);
-    return new AmazonDynamoDBClient(getAWSCredentialsProvider(conf), clientConfig);
+  private DynamoDbClient getDynamoDBClient(Configuration conf, String region) {
+    final DynamoDbClientBuilder dynamoDbClientBuilder = DynamoDbClient.builder();
+
+    dynamoDbClientBuilder.region(Region.of(getDynamoDBRegion(conf, region)));
+
+    String customEndpoint = getDynamoDBEndpoint(conf, region);
+    if (!Strings.isNullOrEmpty(customEndpoint)) {
+      dynamoDbClientBuilder.endpointOverride(URI.create(customEndpoint));
+    }
+
+    return dynamoDbClientBuilder.httpClient(ApacheHttpClient.builder()
+            .proxyConfiguration(applyProxyConfiguration(conf))
+            .build())
+        .credentialsProvider(getAwsCredentialsProvider(conf))
+        .overrideConfiguration(ClientOverrideConfiguration.builder()
+            .retryPolicy(builder -> builder.numRetries(1))
+            .build())
+        .build();
   }
 
   @VisibleForTesting
-  void applyProxyConfiguration(ClientConfiguration clientConfig, Configuration conf) {
+  ProxyConfiguration applyProxyConfiguration(Configuration conf) {
+    ProxyConfiguration.Builder builder = ProxyConfiguration.builder();
+
     final String proxyHost = conf.get(DynamoDBConstants.PROXY_HOST);
     final int proxyPort = conf.getInt(DynamoDBConstants.PROXY_PORT, 0);
     final String proxyUsername = conf.get(DynamoDBConstants.PROXY_USERNAME);
     final String proxyPassword = conf.get(DynamoDBConstants.PROXY_PASSWORD);
     boolean proxyHostAndPortPresent = false;
     if (!Strings.isNullOrEmpty(proxyHost) && proxyPort > 0) {
-      clientConfig.setProxyHost(proxyHost);
-      clientConfig.setProxyPort(proxyPort);
+      builder.endpoint(URI.create(proxyHost + ":" + proxyPort));
       proxyHostAndPortPresent = true;
     } else if (Strings.isNullOrEmpty(proxyHost) ^ proxyPort <= 0) {
       throw new RuntimeException("Only one of proxy host and port are set, when both are required");
@@ -404,17 +431,19 @@ public class DynamoDBClient {
         throw new RuntimeException("Proxy host and port must be supplied if proxy username and "
             + "password are present");
       } else {
-        clientConfig.setProxyUsername(proxyUsername);
-        clientConfig.setProxyPassword(proxyPassword);
+        builder.username(proxyUsername)
+            .password(proxyPassword);
       }
     } else if (Strings.isNullOrEmpty(proxyUsername) ^ Strings.isNullOrEmpty(proxyPassword)) {
       throw new RuntimeException("Only one of proxy username and password are set, when both are "
           + "required");
     }
+
+    return builder.build();
   }
 
-  protected AWSCredentialsProvider getAWSCredentialsProvider(Configuration conf) {
-    List<AWSCredentialsProvider> providersList = new ArrayList<>();
+  protected AwsCredentialsProvider getAwsCredentialsProvider(Configuration conf) {
+    List<AwsCredentialsProvider> providersList = new ArrayList<>();
 
     // try to load custom credential provider, fail if a provider is specified but cannot be
     // initialized
@@ -422,7 +451,7 @@ public class DynamoDBClient {
     if (!Strings.isNullOrEmpty(providerClass)) {
       try {
         providersList.add(
-            (AWSCredentialsProvider) ReflectionUtils.newInstance(Class.forName(providerClass), conf)
+            (AwsCredentialsProvider) ReflectionUtils.newInstance(Class.forName(providerClass), conf)
         );
       } catch (ClassNotFoundException e) {
         throw new RuntimeException("Custom AWSCredentialsProvider not found: " + providerClass, e);
@@ -443,40 +472,24 @@ public class DynamoDBClient {
     }
 
     if (Strings.isNullOrEmpty(accessKey) || Strings.isNullOrEmpty(secretKey)) {
-      providersList.add(new InstanceProfileCredentialsProvider());
+      providersList.add(InstanceProfileCredentialsProvider.create());
     } else if (!Strings.isNullOrEmpty(sessionKey)) {
-      final AWSCredentials credentials =
-          new BasicSessionCredentials(accessKey, secretKey, sessionKey);
-      providersList.add(new AWSCredentialsProvider() {
-        @Override
-        public AWSCredentials getCredentials() {
-          return credentials;
-        }
-
-        @Override
-        public void refresh() {
-        }
-      });
+      final AwsCredentials credentials =
+          AwsSessionCredentials.create(accessKey, secretKey, sessionKey);
+      providersList.add(() -> credentials);
     } else {
-      final AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
-      providersList.add(new AWSCredentialsProvider() {
-        @Override
-        public AWSCredentials getCredentials() {
-          return credentials;
-        }
-
-        @Override
-        public void refresh() {
-        }
-      });
+      final AwsCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
+      providersList.add(() -> credentials);
     }
 
-    AWSCredentialsProvider[] providerArray = providersList.toArray(
-        new AWSCredentialsProvider[providersList.size()]
+    AwsCredentialsProvider[] providerArray = providersList.toArray(
+        new AwsCredentialsProvider[providersList.size()]
     );
 
-    AWSCredentialsProviderChain providerChain = new AWSCredentialsProviderChain(providerArray);
-    providerChain.setReuseLastProvider(true);
+    AwsCredentialsProviderChain providerChain = AwsCredentialsProviderChain.builder()
+        .credentialsProviders(providerArray)
+        .reuseLastProviderEnabled(true)
+        .build();
     return providerChain;
   }
 
