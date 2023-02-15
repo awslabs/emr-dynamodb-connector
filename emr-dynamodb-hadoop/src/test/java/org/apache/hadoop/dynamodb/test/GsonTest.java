@@ -17,8 +17,6 @@ import static org.junit.Assert.assertFalse;
 
 import com.google.gson.Gson;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.junit.Test;
@@ -28,6 +26,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class GsonTest {
   private static final int TASK_COUNT = 100;
@@ -44,7 +43,7 @@ public class GsonTest {
   @Test
   public void testSpecialCase1() {
     Map<String, AttributeValue> item = DynamoDBTestUtils.getRandomItem();
-    item.put("S", new AttributeValue().withS("This is a \n \0 \1 \2 line test"));
+    item.put("S", AttributeValue.fromS("This is a \n \0 \1 \2 line test"));
 
     Gson gson = DynamoDBUtil.getGson();
     String json = gson.toJson(item, DynamoDBItemWritable.type);

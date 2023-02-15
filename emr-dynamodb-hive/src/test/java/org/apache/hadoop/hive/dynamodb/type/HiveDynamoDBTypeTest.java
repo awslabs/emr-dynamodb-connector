@@ -11,7 +11,6 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.test.DynamoDBTestUtils;
 import org.apache.hadoop.dynamodb.type.DynamoDBTypeConstants;
 import org.apache.hadoop.hive.serde2.SerDeException;
@@ -35,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import static org.apache.hadoop.hive.serde2.lazy.objectinspector.primitive.LazyPrimitiveObjectInspectorFactory.LAZY_BOOLEAN_OBJECT_INSPECTOR;
 import static org.apache.hadoop.hive.serde2.lazy.objectinspector.primitive.LazyPrimitiveObjectInspectorFactory.LAZY_DOUBLE_OBJECT_INSPECTOR;
@@ -86,7 +86,7 @@ public class HiveDynamoDBTypeTest {
   public void testString() {
     String val = STRING_LIST.get(0);
     HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(STRING_OBJECT_INSPECTOR);
-    AttributeValue expectedAV = new AttributeValue().withS(val);
+    AttributeValue expectedAV = AttributeValue.fromS(val);
     LazyString ls = new LazyString(LazyPrimitiveObjectInspectorFactory
         .getLazyStringObjectInspector(false, (byte) 0));
     initLazyObject(ls, val.getBytes(), 0, val.length());
@@ -104,7 +104,7 @@ public class HiveDynamoDBTypeTest {
     double val = TEST_DOUBLE;
     String valString = Double.toString(val);
     HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(DOUBLE_OBJECT_INSPECTOR);
-    AttributeValue expectedAV = new AttributeValue().withN(valString);
+    AttributeValue expectedAV = AttributeValue.fromN(valString);
     AttributeValue actualAV = ddType.getDynamoDBData(val, DOUBLE_OBJECT_INSPECTOR, false);
     assertEquals(expectedAV, actualAV);
     Object actualDouble = ddType.getHiveData(actualAV, DOUBLE_OBJECT_INSPECTOR);
@@ -122,7 +122,7 @@ public class HiveDynamoDBTypeTest {
     long val = LONG_LIST.get(0);
     String valString = Long.toString(val);
     HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(LONG_OBJECT_INSPECTOR);
-    AttributeValue expectedAV = new AttributeValue().withN(valString);
+    AttributeValue expectedAV = AttributeValue.fromN(valString);
     AttributeValue actualAV = ddType.getDynamoDBData(val, LONG_OBJECT_INSPECTOR, false);
     assertEquals(expectedAV, actualAV);
     Object actualLong = ddType.getHiveData(actualAV, LONG_OBJECT_INSPECTOR);
@@ -141,7 +141,7 @@ public class HiveDynamoDBTypeTest {
     boolean val = true;
     String valString = Boolean.toString(val);
     HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(BOOLEAN_OBJECT_INSPECTOR);
-    AttributeValue expectedAV = new AttributeValue().withBOOL(val);
+    AttributeValue expectedAV = AttributeValue.fromBool(val);
     AttributeValue actualAV = ddType.getDynamoDBData(val, BOOLEAN_OBJECT_INSPECTOR, false);
     assertEquals(expectedAV, actualAV);
     Object actualBoolean = ddType.getHiveData(actualAV, BOOLEAN_OBJECT_INSPECTOR);
@@ -159,18 +159,18 @@ public class HiveDynamoDBTypeTest {
     List<AttributeValue> longAVList = new ArrayList<>();
     List<AttributeValue> strAVList = new ArrayList<>();
     for (String str : STRING_LIST) {
-      longAVList.add(new AttributeValue().withN(str));
-      strAVList.add(new AttributeValue(str));
+      longAVList.add(AttributeValue.fromN(str));
+      strAVList.add(AttributeValue.fromS(str));
     }
     HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(LONG_LIST_OBJECT_INSPECTOR);
-    AttributeValue expectedAV = new AttributeValue().withL(longAVList);
+    AttributeValue expectedAV = AttributeValue.fromL(longAVList);
     AttributeValue actualAV = ddType.getDynamoDBData(LONG_LIST, LONG_LIST_OBJECT_INSPECTOR, false);
     assertEquals(expectedAV, actualAV);
     Object actualList = ddType.getHiveData(actualAV, LONG_LIST_OBJECT_INSPECTOR);
     assertEquals(LONG_LIST, actualList);
 
     ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(STRING_LIST_OBJECT_INSPECTOR);
-    expectedAV = new AttributeValue().withL(strAVList);
+    expectedAV = AttributeValue.fromL(strAVList);
     actualAV = ddType.getDynamoDBData(STRING_LIST, STRING_LIST_OBJECT_INSPECTOR, false);
     assertEquals(expectedAV, actualAV);
     actualList = ddType.getHiveData(actualAV, STRING_LIST_OBJECT_INSPECTOR);
@@ -180,14 +180,14 @@ public class HiveDynamoDBTypeTest {
   @Test
   public void testSet() {
     HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromDynamoDBType(DynamoDBTypeConstants.NUMBER_SET);
-    AttributeValue expectedAV = new AttributeValue().withNS(STRING_LIST);
+    AttributeValue expectedAV = AttributeValue.fromNs(STRING_LIST);
     AttributeValue actualAV = ddType.getDynamoDBData(LONG_LIST, LONG_LIST_OBJECT_INSPECTOR, false);
     assertEquals(expectedAV, actualAV);
     Object actualList = ddType.getHiveData(actualAV, LONG_LIST_OBJECT_INSPECTOR);
     assertEquals(LONG_LIST, actualList);
 
     ddType = HiveDynamoDBTypeFactory.getTypeObjectFromDynamoDBType(DynamoDBTypeConstants.STRING_SET);
-    expectedAV = new AttributeValue().withSS(STRING_LIST);
+    expectedAV = AttributeValue.fromSs(STRING_LIST);
     actualAV = ddType.getDynamoDBData(STRING_LIST, STRING_LIST_OBJECT_INSPECTOR, false);
     assertEquals(expectedAV, actualAV);
     actualList = ddType.getHiveData(actualAV, STRING_LIST_OBJECT_INSPECTOR);
@@ -203,11 +203,11 @@ public class HiveDynamoDBTypeTest {
     for (String str : STRING_MAP.keySet()) {
       String avStringField = DynamoDBTestUtils.toAttributeValueFieldFormat(DynamoDBTypeConstants.STRING);
       hiveStringItem.put(str, new JSONObject().put(avStringField, STRING_MAP.get(str)).toString());
-      expectedStringItem.put(str, new AttributeValue(STRING_MAP.get(str)));
+      expectedStringItem.put(str, AttributeValue.fromS(STRING_MAP.get(str)));
 
       String avNumberField = DynamoDBTestUtils.toAttributeValueFieldFormat(DynamoDBTypeConstants.NUMBER);
       hiveNumberItem.put(str, new JSONObject().put(avNumberField, STRING_MAP.get(str)).toString());
-      expectedNumberItem.put(str, new AttributeValue().withN(STRING_MAP.get(str)));
+      expectedNumberItem.put(str, AttributeValue.fromN(STRING_MAP.get(str)));
     }
 
     HiveDynamoDBItemType ddType = (HiveDynamoDBItemType) HiveDynamoDBTypeFactory
@@ -228,18 +228,18 @@ public class HiveDynamoDBTypeTest {
     Map<String, AttributeValue> longAVMap = new HashMap<>();
     Map<String, AttributeValue> stringAVMap = new HashMap<>();
     for (String str : STRING_MAP.keySet()) {
-      longAVMap.put(str, new AttributeValue().withN(STRING_MAP.get(str)));
-      stringAVMap.put(str, new AttributeValue(STRING_MAP.get(str)));
+      longAVMap.put(str, AttributeValue.fromN(STRING_MAP.get(str)));
+      stringAVMap.put(str, AttributeValue.fromS(STRING_MAP.get(str)));
     }
     HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(LONG_MAP_OBJECT_INSPECTOR);
-    AttributeValue expectedAV = new AttributeValue().withM(longAVMap);
+    AttributeValue expectedAV = AttributeValue.fromM(longAVMap);
     AttributeValue actualAV = ddType.getDynamoDBData(LONG_MAP, LONG_MAP_OBJECT_INSPECTOR, false);
     assertEquals(expectedAV, actualAV);
     Object actualMap = ddType.getHiveData(actualAV, LONG_MAP_OBJECT_INSPECTOR);
     assertEquals(LONG_MAP, actualMap);
 
     ddType = HiveDynamoDBTypeFactory.getTypeObjectFromDynamoDBType(DynamoDBTypeConstants.MAP);
-    expectedAV = new AttributeValue().withM(stringAVMap);
+    expectedAV = AttributeValue.fromM(stringAVMap);
     actualAV = ddType.getDynamoDBData(STRING_MAP, STRING_MAP_OBJECT_INSPECTOR, false);
     assertEquals(expectedAV, actualAV);
     actualMap = ddType.getHiveData(actualAV, STRING_MAP_OBJECT_INSPECTOR);
@@ -250,9 +250,9 @@ public class HiveDynamoDBTypeTest {
   public void testStruct() {
     List<Object> struct = Lists.newArrayList((Object) STRING_LIST.get(0), LONG_LIST.get(1), TEST_DOUBLE);
     Map<String, AttributeValue> structAVMap = new HashMap<>();
-    structAVMap.put(STRING_LIST.get(0), new AttributeValue(STRING_LIST.get(0)));
-    structAVMap.put(STRING_LIST.get(1), new AttributeValue().withN(Long.toString(LONG_LIST.get(1))));
-    structAVMap.put(STRING_LIST.get(2), new AttributeValue().withN(Double.toString(TEST_DOUBLE)));
+    structAVMap.put(STRING_LIST.get(0), AttributeValue.fromS(STRING_LIST.get(0)));
+    structAVMap.put(STRING_LIST.get(1), AttributeValue.fromN(Long.toString(LONG_LIST.get(1))));
+    structAVMap.put(STRING_LIST.get(2), AttributeValue.fromN(Double.toString(TEST_DOUBLE)));
     List<String> structFieldNames = STRING_LIST.subList(0, 3);
     List<ObjectInspector> structFieldOIs = Lists.newArrayList(STRING_OBJECT_INSPECTOR, LONG_OBJECT_INSPECTOR,
             DOUBLE_OBJECT_INSPECTOR);
@@ -260,7 +260,7 @@ public class HiveDynamoDBTypeTest {
             .getStandardStructObjectInspector(structFieldNames, structFieldOIs);
 
     HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(structObjectInspector);
-    AttributeValue expectedAV = new AttributeValue().withM(structAVMap);
+    AttributeValue expectedAV = AttributeValue.fromM(structAVMap);
     AttributeValue actualAV = ddType.getDynamoDBData(struct, structObjectInspector, false);
     assertEquals(expectedAV, actualAV);
     Object actualStruct = ddType.getHiveData(actualAV, structObjectInspector);
@@ -270,9 +270,9 @@ public class HiveDynamoDBTypeTest {
   @Test
   public void testMultipleTypeList() {
     List<AttributeValue> avList = new ArrayList<>();
-    avList.add(new AttributeValue(STRING_LIST.get(0)));
-    avList.add(new AttributeValue().withN(STRING_LIST.get(0)));
-    AttributeValue av = new AttributeValue().withL(avList);
+    avList.add(AttributeValue.fromS(STRING_LIST.get(0)));
+    avList.add(AttributeValue.fromN(STRING_LIST.get(0)));
+    AttributeValue av = AttributeValue.fromL(avList);
 
     HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(STRING_LIST_OBJECT_INSPECTOR);
     List<String> expectedStringList = Lists.newArrayList(STRING_LIST.get(0), null);
@@ -289,7 +289,7 @@ public class HiveDynamoDBTypeTest {
   public void testNullSerialization() {
     String val = null;
     HiveDynamoDBType ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(STRING_OBJECT_INSPECTOR);
-    AttributeValue expectedAV = new AttributeValue().withNULL(true);
+    AttributeValue expectedAV = AttributeValue.fromNul(true);
     AttributeValue actualAV = ddType.getDynamoDBData(val, STRING_OBJECT_INSPECTOR, true);
     assertEquals(expectedAV, actualAV);
     Object actualNull = ddType.getHiveData(actualAV, STRING_OBJECT_INSPECTOR);
@@ -298,13 +298,13 @@ public class HiveDynamoDBTypeTest {
     List<String> nullStringList = new ArrayList<>(STRING_LIST);
     nullStringList.set(0, null);
     List<AttributeValue> strAVList = new ArrayList<>();
-    strAVList.add(new AttributeValue().withNULL(true));
+    strAVList.add(AttributeValue.fromNul(true));
     for (int i = 1; i < nullStringList.size(); i++) {
-      strAVList.add(new AttributeValue(nullStringList.get(i)));
+      strAVList.add(AttributeValue.fromS(nullStringList.get(i)));
     }
 
     ddType = HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(STRING_LIST_OBJECT_INSPECTOR);
-    expectedAV = new AttributeValue().withL(strAVList);
+    expectedAV = AttributeValue.fromL(strAVList);
     actualAV = ddType.getDynamoDBData(nullStringList, STRING_LIST_OBJECT_INSPECTOR, true);
     assertEquals(expectedAV, actualAV);
     Object actualList = ddType.getHiveData(actualAV, STRING_LIST_OBJECT_INSPECTOR);

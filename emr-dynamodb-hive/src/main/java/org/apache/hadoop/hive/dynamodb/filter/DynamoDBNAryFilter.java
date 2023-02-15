@@ -13,12 +13,12 @@
 
 package org.apache.hadoop.hive.dynamodb.filter;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.Condition;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.hadoop.dynamodb.filter.DynamoDBFilterOperator;
 import org.apache.hadoop.hive.dynamodb.type.HiveDynamoDBTypeFactory;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.Condition;
 
 public class DynamoDBNAryFilter extends AbstractDynamoDBFilter {
 
@@ -32,16 +32,16 @@ public class DynamoDBNAryFilter extends AbstractDynamoDBFilter {
 
   @Override
   public Condition createCondition() {
-    Condition condition = new Condition();
-    condition.setComparisonOperator(operator.getDynamoDBName());
-
     List<AttributeValue> attributeValueList = new ArrayList<>();
     for (String value : columnValues) {
       attributeValueList.add(HiveDynamoDBTypeFactory.getTypeObjectFromHiveType(columnType)
           .getAttributeValue(value));
     }
-    condition.setAttributeValueList(attributeValueList);
 
+    Condition condition = Condition.builder()
+        .comparisonOperator(operator.getDynamoDBName())
+        .attributeValueList(attributeValueList)
+        .build();
     return condition;
   }
 }

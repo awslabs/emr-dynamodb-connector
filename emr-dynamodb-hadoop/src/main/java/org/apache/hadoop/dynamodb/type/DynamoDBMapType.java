@@ -11,8 +11,8 @@
 
 package org.apache.hadoop.dynamodb.type;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.key.DynamoDBKey;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class DynamoDBMapType implements DynamoDBType {
 
@@ -21,7 +21,7 @@ public class DynamoDBMapType implements DynamoDBType {
     System.out.println("values:");
     System.out.println(values);
     System.out.println("end values");
-    return new AttributeValue();//.withM(values[0]);
+    return AttributeValue.builder().build();
   }
 
   @Override

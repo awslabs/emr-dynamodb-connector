@@ -13,7 +13,6 @@
 
 package org.apache.hadoop.hive.dynamodb.read;
 
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -41,6 +40,7 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
+import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 
 public class HiveDynamoDBInputFormat extends DynamoDBInputFormat {
 
@@ -152,9 +152,9 @@ public class HiveDynamoDBInputFormat extends DynamoDBInputFormat {
     TableDescription tableDescription =
         client.describeTable(conf.get(DynamoDBConstants.TABLE_NAME));
     DynamoDBQueryFilter queryFilter = pushdown.predicateToDynamoDBFilter(
-        tableDescription.getKeySchema(),
-        tableDescription.getLocalSecondaryIndexes(),
-        tableDescription.getGlobalSecondaryIndexes(),
+        tableDescription.keySchema(),
+        tableDescription.localSecondaryIndexes(),
+        tableDescription.globalSecondaryIndexes(),
         hiveDynamoDBMapping, hiveTypeMapping, filterExpr);
     return queryFilter;
   }

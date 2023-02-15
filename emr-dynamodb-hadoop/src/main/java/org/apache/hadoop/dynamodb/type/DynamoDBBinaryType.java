@@ -15,15 +15,16 @@ package org.apache.hadoop.dynamodb.type;
 
 import static org.apache.hadoop.dynamodb.DynamoDBUtil.base64StringToByteBuffer;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.key.DynamoDBBinaryKey;
 import org.apache.hadoop.dynamodb.key.DynamoDBKey;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class DynamoDBBinaryType implements DynamoDBType {
 
   @Override
   public AttributeValue getAttributeValue(String... values) {
-    return new AttributeValue().withB(base64StringToByteBuffer(values[0]));
+    return AttributeValue.fromB(SdkBytes.fromByteBuffer(base64StringToByteBuffer(values[0])));
   }
 
   @Override

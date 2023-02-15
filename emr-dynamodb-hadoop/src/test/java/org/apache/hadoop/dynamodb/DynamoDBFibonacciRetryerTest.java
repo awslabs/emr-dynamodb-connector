@@ -19,9 +19,6 @@ import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
-
 import org.joda.time.Duration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +27,10 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.http.SdkHttpResponse;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DynamoDBFibonacciRetryerTest {
@@ -38,7 +39,7 @@ public class DynamoDBFibonacciRetryerTest {
   private Callable<Object> call;
 
   @Test
-  public void testSuceedCall() throws Exception {
+  public void testSucceedCall() throws Exception {
     DynamoDBFibonacciRetryer retryer = new DynamoDBFibonacciRetryer(Duration.standardSeconds(10));
     retryer.runWithRetry(call, null, null);
     verify(call).call();
@@ -46,9 +47,15 @@ public class DynamoDBFibonacciRetryerTest {
 
   @Test(expected = RuntimeException.class)
   public void testRetryThrottleException() throws Exception {
-    AmazonServiceException ase = new AmazonServiceException("Test");
-    ase.setErrorCode("ProvisionedThroughputExceededException");
-    ase.setStatusCode(400);
+    AwsServiceException ase = AwsServiceException.builder()
+        .message("Test")
+        .awsErrorDetails(AwsErrorDetails.builder()
+            .errorCode("ProvisionedThroughputExceededException")
+            .sdkHttpResponse(SdkHttpResponse.builder()
+                .statusCode(400)
+                .build())
+            .build())
+        .build();
     when(call.call()).thenThrow(ase);
     DynamoDBFibonacciRetryer retryer = new DynamoDBFibonacciRetryer(Duration.standardSeconds(10));
 
@@ -62,9 +69,15 @@ public class DynamoDBFibonacciRetryerTest {
 
   @Test(expected = RuntimeException.class)
   public void testRetryableASEException() throws Exception {
-    AmazonServiceException ase = new AmazonServiceException("Test");
-    ase.setErrorCode("ArbitRetryableException");
-    ase.setStatusCode(500);
+    AwsServiceException ase = AwsServiceException.builder()
+        .message("Test")
+        .awsErrorDetails(AwsErrorDetails.builder()
+            .errorCode("ArbitRetryableException")
+            .sdkHttpResponse(SdkHttpResponse.builder()
+                .statusCode(500)
+                .build())
+            .build())
+        .build();
     when(call.call()).thenThrow(ase);
     DynamoDBFibonacciRetryer retryer = new DynamoDBFibonacciRetryer(Duration.standardSeconds(10));
 
@@ -78,9 +91,15 @@ public class DynamoDBFibonacciRetryerTest {
 
   @Test(expected = RuntimeException.class)
   public void testRetryableASEException2() throws Exception {
-    AmazonServiceException ase = new AmazonServiceException("Test");
-    ase.setErrorCode("ArbitRetryableException");
-    ase.setStatusCode(503);
+    AwsServiceException ase = AwsServiceException.builder()
+        .message("Test")
+        .awsErrorDetails(AwsErrorDetails.builder()
+            .errorCode("ArbitRetryableException")
+            .sdkHttpResponse(SdkHttpResponse.builder()
+                .statusCode(503)
+                .build())
+            .build())
+        .build();
     when(call.call()).thenThrow(ase);
     DynamoDBFibonacciRetryer retryer = new DynamoDBFibonacciRetryer(Duration.standardSeconds(10));
 
@@ -94,9 +113,15 @@ public class DynamoDBFibonacciRetryerTest {
 
   @Test(expected = RuntimeException.class)
   public void testNonRetryableASEException() throws Exception {
-    AmazonServiceException ase = new AmazonServiceException("Test");
-    ase.setErrorCode("ArbitNonRetryableException");
-    ase.setStatusCode(400);
+    AwsServiceException ase = AwsServiceException.builder()
+        .message("Test")
+        .awsErrorDetails(AwsErrorDetails.builder()
+            .errorCode("ArbitNonRetryableException")
+            .sdkHttpResponse(SdkHttpResponse.builder()
+                .statusCode(400)
+                .build())
+            .build())
+        .build();
     when(call.call()).thenThrow(ase);
     DynamoDBFibonacciRetryer retryer = new DynamoDBFibonacciRetryer(Duration.standardSeconds(10));
 
@@ -109,7 +134,7 @@ public class DynamoDBFibonacciRetryerTest {
 
   @Test(expected = RuntimeException.class)
   public void testRetryACEException() throws Exception {
-    AmazonClientException ace = new AmazonClientException("Test");
+    SdkException ace = SdkException.builder().message("Test").build();
     when(call.call()).thenThrow(ace);
     DynamoDBFibonacciRetryer retryer = new DynamoDBFibonacciRetryer(Duration.standardSeconds(10));
 

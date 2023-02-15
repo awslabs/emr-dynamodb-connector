@@ -13,13 +13,13 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import java.util.List;
 import org.apache.hadoop.dynamodb.type.DynamoDBStringSetType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class HiveDynamoDBStringSetType extends DynamoDBStringSetType implements HiveDynamoDBType {
 
@@ -30,7 +30,7 @@ public class HiveDynamoDBStringSetType extends DynamoDBStringSetType implements 
         DynamoDBDataParser.getSetAttribute(data, objectInspector, getDynamoDBType());
     return (values == null || values.isEmpty())
         ? DynamoDBDataParser.getNullAttribute(nullSerialization)
-        : new AttributeValue().withSS(values);
+        : AttributeValue.fromSs(values);
   }
 
   @Override
@@ -45,7 +45,7 @@ public class HiveDynamoDBStringSetType extends DynamoDBStringSetType implements 
 
   @Override
   public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
-    return data.getSS();
+    return data.ss();
   }
 
 }

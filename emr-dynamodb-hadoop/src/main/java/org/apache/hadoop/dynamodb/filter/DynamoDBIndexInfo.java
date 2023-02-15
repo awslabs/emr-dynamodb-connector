@@ -1,8 +1,8 @@
 package org.apache.hadoop.dynamodb.filter;
 
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.Projection;
 import java.util.List;
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.Projection;
 
 public class DynamoDBIndexInfo {
 

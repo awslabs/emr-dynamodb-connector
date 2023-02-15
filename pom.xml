@@ -18,7 +18,7 @@
     </licenses>
     <properties>
         <java.version>1.8</java.version>
-        <aws-java-sdk.version>1.11.475</aws-java-sdk.version>
+        <aws-java-sdk.version>2.18.40</aws-java-sdk.version>
         <commons-lang3.version>3.7</commons-lang3.version>
         <hadoop.version>3.3.3</hadoop.version>
         <hive1.version>1.0.0</hive1.version>
@@ -68,9 +68,11 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk-dynamodb</artifactId>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
                 <version>${aws-java-sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>

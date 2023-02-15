@@ -11,7 +11,6 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import java.util.Map;
 import org.apache.hadoop.dynamodb.type.DynamoDBMapType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
@@ -20,6 +19,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class HiveDynamoDBMapType extends DynamoDBMapType implements HiveDynamoDBType {
 
@@ -30,7 +30,7 @@ public class HiveDynamoDBMapType extends DynamoDBMapType implements HiveDynamoDB
         DynamoDBDataParser.getMapAttribute(data, objectInspector, nullSerialization);
     return values == null
         ? DynamoDBDataParser.getNullAttribute(nullSerialization)
-        : new AttributeValue().withM(values);
+        : AttributeValue.fromM(values);
   }
 
   @Override
@@ -70,7 +70,7 @@ public class HiveDynamoDBMapType extends DynamoDBMapType implements HiveDynamoDB
 
   @Override
   public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
-    Map<String, AttributeValue> dataMap = data.getM();
+    Map<String, AttributeValue> dataMap = data.m();
     if (dataMap == null) {
       return null;
     }

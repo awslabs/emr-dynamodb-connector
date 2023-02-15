@@ -13,7 +13,7 @@
 
 package org.apache.hadoop.dynamodb.key;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 
 public class DynamoDBBooleanKey  extends AbstractDynamoDBKey {
@@ -24,7 +24,7 @@ public class DynamoDBBooleanKey  extends AbstractDynamoDBKey {
 
   @Override
   public int compareValue(AttributeValue attribute) {
-    return new Boolean(key).compareTo(attribute.getBOOL());
+    return new Boolean(key).compareTo(attribute.bool());
   }
 
 }

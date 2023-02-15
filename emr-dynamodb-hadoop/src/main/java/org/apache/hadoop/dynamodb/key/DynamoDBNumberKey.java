@@ -13,8 +13,8 @@
 
 package org.apache.hadoop.dynamodb.key;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import java.math.BigDecimal;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class DynamoDBNumberKey extends AbstractDynamoDBKey {
 
@@ -26,7 +26,7 @@ public class DynamoDBNumberKey extends AbstractDynamoDBKey {
 
   @Override
   public int compareValue(AttributeValue attribute) {
-    BigDecimal passedKey = new BigDecimal(attribute.getN());
+    BigDecimal passedKey = new BigDecimal(attribute.n());
     if (number == null) {
       number = new BigDecimal(key);
     }

@@ -13,7 +13,6 @@
 
 package org.apache.hadoop.dynamodb.preader;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
@@ -26,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.util.AbstractTimeSource;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 /**
  * The ReadManager is responsible for deciding the required number of ReadWorkers to achieve the

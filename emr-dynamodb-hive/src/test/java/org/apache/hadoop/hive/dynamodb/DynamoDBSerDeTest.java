@@ -11,7 +11,6 @@
 
 package org.apache.hadoop.hive.dynamodb;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.dynamodb.DynamoDBItemWritable;
@@ -33,6 +32,7 @@ import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import static org.junit.Assert.assertEquals;
 
@@ -70,10 +70,10 @@ public class DynamoDBSerDeTest {
     List<String> data = PRIMITIVE_STRING_DATA;
 
     Map<String, AttributeValue> expectedItemMap = Maps.newHashMap();
-    expectedItemMap.put(attributeNames.get(0), new AttributeValue(data.get(0)));
-    expectedItemMap.put(attributeNames.get(1), new AttributeValue().withN(data.get(1)));
-    expectedItemMap.put(attributeNames.get(2), new AttributeValue().withN(data.get(2)));
-    expectedItemMap.put(attributeNames.get(3), new AttributeValue().withBOOL(Boolean.valueOf(data.get(3))));
+    expectedItemMap.put(attributeNames.get(0), AttributeValue.fromS(data.get(0)));
+    expectedItemMap.put(attributeNames.get(1), AttributeValue.fromN(data.get(1)));
+    expectedItemMap.put(attributeNames.get(2), AttributeValue.fromN(data.get(2)));
+    expectedItemMap.put(attributeNames.get(3), AttributeValue.fromBool(Boolean.valueOf(data.get(3))));
 
     List<Object> rowData = Lists.newArrayList();
     rowData.add(data.get(0));
@@ -94,7 +94,7 @@ public class DynamoDBSerDeTest {
     data.set(1, null);
 
     Map<String, AttributeValue> expectedItemMap = Maps.newHashMap();
-    expectedItemMap.put(attributeNames.get(0), new AttributeValue(data.get(0)));
+    expectedItemMap.put(attributeNames.get(0), AttributeValue.fromS(data.get(0)));
 
     List<Object> rowData = Lists.newArrayList();
     rowData.addAll(data);
@@ -104,7 +104,7 @@ public class DynamoDBSerDeTest {
     assertEquals(expectedItemMap, actualItemMap);
 
     // with null serialization
-    expectedItemMap.put(attributeNames.get(1), new AttributeValue().withNULL(true));
+    expectedItemMap.put(attributeNames.get(1), AttributeValue.fromNul(true));
     actualItemMap = getSerializedItem(attributeNames, colOIs, rowData, true);
     assertEquals(expectedItemMap, actualItemMap);
   }
@@ -118,12 +118,12 @@ public class DynamoDBSerDeTest {
     List<String> items = Lists.newArrayList("milk", "bread", "eggs", "milk");
     List<AttributeValue> itemsAV = Lists.newArrayList();
     for (String item : items) {
-      itemsAV.add(new AttributeValue(item));
+      itemsAV.add(AttributeValue.fromS(item));
     }
 
     Map<String, AttributeValue> expectedItemMap = Maps.newHashMap();
-    expectedItemMap.put(attributeNames.get(0), new AttributeValue(list));
-    expectedItemMap.put(attributeNames.get(1), new AttributeValue().withL(itemsAV));
+    expectedItemMap.put(attributeNames.get(0), AttributeValue.fromS(list));
+    expectedItemMap.put(attributeNames.get(1), AttributeValue.fromL(itemsAV));
 
     List<Object> rowData = Lists.newArrayList();
     rowData.add(list);
@@ -137,7 +137,7 @@ public class DynamoDBSerDeTest {
     typeMapping.put(attributeNames.get(1), DynamoDBTypeConstants.STRING_SET);
     items = items.subList(0, 3);
     rowData.set(1, items);
-    expectedItemMap.put(attributeNames.get(1), new AttributeValue().withSS(items));
+    expectedItemMap.put(attributeNames.get(1), AttributeValue.fromSs(items));
     actualItemMap = getSerializedItem(attributeNames, colOIs, typeMapping, rowData);
 
     assertEquals(expectedItemMap, actualItemMap);
@@ -160,17 +160,17 @@ public class DynamoDBSerDeTest {
       String person = people.get(i);
       long id = (long) i;
 
-      peopleAV.add(new AttributeValue(person));
+      peopleAV.add(AttributeValue.fromS(person));
       ids.put(person, id);
-      idsAV.put(person, new AttributeValue().withN(Long.toString(id)));
+      idsAV.put(person, AttributeValue.fromN(Long.toString(id)));
       lists.put(person, people.subList(0, i + 1));
-      listsAV.put(person, new AttributeValue().withL(Lists.newArrayList(peopleAV)));
+      listsAV.put(person, AttributeValue.fromL(Lists.newArrayList(peopleAV)));
     }
 
     Map<String, AttributeValue> expectedItemMap = Maps.newHashMap();
-    expectedItemMap.put(attributeNames.get(0), new AttributeValue(map));
-    expectedItemMap.put(attributeNames.get(1), new AttributeValue().withM(idsAV));
-    expectedItemMap.put(attributeNames.get(2), new AttributeValue().withM(listsAV));
+    expectedItemMap.put(attributeNames.get(0), AttributeValue.fromS(map));
+    expectedItemMap.put(attributeNames.get(1), AttributeValue.fromM(idsAV));
+    expectedItemMap.put(attributeNames.get(2), AttributeValue.fromM(listsAV));
 
     List<Object> rowData = Lists.newArrayList();
     rowData.add(map);
@@ -190,10 +190,10 @@ public class DynamoDBSerDeTest {
     Map<String, AttributeValue> namesAV = Maps.newHashMap();
     for (String person : people) {
       names.put(person, person);
-      namesAV.put(person, new AttributeValue(person));
+      namesAV.put(person, AttributeValue.fromS(person));
     }
     rowData.add(names);
-    expectedItemMap.put(attributeNames.get(3), new AttributeValue().withM(namesAV));
+    expectedItemMap.put(attributeNames.get(3), AttributeValue.fromM(namesAV));
     actualItemMap = getSerializedItem(attributeNames, colOIs, typeMapping, rowData);
 
     assertEquals(expectedItemMap, actualItemMap);
@@ -207,14 +207,14 @@ public class DynamoDBSerDeTest {
     String struct = "animal";
     List<String> data = PRIMITIVE_STRING_DATA;
     Map<String, AttributeValue> dataAV = Maps.newHashMap();
-    dataAV.put(PRIMITIVE_FIELDS.get(0), new AttributeValue(data.get(0)));
-    dataAV.put(PRIMITIVE_FIELDS.get(1), new AttributeValue().withN(data.get(1)));
-    dataAV.put(PRIMITIVE_FIELDS.get(2), new AttributeValue().withN(data.get(2)));
-    dataAV.put(PRIMITIVE_FIELDS.get(3), new AttributeValue().withBOOL(Boolean.valueOf(data.get(3))));
+    dataAV.put(PRIMITIVE_FIELDS.get(0), AttributeValue.fromS(data.get(0)));
+    dataAV.put(PRIMITIVE_FIELDS.get(1), AttributeValue.fromN(data.get(1)));
+    dataAV.put(PRIMITIVE_FIELDS.get(2), AttributeValue.fromN(data.get(2)));
+    dataAV.put(PRIMITIVE_FIELDS.get(3), AttributeValue.fromBool(Boolean.valueOf(data.get(3))));
 
     Map<String, AttributeValue> expectedItemMap = Maps.newHashMap();
-    expectedItemMap.put(attributeNames.get(0), new AttributeValue(struct));
-    expectedItemMap.put(attributeNames.get(1), new AttributeValue().withM(dataAV));
+    expectedItemMap.put(attributeNames.get(0), AttributeValue.fromS(struct));
+    expectedItemMap.put(attributeNames.get(1), AttributeValue.fromM(dataAV));
 
     List<Object> structData = Lists.newArrayList();
     structData.add(data.get(0));
@@ -245,10 +245,10 @@ public class DynamoDBSerDeTest {
     );
     List<String> data = PRIMITIVE_STRING_DATA;
     Map<String, AttributeValue> expectedItemMap = Maps.newHashMap();
-    expectedItemMap.put(attributeNames.get(0), new AttributeValue(data.get(0)));
-    expectedItemMap.put(attributeNames.get(1), new AttributeValue().withN(data.get(1)));
-    expectedItemMap.put(attributeNames.get(2), new AttributeValue().withN(data.get(2)));
-    expectedItemMap.put(attributeNames.get(3), new AttributeValue().withBOOL(Boolean.valueOf(data.get(3))));
+    expectedItemMap.put(attributeNames.get(0), AttributeValue.fromS(data.get(0)));
+    expectedItemMap.put(attributeNames.get(1), AttributeValue.fromN(data.get(1)));
+    expectedItemMap.put(attributeNames.get(2), AttributeValue.fromN(data.get(2)));
+    expectedItemMap.put(attributeNames.get(3), AttributeValue.fromBool(Boolean.valueOf(data.get(3))));
 
     Map<String, String> itemCol = Maps.newHashMap();
     for (int i = 0; i < attributeNames.size(); i++) {
@@ -270,7 +270,7 @@ public class DynamoDBSerDeTest {
     colNames.add(attributeNames.get(0));
     colOIs.add(STRING_OBJECT_INSPECTOR);
     rowData.add(animal);
-    expectedItemMap.put(attributeNames.get(0), new AttributeValue(animal));
+    expectedItemMap.put(attributeNames.get(0), AttributeValue.fromS(animal));
     actualItemMap = getSerializedItem(colNames, colOIs, rowData);
 
     assertEquals(expectedItemMap, actualItemMap);

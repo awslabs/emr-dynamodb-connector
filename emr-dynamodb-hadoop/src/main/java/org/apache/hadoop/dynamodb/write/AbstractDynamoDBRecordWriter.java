@@ -16,11 +16,6 @@ package org.apache.hadoop.dynamodb.write;
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES;
 import static org.apache.hadoop.dynamodb.DynamoDBUtil.createJobClient;
 
-import com.amazonaws.services.dynamodbv2.model.BatchWriteItemResult;
-import com.amazonaws.services.dynamodbv2.model.Capacity;
-import com.amazonaws.services.dynamodbv2.model.ConsumedCapacity;
-import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
-import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import java.io.IOException;
 import java.util.List;
 import org.apache.commons.logging.Log;
@@ -38,6 +33,11 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.Progressable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.Capacity;
+import software.amazon.awssdk.services.dynamodb.model.ConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 /**
  * AbstractDynamoDBRecordWriter does all the backend work for reading in key-value pairs from the
@@ -75,7 +75,9 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
     client = new DynamoDBClient(jobConf);
     tableName = jobConf.get(DynamoDBConstants.OUTPUT_TABLE_NAME);
     if (tableName == null) {
-      throw new ResourceNotFoundException("No output table name was specified.");
+      throw ResourceNotFoundException.builder()
+              .message("No output table name was specified.")
+              .build();
     }
 
 
@@ -109,20 +111,20 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
     }
 
     DynamoDBItemWritable item = convertValueToDynamoDBItem(key, value);
-    BatchWriteItemResult result = client.putBatch(tableName, item.getItem(),
+    BatchWriteItemResponse response = client.putBatch(tableName, item.getItem(),
         permissibleWritesPerSecond - writesPerSecond, reporter, deletionMode);
 
     batchSize++;
     totalItemsWritten++;
 
-    if (result != null) {
-      if (result.getConsumedCapacity() != null) {
-        for (ConsumedCapacity consumedCapacity : result.getConsumedCapacity()) {
-          double consumedUnits = consumedCapacity.getTable().getCapacityUnits();
-          if (consumedCapacity.getLocalSecondaryIndexes() != null) {
+    if (response != null) {
+      if (response.consumedCapacity() != null) {
+        for (ConsumedCapacity consumedCapacity : response.consumedCapacity()) {
+          double consumedUnits = consumedCapacity.table().capacityUnits();
+          if (consumedCapacity.localSecondaryIndexes() != null) {
             for (Capacity lsiConsumedCapacity :
-                consumedCapacity.getLocalSecondaryIndexes().values()) {
-              consumedUnits += lsiConsumedCapacity.getCapacityUnits();
+                consumedCapacity.localSecondaryIndexes().values()) {
+              consumedUnits += lsiConsumedCapacity.capacityUnits();
             }
           }
           totalIOPSConsumed += consumedUnits;
@@ -130,7 +132,7 @@ public abstract class AbstractDynamoDBRecordWriter<K, V> implements RecordWriter
       }
 
       int unprocessedItems = 0;
-      for (List<WriteRequest> requests : result.getUnprocessedItems().values()) {
+      for (List<WriteRequest> requests : response.unprocessedItems().values()) {
         unprocessedItems += requests.size();
       }
       writesPerSecond += batchSize - unprocessedItems;

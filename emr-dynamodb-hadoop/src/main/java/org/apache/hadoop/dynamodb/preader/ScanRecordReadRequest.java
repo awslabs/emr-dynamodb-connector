@@ -13,11 +13,11 @@
 
 package org.apache.hadoop.dynamodb.preader;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import java.util.Map;
 import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
 import org.apache.hadoop.dynamodb.preader.RateController.RequestLimit;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 
 public class ScanRecordReadRequest extends AbstractRecordReadRequest {
 
@@ -35,17 +35,18 @@ public class ScanRecordReadRequest extends AbstractRecordReadRequest {
   @Override
   protected PageResults<Map<String, AttributeValue>> fetchPage(RequestLimit lim) {
     // Read from DynamoDB
-    RetryResult<ScanResult> retryResult = context.getClient().scanTable(tableName, null, segment,
-        context.getSplit().getTotalSegments(), lastEvaluatedKey, lim.items, context.getReporter());
+    RetryResult<ScanResponse> retryResult = context.getClient()
+            .scanTable(tableName, null, segment, context.getSplit().getTotalSegments(),
+                    lastEvaluatedKey, lim.items, context.getReporter());
 
-    ScanResult result = retryResult.result;
+    ScanResponse response = retryResult.result;
     int retries = retryResult.retries;
 
     double consumedCapacityUnits = 0.0;
-    if (result.getConsumedCapacity() != null) {
-      consumedCapacityUnits = result.getConsumedCapacity().getCapacityUnits();
+    if (response.consumedCapacity() != null) {
+      consumedCapacityUnits = response.consumedCapacity().capacityUnits();
     }
-    return new PageResults<>(result.getItems(), result.getLastEvaluatedKey(), consumedCapacityUnits,
+    return new PageResults<>(response.items(), response.lastEvaluatedKey(), consumedCapacityUnits,
         retries);
   }
 }

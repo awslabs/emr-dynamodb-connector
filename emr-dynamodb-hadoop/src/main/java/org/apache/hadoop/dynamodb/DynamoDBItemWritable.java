@@ -13,7 +13,6 @@
 
 package org.apache.hadoop.dynamodb;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.ByteArrayInputStream;
@@ -27,6 +26,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.hadoop.io.Writable;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class DynamoDBItemWritable implements Writable, Serializable {
 

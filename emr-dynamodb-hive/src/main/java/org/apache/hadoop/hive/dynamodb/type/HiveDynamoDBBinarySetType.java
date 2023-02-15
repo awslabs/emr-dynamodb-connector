@@ -13,27 +13,31 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.hadoop.dynamodb.type.DynamoDBBinarySetType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class HiveDynamoDBBinarySetType extends DynamoDBBinarySetType implements HiveDynamoDBType {
 
   @Override
   public AttributeValue getDynamoDBData(Object data, ObjectInspector objectInspector,
-      boolean nullSerialization) {
+                                        boolean nullSerialization) {
     List<ByteBuffer> values =
         DynamoDBDataParser.getByteBuffers(data, objectInspector, getDynamoDBType());
     return (values == null || values.isEmpty())
         ? DynamoDBDataParser.getNullAttribute(nullSerialization)
-        : new AttributeValue().withBS(values);
+        : AttributeValue.fromBs(values.stream()
+        .map(byteBuffer -> SdkBytes.fromByteBuffer(byteBuffer))
+        .collect(Collectors.toList()));
   }
 
   @Override
@@ -48,15 +52,15 @@ public class HiveDynamoDBBinarySetType extends DynamoDBBinarySetType implements 
 
   @Override
   public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
-    List<ByteBuffer> byteBuffers = data.getBS();
+    List<SdkBytes> sdkBytesList = data.bs();
 
-    if (byteBuffers == null || byteBuffers.isEmpty()) {
+    if (sdkBytesList == null || sdkBytesList.isEmpty()) {
       return null;
     }
 
-    List<byte[]> byteArrays = new ArrayList<>(byteBuffers.size());
-    for (ByteBuffer byteBuffer : byteBuffers) {
-      byteArrays.add(Arrays.copyOf(byteBuffer.array(), byteBuffer.array().length));
+    List<byte[]> byteArrays = new ArrayList<>(sdkBytesList.size());
+    for (SdkBytes sdkBytes : sdkBytesList) {
+      byteArrays.add(Arrays.copyOf(sdkBytes.asByteArray(), sdkBytes.asByteArray().length));
     }
 
     return byteArrays;

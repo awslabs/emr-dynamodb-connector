@@ -13,7 +13,6 @@
 
 package org.apache.hadoop.hive.dynamodb.util;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +35,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.DoubleObjectInspe
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.LongObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
 import org.apache.hadoop.io.BytesWritable;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class DynamoDBDataParser {
   private static final Log log = LogFactory.getLog(DynamoDBDataParser.class);
