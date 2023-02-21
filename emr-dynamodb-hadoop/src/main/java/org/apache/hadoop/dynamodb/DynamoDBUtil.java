@@ -171,24 +171,24 @@ public final class DynamoDBUtil {
       byteSize += att.s().getBytes(CHARACTER_ENCODING).length;
     } else if (att.b() != null) {
       byteSize += att.b().asByteBuffer().array().length;
-    } else if (att.ns() != null) {
+    } else if (att.hasNs()) {
       for (String number : att.ns()) {
         byteSize += number.getBytes(CHARACTER_ENCODING).length;
       }
-    } else if (att.ss() != null) {
+    } else if (att.hasSs()) {
       for (String string : att.ss()) {
         byteSize += string.getBytes(CHARACTER_ENCODING).length;
       }
-    } else if (att.bs() != null) {
+    } else if (att.hasBs()) {
       for (SdkBytes sdkBytes : att.bs()) {
         byteSize += sdkBytes.asByteBuffer().array().length;
       }
-    } else if (att.m() != null) {
+    } else if (att.hasM()) {
       for (Entry<String, AttributeValue> entry : att.m().entrySet()) {
         byteSize += getAttributeSizeBytes(entry.getValue())
             + entry.getKey().getBytes(CHARACTER_ENCODING).length;
       }
-    } else if (att.l() != null) {
+    } else if (att.hasL()) {
       for (AttributeValue entry : att.l()) {
         byteSize += getAttributeSizeBytes(entry);
       }
