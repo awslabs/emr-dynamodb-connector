@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNull;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -61,12 +60,12 @@ public class DynamoDBItemWritableTest {
     item.write(out);
     outStream.close();
 
-    String data = outStream.toString();
+    final byte[] data = outStream.toByteArray();
 
     item.setItem(null);
     assertNull(item.getItem());
 
-    item.readFields(new DataInputStream(IOUtils.toInputStream(data)));
+    item.readFields(new DataInputStream(new ByteArrayInputStream(data)));
     checkReturnedItem();
   }
 
