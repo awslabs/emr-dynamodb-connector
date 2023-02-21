@@ -41,7 +41,12 @@ public class QueryRecordReadRequest extends AbstractRecordReadRequest {
     QueryResponse response = retryResult.result;
     int retries = retryResult.retries;
 
-    return new PageResults<>(response.items(), response.lastEvaluatedKey(),
-            response.consumedCapacity().capacityUnits(), retries);
+    return new PageResults<>(response.items(),
+        // Default value of QueryResponse.lastEvaluatedKey is changed from NULL to
+        // SdkAutoConstructMap in AWS SDK 2.x.
+        // Translate the default value to NULL here, to keep this assumption in other classes.
+        response.hasLastEvaluatedKey() ? response.lastEvaluatedKey() : null,
+        response.consumedCapacity().capacityUnits(),
+        retries);
   }
 }
