@@ -421,7 +421,7 @@ public class DynamoDBClient {
     final String proxyPassword = conf.get(DynamoDBConstants.PROXY_PASSWORD);
     boolean proxyHostAndPortPresent = false;
     if (!Strings.isNullOrEmpty(proxyHost) && proxyPort > 0) {
-      builder.endpoint(URI.create(proxyHost + ":" + proxyPort));
+      builder.endpoint(buildProxyEndpoint(proxyHost, proxyPort));
       proxyHostAndPortPresent = true;
     } else if (Strings.isNullOrEmpty(proxyHost) ^ proxyPort <= 0) {
       throw new RuntimeException("Only one of proxy host and port are set, when both are required");
@@ -493,4 +493,10 @@ public class DynamoDBClient {
     return providerChain;
   }
 
+  private URI buildProxyEndpoint(String proxyHost, int proxyPort) {
+    // Default proxy protocol is HTTP, aligning with AWS Java SDK 1.x
+    // https://github.com/aws/aws-sdk-java/blob/master/aws-java-sdk-core/src/main/java/com/amazonaws/ClientConfiguration.java#L171
+    final String HTTP_PROTOCOL = "http://";
+    return URI.create(HTTP_PROTOCOL + proxyHost + ":" + proxyPort);
+  }
 }
