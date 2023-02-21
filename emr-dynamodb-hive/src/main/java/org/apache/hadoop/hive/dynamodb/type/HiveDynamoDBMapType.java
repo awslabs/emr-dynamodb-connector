@@ -70,10 +70,11 @@ public class HiveDynamoDBMapType extends DynamoDBMapType implements HiveDynamoDB
 
   @Override
   public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
-    Map<String, AttributeValue> dataMap = data.m();
-    if (dataMap == null) {
+    if (!data.hasM()) {
       return null;
     }
+
+    Map<String, AttributeValue> dataMap = data.m();
     switch (objectInspector.getCategory()) {
       case MAP:
         return DynamoDBDataParser.getMapObject(dataMap, objectInspector);
