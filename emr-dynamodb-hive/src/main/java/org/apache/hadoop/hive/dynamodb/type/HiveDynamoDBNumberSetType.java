@@ -48,8 +48,8 @@ public class HiveDynamoDBNumberSetType extends DynamoDBNumberSetType implements 
 
   @Override
   public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
-    return data.ns() == null ? null
-        : DynamoDBDataParser.getNumberObjectList(data.ns(), objectInspector);
+    return data.hasNs() ? DynamoDBDataParser.getNumberObjectList(data.ns(), objectInspector)
+        : null;
   }
 
 }

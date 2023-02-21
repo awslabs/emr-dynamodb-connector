@@ -54,8 +54,8 @@ public class HiveDynamoDBListType extends DynamoDBListType implements HiveDynamo
 
   @Override
   public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
-    return data.l() == null ? null
-        : DynamoDBDataParser.getListObject(data.l(), objectInspector);
+    return data.hasL() ? DynamoDBDataParser.getListObject(data.l(), objectInspector)
+        : null;
   }
 
 }
