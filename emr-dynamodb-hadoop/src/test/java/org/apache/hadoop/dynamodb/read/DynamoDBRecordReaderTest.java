@@ -28,7 +28,6 @@ import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -169,7 +168,6 @@ public class DynamoDBRecordReaderTest {
     }
   }
 
-  @Ignore
   @Test
   public void testConsumingAllBeginningElementsIfStartKeyIsNull() {
     DynamoDBSplit split = new DynamoDBSegmentsSplit(null, 0, 0, Arrays.asList(0), 4, 0, new

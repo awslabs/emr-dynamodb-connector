@@ -46,7 +46,12 @@ public class ScanRecordReadRequest extends AbstractRecordReadRequest {
     if (response.consumedCapacity() != null) {
       consumedCapacityUnits = response.consumedCapacity().capacityUnits();
     }
-    return new PageResults<>(response.items(), response.lastEvaluatedKey(), consumedCapacityUnits,
+    return new PageResults<>(response.items(),
+        // Default value of ScanResponse.lastEvaluatedKey is changed from NULL to
+        // SdkAutoConstructMap in AWS SDK 2.x.
+        // Translate the default value to NULL here, to keep this assumption in other classes.
+        response.hasLastEvaluatedKey() ? response.lastEvaluatedKey() : null,
+        consumedCapacityUnits,
         retries);
   }
 }

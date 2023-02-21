@@ -35,6 +35,7 @@ import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndexDescription;
 import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.KeyType;
 import software.amazon.awssdk.services.dynamodb.model.LocalSecondaryIndexDescription;
 import software.amazon.awssdk.services.dynamodb.model.Projection;
 import software.amazon.awssdk.services.dynamodb.model.ProjectionType;
@@ -329,7 +330,7 @@ public class DynamoDBFilterPushdown {
   private boolean indexIncludesAllMappedAttributes(List<KeySchemaElement> tableSchema,
       DynamoDBIndexInfo index, Map<String, String> hiveDynamoDBMapping) {
     Projection indexProjection = index.getIndexProjection();
-    if (ProjectionType.ALL.toString().equals(indexProjection.projectionType())) {
+    if (ProjectionType.ALL == indexProjection.projectionType()) {
       return true;
     }
 
@@ -340,7 +341,7 @@ public class DynamoDBFilterPushdown {
     for (KeySchemaElement keySchemaElement: index.getIndexSchema()) {
       projectionAttributes.add(keySchemaElement.attributeName());
     }
-    if (ProjectionType.INCLUDE.toString().equals(indexProjection.projectionType())) {
+    if (ProjectionType.INCLUDE == indexProjection.projectionType()) {
       projectionAttributes.addAll(indexProjection.nonKeyAttributes());
     }
 
@@ -363,7 +364,7 @@ public class DynamoDBFilterPushdown {
 
     boolean hashKeyFilterExists = false;
     if (schema.size() > 0
-        && DYNAMODB_KEY_TYPE_HASH.equals(schema.get(HASH_KEY_INDEX).keyType())) {
+        && KeyType.HASH == schema.get(HASH_KEY_INDEX).keyType()) {
       String hashKeyName = schema.get(HASH_KEY_INDEX).attributeName();
       if (filterMap.containsKey(hashKeyName)) {
         DynamoDBFilter hashKeyFilter = filterMap.get(hashKeyName);
