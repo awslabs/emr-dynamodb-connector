@@ -214,11 +214,11 @@ public class DynamoDBObjectInspectorTest {
     List<TypeInfo> colTypeInfos = Lists.newArrayList(STRING_MAP_TYPE_INFO);
 
     List<String> attributeNames = PRIMITIVE_FIELDS;
-    List<String> attributeTypes = DynamoDBTestUtils.toAttributeValueFieldFormatList(
-        DynamoDBTypeConstants.STRING,
-        DynamoDBTypeConstants.NUMBER,
-        DynamoDBTypeConstants.NUMBER,
-        DynamoDBTypeConstants.BOOLEAN
+    List<String> attributeTypes = Lists.newArrayList(
+        DynamoDBTypeConstants.STRING.toLowerCase(),
+        DynamoDBTypeConstants.NUMBER.toLowerCase(),
+        DynamoDBTypeConstants.NUMBER.toLowerCase(),
+        DynamoDBTypeConstants.BOOLEAN.toLowerCase()
     );
     List<String> data = PRIMITIVE_STRING_DATA;
     Map<String, String> colItemMap = Maps.newHashMap();
