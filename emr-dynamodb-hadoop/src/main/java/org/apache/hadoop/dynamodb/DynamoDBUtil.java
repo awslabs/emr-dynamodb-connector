@@ -65,6 +65,10 @@ public final class DynamoDBUtil {
     /* We hand serialize/deserialize ByteBuffer objects. */
     gsonBuilder.registerTypeAdapter(ByteBuffer.class, new ByteBufferSerializer());
     gsonBuilder.registerTypeAdapter(ByteBuffer.class, new ByteBufferDeserializer());
+    gsonBuilder.registerTypeAdapter(SdkBytes.class, new SdkBytesSerializer());
+    gsonBuilder.registerTypeAdapter(SdkBytes.class, new SdkBytesDeserializer());
+    gsonBuilder.registerTypeAdapter(AttributeValue.class, new AttributeValueSerializer());
+    gsonBuilder.registerTypeAdapter(AttributeValue.class, new AttributeValueDeserializer());
 
     gson = gsonBuilder.disableHtmlEscaping().create();
   }
@@ -369,6 +373,28 @@ public final class DynamoDBUtil {
 
       String base64String = jsonElement.getAsJsonPrimitive().getAsString();
       return DynamoDBUtil.base64StringToByteBuffer(base64String);
+    }
+  }
+
+  private static class SdkBytesSerializer implements JsonSerializer<SdkBytes> {
+
+    @Override
+    public JsonElement serialize(SdkBytes sdkBytes, Type type, JsonSerializationContext
+        context) {
+
+      String base64String = DynamoDBUtil.base64EncodeByteArray(sdkBytes.asByteArray());
+      return new JsonPrimitive(base64String);
+    }
+  }
+
+  private static class SdkBytesDeserializer implements JsonDeserializer<SdkBytes> {
+
+    @Override
+    public SdkBytes deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext
+        context) throws JsonParseException {
+
+      String base64String = jsonElement.getAsJsonPrimitive().getAsString();
+      return SdkBytes.fromByteBuffer(DynamoDBUtil.base64StringToByteBuffer(base64String));
     }
   }
 
