@@ -174,7 +174,7 @@ public final class DynamoDBUtil {
     } else if (att.s() != null) {
       byteSize += att.s().getBytes(CHARACTER_ENCODING).length;
     } else if (att.b() != null) {
-      byteSize += att.b().asByteBuffer().array().length;
+      byteSize += att.b().asByteArray().length;
     } else if (att.hasNs()) {
       for (String number : att.ns()) {
         byteSize += number.getBytes(CHARACTER_ENCODING).length;
@@ -185,7 +185,7 @@ public final class DynamoDBUtil {
       }
     } else if (att.hasBs()) {
       for (SdkBytes sdkBytes : att.bs()) {
-        byteSize += sdkBytes.asByteBuffer().array().length;
+        byteSize += sdkBytes.asByteArray().length;
       }
     } else if (att.hasM()) {
       for (Entry<String, AttributeValue> entry : att.m().entrySet()) {
