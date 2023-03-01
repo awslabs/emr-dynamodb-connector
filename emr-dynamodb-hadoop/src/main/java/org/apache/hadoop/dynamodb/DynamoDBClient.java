@@ -394,10 +394,10 @@ public class DynamoDBClient {
   private DynamoDbClient getDynamoDBClient(Configuration conf, String region) {
     final DynamoDbClientBuilder dynamoDbClientBuilder = DynamoDbClient.builder();
 
-    dynamoDbClientBuilder.region(Region.of(getDynamoDBRegion(conf, region)));
-
     String customEndpoint = getDynamoDBEndpoint(conf, region);
-    if (!Strings.isNullOrEmpty(customEndpoint)) {
+    if (Strings.isNullOrEmpty(customEndpoint)) {
+      dynamoDbClientBuilder.region(Region.of(getDynamoDBRegion(conf, region)));
+    } else {
       dynamoDbClientBuilder.endpointOverride(URI.create(customEndpoint));
     }
 
