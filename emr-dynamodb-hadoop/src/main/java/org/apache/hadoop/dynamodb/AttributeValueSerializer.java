@@ -37,57 +37,61 @@ public class AttributeValueSerializer implements JsonSerializer<AttributeValue> 
     JsonObject serializedValue = new JsonObject();
     switch (attributeValue.type()) {
       case B:
-        serializedValue.add(DynamoDBTypeConstants.BINARY.toLowerCase(),
+        serializedValue.add(toV1FieldCasingStyle(DynamoDBTypeConstants.BINARY),
             context.serialize(attributeValue.b()));
         break;
       case BOOL:
-        serializedValue.add(DynamoDBTypeConstants.BOOLEAN.toLowerCase(),
+        serializedValue.add(toV1FieldCasingStyle(DynamoDBTypeConstants.BOOLEAN),
             new JsonPrimitive(attributeValue.bool()));
         break;
       case BS:
         JsonArray sdkBytesList = new JsonArray();
         attributeValue.bs()
             .forEach(item -> sdkBytesList.add(context.serialize(item, SdkBytes.class)));
-        serializedValue.add(DynamoDBTypeConstants.BINARY_SET.toLowerCase(), sdkBytesList);
+        serializedValue.add(toV1FieldCasingStyle(DynamoDBTypeConstants.BINARY_SET), sdkBytesList);
         break;
       case L:
         JsonArray attributeList = new JsonArray();
         attributeValue.l()
             .forEach(item -> attributeList.add(context.serialize(item, AttributeValue.class)));
-        serializedValue.add(DynamoDBTypeConstants.LIST.toLowerCase(), attributeList);
+        serializedValue.add(toV1FieldCasingStyle(DynamoDBTypeConstants.LIST), attributeList);
         break;
       case M:
         JsonObject avm = new JsonObject();
         attributeValue.m().entrySet()
             .forEach(entry ->
                 avm.add(entry.getKey(), context.serialize(entry.getValue(), AttributeValue.class)));
-        serializedValue.add(DynamoDBTypeConstants.MAP.toLowerCase(), avm);
+        serializedValue.add(toV1FieldCasingStyle(DynamoDBTypeConstants.MAP), avm);
         break;
       case N:
-        serializedValue.add(DynamoDBTypeConstants.NUMBER.toLowerCase(),
+        serializedValue.add(toV1FieldCasingStyle(DynamoDBTypeConstants.NUMBER),
             new JsonPrimitive(attributeValue.n()));
         break;
       case NS:
         JsonArray numberList = new JsonArray();
         attributeValue.ns().forEach(item -> numberList.add(new JsonPrimitive(item)));
-        serializedValue.add(DynamoDBTypeConstants.NUMBER_SET.toLowerCase(), numberList);
+        serializedValue.add(toV1FieldCasingStyle(DynamoDBTypeConstants.NUMBER_SET), numberList);
         break;
       case NUL:
-        serializedValue.add(DynamoDBTypeConstants.NULL.toLowerCase(),
+        serializedValue.add(toV1FieldCasingStyle(DynamoDBTypeConstants.NULL),
             new JsonPrimitive(attributeValue.nul()));
         break;
       case S:
-        serializedValue.add(DynamoDBTypeConstants.STRING.toLowerCase(),
+        serializedValue.add(toV1FieldCasingStyle(DynamoDBTypeConstants.STRING),
             new JsonPrimitive(attributeValue.s()));
         break;
       case SS:
         JsonArray stringList = new JsonArray();
         attributeValue.ss().forEach(item -> stringList.add(new JsonPrimitive(item)));
-        serializedValue.add(DynamoDBTypeConstants.STRING_SET.toLowerCase(), stringList);
+        serializedValue.add(toV1FieldCasingStyle(DynamoDBTypeConstants.STRING_SET), stringList);
         break;
       default:
         break;
     }
     return serializedValue;
+  }
+
+  private static String toV1FieldCasingStyle(String typeConstant) {
+    return typeConstant.substring(0, 1).toLowerCase() + typeConstant.substring(1).toUpperCase();
   }
 }
