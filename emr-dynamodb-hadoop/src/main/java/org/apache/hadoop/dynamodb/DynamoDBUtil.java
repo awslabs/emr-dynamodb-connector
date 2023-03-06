@@ -217,17 +217,7 @@ public final class DynamoDBUtil {
   }
 
   /**
-   * Calculates DynamoDB end-point.
-   *
-   * Algorithm details:
-   * <ol>
-   * <li> Use endpoint in job configuration "dynamodb.endpoint" value if available
-   * <li> Use endpoint from region in job configuration "dynamodb.region" value if available
-   * <li> Use endpoint from region in job configuration "dynamodb.regionid" value if available
-   * <li> Use endpoint from EC2 Metadata of instance if available
-   * <li> If all previous attempts at retrieving endpoint fail, default to us-east-1 endpoint
-   * </ol>
-   *
+   * Get custom DynamoDB end-point from configuration.
    * @param conf   Job Configuration
    * @param region optional preferred region
    * @return end-point for DynamoDb service
@@ -236,33 +226,27 @@ public final class DynamoDBUtil {
     String endpoint = getValueFromConf(conf, DynamoDBConstants.ENDPOINT);
     if (Strings.isNullOrEmpty(endpoint)) {
       log.info(DynamoDBConstants.ENDPOINT + " not found from configuration.");
-      /*
-      if (Strings.isNullOrEmpty(region)) {
-        region = getValueFromConf(conf, DynamoDBConstants.REGION);
-      }
-      if (Strings.isNullOrEmpty(region)) {
-        region = getValueFromConf(conf, DynamoDBConstants.REGION_ID);
-      }
-      if (Strings.isNullOrEmpty(region)) {
-        try {
-          region = EC2MetadataUtils.getEC2InstanceRegion();
-        } catch (Exception e) {
-          log.warn(String.format("Exception when attempting to get AWS region information. Will "
-              + "ignore and default " + "to %s", DynamoDBConstants.DEFAULT_AWS_REGION), e);
-        }
-      }
-      if (Strings.isNullOrEmpty(region)) {
-        region = DynamoDBConstants.DEFAULT_AWS_REGION;
-      }
-
-      endpoint = DynamoDbClient.serviceMetadata().endpointFor(Region.of(region)).toString();
-      */
     } else {
       log.info("Using endpoint for DynamoDB: " + endpoint);
     }
     return endpoint;
   }
 
+  /**
+   * Calculates DynamoDB region.
+   *
+   * Algorithm details:
+   * <ol>
+   * <li> Use region in job configuration "dynamodb.region" value if available
+   * <li> Use region in job configuration "dynamodb.regionid" value if available
+   * <li> Use endpoint from EC2 Metadata of instance if available
+   * <li> If all previous attempts fail, default to us-east-1 region
+   * </ol>
+   *
+   * @param conf
+   * @param region
+   * @return region for DynamoDB service
+   */
   public static String getDynamoDBRegion(Configuration conf, String region) {
     if (!Strings.isNullOrEmpty(region)) {
       return region;
