@@ -13,7 +13,6 @@
 
 package org.apache.hadoop.hive.dynamodb;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.ArrayList;
@@ -29,6 +28,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class DynamoDBObjectInspector extends StructObjectInspector {
 

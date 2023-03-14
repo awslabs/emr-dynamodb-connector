@@ -13,7 +13,6 @@
 
 package org.apache.hadoop.dynamodb.preader;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import java.util.Collection;
 import java.util.Map;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
@@ -21,6 +20,7 @@ import org.apache.hadoop.dynamodb.split.DynamoDBSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class DynamoDBRecordReaderContext {
 

@@ -13,9 +13,6 @@
 
 package org.apache.hadoop.hive.dynamodb;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.google.common.base.Strings;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +51,10 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputFormat;
+import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 
 public class DynamoDBStorageHandler
     implements HiveMetaHook, HiveStoragePredicateHandler, HiveStorageHandler {
@@ -148,8 +149,8 @@ public class DynamoDBStorageHandler
       jobProperties.put(DynamoDBConstants.TABLE_NAME, tableName);
 
       jobProperties.put(DynamoDBConstants.DYNAMODB_TABLE_KEY_NAMES,
-          description.getKeySchema().stream()
-              .map(KeySchemaElement::getAttributeName)
+          description.keySchema().stream()
+              .map(KeySchemaElement::attributeName)
               .collect(Collectors.joining(DynamoDBConstants.DYNAMODB_TABLE_KEY_NAMES_SEPARATOR)));
 
       Map<String, String> hiveToDynamoDBSchemaMapping = HiveDynamoDBUtil
@@ -188,9 +189,8 @@ public class DynamoDBStorageHandler
             .getProperty(DynamoDBConstants.THROUGHPUT_WRITE_PERCENT));
       }
 
-      if (description.getBillingModeSummary() == null
-          || description.getBillingModeSummary().getBillingMode()
-          .equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
+      if (description.billingModeSummary() == null
+          || description.billingModeSummary().billingMode() == BillingMode.PROVISIONED) {
         useExplicitThroughputIfRequired(jobProperties, tableDesc);
       } else {
         // If not specified at the table level, set default value
@@ -202,14 +202,14 @@ public class DynamoDBStorageHandler
                 DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString()));
       }
 
-      jobProperties.put(DynamoDBConstants.ITEM_COUNT, description.getItemCount().toString());
-      jobProperties.put(DynamoDBConstants.TABLE_SIZE_BYTES, description.getTableSizeBytes()
+      jobProperties.put(DynamoDBConstants.ITEM_COUNT, description.itemCount().toString());
+      jobProperties.put(DynamoDBConstants.TABLE_SIZE_BYTES, description.tableSizeBytes()
           .toString());
       jobProperties.put(DynamoDBConstants.AVG_ITEM_SIZE, averageItemSize.toString());
 
       log.info("Average item size: " + averageItemSize);
-      log.info("Item count: " + description.getItemCount());
-      log.info("Table size: " + description.getTableSizeBytes());
+      log.info("Item count: " + description.itemCount());
+      log.info("Table size: " + description.tableSizeBytes());
       log.info("Read throughput: " + jobProperties.get(DynamoDBConstants.READ_THROUGHPUT));
       log.info("Write throughput: " + jobProperties.get(DynamoDBConstants.WRITE_THROUGHPUT));
 
@@ -361,10 +361,10 @@ public class DynamoDBStorageHandler
       }
 
       // validate key schema
-      for (AttributeDefinition definition : tableDescription.getAttributeDefinitions()) {
-        String attributeName = definition.getAttributeName();
+      for (AttributeDefinition definition : tableDescription.attributeDefinitions()) {
+        String attributeName = definition.attributeName();
         if (fieldName.equalsIgnoreCase(attributeName)) {
-          String attributeType = definition.getAttributeType();
+          String attributeType = definition.attributeTypeAsString();
           if (HiveDynamoDBTypeFactory.isHiveDynamoDBItemMapType(ddType)
               || (!ddType.getDynamoDBType().equals(attributeType))) {
             throw new MetaException("The key element " + fieldName + " does not match type. "
@@ -381,10 +381,10 @@ public class DynamoDBStorageHandler
   }
 
   private void checkTableStatus(TableDescription tableDescription) throws MetaException {
-    String status = tableDescription.getTableStatus();
+    String status = tableDescription.tableStatusAsString();
 
     if ("CREATING".equals(status) || "DELETING".equals(status)) {
-      throw new MetaException("Table " + tableDescription.getTableName() + " is in state "
+      throw new MetaException("Table " + tableDescription.tableName() + " is in state "
           + status);
     }
   }

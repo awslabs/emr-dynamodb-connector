@@ -13,7 +13,6 @@
 
 package org.apache.hadoop.dynamodb.tools;
 
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,6 +31,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.lib.IdentityReducer;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
+import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 
 public class DynamoDBExport extends Configured implements Tool {
 
@@ -106,16 +107,16 @@ public class DynamoDBExport extends Configured implements Tool {
     DynamoDBClient client = new DynamoDBClient(jobConf);
     TableDescription description = client.describeTable(tableName);
 
-    Long itemCount = description.getItemCount();
-    Long tableSizeBytes = description.getTableSizeBytes();
+    Long itemCount = description.itemCount();
+    Long tableSizeBytes = description.tableSizeBytes();
 
-    if (description.getBillingModeSummary() == null
-            || description.getBillingModeSummary().getBillingMode()
-        .equals(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
+    if (description.billingModeSummary() == null
+            || description.billingModeSummary().billingMode()
+        .equals(BillingMode.PROVISIONED)) {
       jobConf.set(DynamoDBConstants.READ_THROUGHPUT,
-          description.getProvisionedThroughput().getReadCapacityUnits().toString());
+          description.provisionedThroughput().readCapacityUnits().toString());
       jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT,
-          description.getProvisionedThroughput().getWriteCapacityUnits().toString());
+          description.provisionedThroughput().writeCapacityUnits().toString());
     } else {
       // If not specified at the table level, set a hard coded value of 40,000
       jobConf.set(DynamoDBConstants.READ_THROUGHPUT,

@@ -13,7 +13,6 @@
 
 package org.apache.hadoop.hive.dynamodb;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import java.util.Arrays;
@@ -27,6 +26,7 @@ import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 /**
  * This class is used to read the DynamoDB backup format and allow querying individual columns from

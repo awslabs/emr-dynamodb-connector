@@ -13,9 +13,9 @@
 
 package org.apache.hadoop.dynamodb.key;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import java.nio.ByteBuffer;
 import org.apache.hadoop.dynamodb.DynamoDBUtil;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class DynamoDBBinaryKey extends AbstractDynamoDBKey {
 
@@ -28,6 +28,6 @@ public class DynamoDBBinaryKey extends AbstractDynamoDBKey {
 
   @Override
   public int compareValue(AttributeValue attribute) {
-    return byteBuffer.compareTo(attribute.getB());
+    return byteBuffer.compareTo(attribute.b().asByteBuffer());
   }
 }

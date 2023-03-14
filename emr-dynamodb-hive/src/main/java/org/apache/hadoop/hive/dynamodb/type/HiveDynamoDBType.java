@@ -13,10 +13,10 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.type.DynamoDBType;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public interface HiveDynamoDBType extends DynamoDBType {
 

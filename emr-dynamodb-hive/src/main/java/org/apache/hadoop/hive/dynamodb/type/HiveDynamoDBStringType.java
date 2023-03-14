@@ -13,12 +13,12 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.apache.hadoop.dynamodb.type.DynamoDBStringType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class HiveDynamoDBStringType extends DynamoDBStringType implements HiveDynamoDBType {
   @Override
@@ -27,7 +27,7 @@ public class HiveDynamoDBStringType extends DynamoDBStringType implements HiveDy
     String value = DynamoDBDataParser.getString(data, objectInspector);
     return value == null
         ? DynamoDBDataParser.getNullAttribute(nullSerialization)
-        : new AttributeValue(value);
+        : AttributeValue.fromS(value);
   }
 
   @Override
@@ -42,7 +42,7 @@ public class HiveDynamoDBStringType extends DynamoDBStringType implements HiveDy
 
   @Override
   public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
-    return data.getS();
+    return data.s();
   }
 
 }

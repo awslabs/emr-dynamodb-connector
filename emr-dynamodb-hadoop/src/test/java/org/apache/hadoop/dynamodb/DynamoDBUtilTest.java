@@ -23,13 +23,6 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.RegionUtils;
-import com.amazonaws.regions.ServiceAbbreviations;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.util.EC2MetadataUtils;
-
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,17 +32,21 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.regions.internal.util.EC2MetadataUtils;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({RegionUtils.class, EC2MetadataUtils.class})
+@PrepareForTest({EC2MetadataUtils.class})
 public class DynamoDBUtilTest {
 
   final String TEST_ENDPOINT = "http://emr.test-dynamodb.endpoint";
   final String TEST_REGION = "test-region";
+  final String TEST_REGION_ID = "test-region-id";
 
   Configuration conf = new Configuration();
   Region region;
@@ -58,25 +55,23 @@ public class DynamoDBUtilTest {
   private static final String TEST_STRING = "AfFLIHsycSvZoEhPPKHUrtwewDAlcD";
   private static final String TEST_NUMBER = "3592.0001";
   private static final List<String> TEST_NUMBER_ARRAY = Lists.newArrayList("2.14748364", "1.23452487", "1.73904643");
-  private static final List<AttributeValue> TEST_LIST = Lists.newArrayList(new AttributeValue(TEST_STRING),
-    new AttributeValue().withN(TEST_NUMBER));
+  private static final List<AttributeValue> TEST_LIST = Lists.newArrayList(AttributeValue.fromS(TEST_STRING),
+    AttributeValue.fromN(TEST_NUMBER));
   private static final List<String> TEST_MAP_KEYS = Lists.newArrayList("mapString", "mapNumber");
 
   @Before
   public void setUp() {
-    PowerMockito.spy(RegionUtils.class);
     PowerMockito.mockStatic(EC2MetadataUtils.class);
-    region = mock(Region.class);
     conf.clear();
   }
 
   @Test
   public void testArrayItemSize() throws UnsupportedEncodingException {
     Map<String, AttributeValue> item = new HashMap<>();
-    item.put(TEST_NAMES.get(0), new AttributeValue(TEST_STRING));
-    item.put(TEST_NAMES.get(1), new AttributeValue(TEST_STRING));
-    item.put(TEST_NAMES.get(2), new AttributeValue().withN(TEST_NUMBER));
-    item.put(TEST_NAMES.get(3), new AttributeValue().withNS(TEST_NUMBER_ARRAY));
+    item.put(TEST_NAMES.get(0), AttributeValue.fromS(TEST_STRING));
+    item.put(TEST_NAMES.get(1), AttributeValue.fromS(TEST_STRING));
+    item.put(TEST_NAMES.get(2), AttributeValue.fromN(TEST_NUMBER));
+    item.put(TEST_NAMES.get(3), AttributeValue.fromNs(TEST_NUMBER_ARRAY));
 
     List<String> allStrings = Lists.newArrayList(TEST_STRING, TEST_STRING, TEST_NUMBER);
     allStrings.addAll(TEST_NAMES);
@@ -89,10 +84,10 @@ public class DynamoDBUtilTest {
   public void testListItemSize() throws UnsupportedEncodingException {
     Map<String, AttributeValue> item = new HashMap<>();
     int expectedSize = 0;
-    item.put(TEST_NAMES.get(0), new AttributeValue(TEST_STRING));
-    item.put(TEST_NAMES.get(1), new AttributeValue(TEST_STRING));
-    item.put(TEST_NAMES.get(2), new AttributeValue().withN(TEST_NUMBER));
-    item.put(TEST_NAMES.get(3), new AttributeValue().withL(TEST_LIST));
+    item.put(TEST_NAMES.get(0), AttributeValue.fromS(TEST_STRING));
+    item.put(TEST_NAMES.get(1), AttributeValue.fromS(TEST_STRING));
+    item.put(TEST_NAMES.get(2), AttributeValue.fromN(TEST_NUMBER));
+    item.put(TEST_NAMES.get(3), AttributeValue.fromL(TEST_LIST));
 
     List<String> allStrings = Lists.newArrayList(TEST_STRING, TEST_STRING, TEST_STRING, TEST_NUMBER, TEST_NUMBER);
     allStrings.addAll(TEST_NAMES);
@@ -103,14 +98,14 @@ public class DynamoDBUtilTest {
   @Test
   public void testMapItemSize() throws UnsupportedEncodingException {
     Map<String, AttributeValue> item = new HashMap<>();
-    item.put(TEST_NAMES.get(0), new AttributeValue(TEST_STRING));
-    item.put(TEST_NAMES.get(1), new AttributeValue(TEST_STRING));
-    item.put(TEST_NAMES.get(2), new AttributeValue().withN(TEST_NUMBER));
+    item.put(TEST_NAMES.get(0), AttributeValue.fromS(TEST_STRING));
+    item.put(TEST_NAMES.get(1), AttributeValue.fromS(TEST_STRING));
+    item.put(TEST_NAMES.get(2), AttributeValue.fromN(TEST_NUMBER));
 
     Map<String, AttributeValue> attrMap = new HashMap<>();
-    attrMap.put(TEST_MAP_KEYS.get(0), new AttributeValue(TEST_STRING));
-    attrMap.put(TEST_MAP_KEYS.get(1), new AttributeValue().withN(TEST_NUMBER));
-    item.put(TEST_NAMES.get(3), new AttributeValue().withM(attrMap));
+    attrMap.put(TEST_MAP_KEYS.get(0), AttributeValue.fromS(TEST_STRING));
+    attrMap.put(TEST_MAP_KEYS.get(1), AttributeValue.fromN(TEST_NUMBER));
+    item.put(TEST_NAMES.get(3), AttributeValue.fromM(attrMap));
 
     List<String> allStrings = Lists.newArrayList(TEST_STRING, TEST_STRING, TEST_STRING, TEST_NUMBER, TEST_NUMBER);
     allStrings.addAll(TEST_NAMES);
@@ -129,7 +124,7 @@ public class DynamoDBUtilTest {
   @Test
   public void testNullItemSize() throws UnsupportedEncodingException {
     Map<String, AttributeValue> item = new HashMap<>();
-    item.put(null, new AttributeValue(TEST_STRING));
+    item.put(null, AttributeValue.fromS(TEST_STRING));
     item.put(TEST_NAMES.get(0), null);
 
     List<String> allStrings = Lists.newArrayList(TEST_STRING, TEST_NAMES.get(0));
@@ -140,10 +135,10 @@ public class DynamoDBUtilTest {
   @Test
   public void testNumberItemSize() throws UnsupportedEncodingException {
     Map<String, AttributeValue> item = new HashMap<>();
-    item.put(TEST_NAMES.get(0), new AttributeValue().withN(TEST_NUMBER));
-    item.put(TEST_NAMES.get(1), new AttributeValue(TEST_STRING));
-    item.put(TEST_NAMES.get(2), new AttributeValue().withN(TEST_NUMBER));
-    item.put(TEST_NAMES.get(3), new AttributeValue().withNS(TEST_NUMBER_ARRAY));
+    item.put(TEST_NAMES.get(0), AttributeValue.fromN(TEST_NUMBER));
+    item.put(TEST_NAMES.get(1), AttributeValue.fromS(TEST_STRING));
+    item.put(TEST_NAMES.get(2), AttributeValue.fromN(TEST_NUMBER));
+    item.put(TEST_NAMES.get(3), AttributeValue.fromNs(TEST_NUMBER_ARRAY));
 
     List<String> allStrings = Lists.newArrayList(TEST_STRING, TEST_NUMBER, TEST_NUMBER);
     allStrings.addAll(TEST_NAMES);
@@ -156,40 +151,40 @@ public class DynamoDBUtilTest {
   public void getsEndpointFromConf() {
     conf.set(DynamoDBConstants.ENDPOINT, TEST_ENDPOINT);
     assertEquals(TEST_ENDPOINT, DynamoDBUtil.getDynamoDBEndpoint(conf, null));
-    verify(region, never()).getServiceEndpoint(ServiceAbbreviations.Dynamodb);
   }
 
   @Test
-  public void getsEndpointFromRegion() {
-    when(RegionUtils.getRegion(TEST_REGION)).thenReturn(region);
-    when(region.getServiceEndpoint(ServiceAbbreviations.Dynamodb)).thenReturn(TEST_ENDPOINT);
+  public void getsRegionFromConf() {
     conf.set(DynamoDBConstants.REGION, TEST_REGION);
-    assertEquals(TEST_ENDPOINT, DynamoDBUtil.getDynamoDBEndpoint(conf, null));
-    verify(region).getServiceEndpoint(ServiceAbbreviations.Dynamodb);
+    assertEquals(TEST_REGION, DynamoDBUtil.getDynamoDBRegion(conf, null));
   }
 
   @Test
-  public void getsEndpointFromEc2InstanceRegion() {
-    when(EC2MetadataUtils.getEC2InstanceRegion()).thenReturn("ec2-instance-region");
-    when(RegionUtils.getRegion("ec2-instance-region")).thenReturn(region);
-    when(region.getServiceEndpoint(ServiceAbbreviations.Dynamodb)).thenReturn(TEST_ENDPOINT);
-    assertEquals(TEST_ENDPOINT, DynamoDBUtil.getDynamoDBEndpoint(conf, null));
+  public void getsRegionIdFromConf() {
+    conf.set(DynamoDBConstants.REGION_ID, TEST_REGION_ID);
+    assertEquals(TEST_REGION_ID, DynamoDBUtil.getDynamoDBRegion(conf, null));
+  }
+
+  @Test
+  public void getsRegionFromEc2Instance() {
+    final String EC2_INSTANCE_REGION = "ec2-instance-region";
+    when(EC2MetadataUtils.getEC2InstanceRegion()).thenReturn(EC2_INSTANCE_REGION);
+    assertEquals(EC2_INSTANCE_REGION, DynamoDBUtil.getDynamoDBRegion(conf, null));
     PowerMockito.verifyStatic();
     EC2MetadataUtils.getEC2InstanceRegion();
-    verify(region, never()).getServiceEndpoint(TEST_REGION);
   }
 
   @Test
-  public void getsEndpointFromDefaultAwsRegion() {
-    PowerMockito.mockStatic(RegionUtils.class);
-    when(EC2MetadataUtils.getEC2InstanceRegion()).thenThrow(new AmazonClientException("Unable to " +
-        "get region from EC2 instance data"));
-    when(RegionUtils.getRegion(DynamoDBConstants.DEFAULT_AWS_REGION)).thenReturn(region);
-    when(region.getServiceEndpoint(ServiceAbbreviations.Dynamodb)).thenReturn(TEST_ENDPOINT);
-    assertEquals(TEST_ENDPOINT, DynamoDBUtil.getDynamoDBEndpoint(conf, null));
+  public void getsRegionFromDefaultAwsRegion() {
+    when(EC2MetadataUtils.getEC2InstanceRegion())
+        .thenThrow(SdkException.builder()
+            .message("Unable to get region from EC2 instance data")
+            .build());
+
+    assertEquals(DynamoDBConstants.DEFAULT_AWS_REGION, DynamoDBUtil.getDynamoDBRegion(conf, null));
     PowerMockito.verifyStatic();
-    RegionUtils.getRegion(DynamoDBConstants.DEFAULT_AWS_REGION);
   }
+
 
   @Test
   public void testGetBoundedBatchLimit() {

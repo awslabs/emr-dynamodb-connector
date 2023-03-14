@@ -16,10 +16,6 @@ package org.apache.hadoop.dynamodb.write;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
-import com.amazonaws.services.dynamodbv2.model.BillingModeSummary;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
-
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.mapred.JobClient;
@@ -29,6 +25,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
+import software.amazon.awssdk.services.dynamodb.model.BillingModeSummary;
+import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughputDescription;
+import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WriteIopsCalculatorTest {
@@ -47,11 +47,16 @@ public class WriteIopsCalculatorTest {
 
   @Before
   public void setup() {
-    when(dynamoDBClient.describeTable(TABLE_NAME)).thenReturn(new TableDescription()
-        .withBillingModeSummary(
-            new BillingModeSummary().withBillingMode(DynamoDBConstants.BILLING_MODE_PROVISIONED))
-        .withProvisionedThroughput(
-            new ProvisionedThroughputDescription().withWriteCapacityUnits(WRITE_CAPACITY_UNITS)));
+    when(dynamoDBClient.describeTable(TABLE_NAME)).thenReturn(TableDescription.builder()
+        .billingModeSummary(
+            BillingModeSummary.builder()
+                .billingMode(BillingMode.PROVISIONED)
+                .build())
+        .provisionedThroughput(
+            ProvisionedThroughputDescription.builder()
+                .writeCapacityUnits(WRITE_CAPACITY_UNITS)
+                .build())
+        .build());
 
     JobConf jobConf = new JobConf();
     jobConf.setNumMapTasks(TOTAL_MAP_TASKS);
