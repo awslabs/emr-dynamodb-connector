@@ -11,13 +11,13 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import java.util.List;
 import org.apache.hadoop.dynamodb.type.DynamoDBListType;
 import org.apache.hadoop.hive.dynamodb.util.DynamoDBDataParser;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class HiveDynamoDBListType extends DynamoDBListType implements HiveDynamoDBType {
 
@@ -28,7 +28,7 @@ public class HiveDynamoDBListType extends DynamoDBListType implements HiveDynamo
         DynamoDBDataParser.getListAttribute(data, objectInspector, nullSerialization);
     return values == null
         ? DynamoDBDataParser.getNullAttribute(nullSerialization)
-        : new AttributeValue().withL(values);
+        : AttributeValue.fromL(values);
   }
 
   @Override
@@ -54,8 +54,8 @@ public class HiveDynamoDBListType extends DynamoDBListType implements HiveDynamo
 
   @Override
   public Object getHiveData(AttributeValue data, ObjectInspector objectInspector) {
-    return data.getL() == null ? null
-        : DynamoDBDataParser.getListObject(data.getL(), objectInspector);
+    return data.hasL() ? DynamoDBDataParser.getListObject(data.l(), objectInspector)
+        : null;
   }
 
 }

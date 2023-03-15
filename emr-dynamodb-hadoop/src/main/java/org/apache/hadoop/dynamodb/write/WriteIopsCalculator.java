@@ -10,8 +10,6 @@
 
 package org.apache.hadoop.dynamodb.write;
 
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import org.apache.commons.logging.Log;
@@ -22,6 +20,9 @@ import org.apache.hadoop.dynamodb.DynamoDBUtil;
 import org.apache.hadoop.dynamodb.IopsCalculator;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
+import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughputDescription;
+import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 
 public class WriteIopsCalculator implements IopsCalculator {
 
@@ -89,11 +90,11 @@ public class WriteIopsCalculator implements IopsCalculator {
 
   private double getThroughput() {
     TableDescription tableDescription = dynamoDBClient.describeTable(tableName);
-    if (tableDescription.getBillingModeSummary() == null || tableDescription.getBillingModeSummary()
-        .getBillingMode().equalsIgnoreCase(DynamoDBConstants.BILLING_MODE_PROVISIONED)) {
+    if (tableDescription.billingModeSummary() == null
+            || tableDescription.billingModeSummary().billingMode() == BillingMode.PROVISIONED) {
       ProvisionedThroughputDescription provisionedThroughput =
-          tableDescription.getProvisionedThroughput();
-      return provisionedThroughput.getWriteCapacityUnits();
+          tableDescription.provisionedThroughput();
+      return provisionedThroughput.writeCapacityUnits();
     }
     return DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND;
   }

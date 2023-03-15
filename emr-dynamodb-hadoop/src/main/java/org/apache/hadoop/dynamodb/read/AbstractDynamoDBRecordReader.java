@@ -15,7 +15,6 @@ package org.apache.hadoop.dynamodb.read;
 
 import static org.apache.hadoop.dynamodb.DynamoDBUtil.createJobClient;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import java.io.IOException;
 import java.util.Map;
 import org.apache.commons.logging.Log;
@@ -34,6 +33,7 @@ import org.apache.hadoop.dynamodb.split.DynamoDBSplit;
 import org.apache.hadoop.dynamodb.util.TimeSource;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 /**
  * AbstractDynamoDBRecordReader does all the backend work for splitting up the data in DynamoDB,

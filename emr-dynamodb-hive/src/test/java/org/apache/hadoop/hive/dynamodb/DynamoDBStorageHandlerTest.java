@@ -13,10 +13,6 @@
 
 package org.apache.hadoop.hive.dynamodb;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -32,6 +28,10 @@ import com.google.common.collect.Maps;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
+import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 
 public class DynamoDBStorageHandlerTest {
 
@@ -310,13 +310,20 @@ public class DynamoDBStorageHandlerTest {
   }
 
   private TableDescription getHashRangeTable() {
-    TableDescription description = new TableDescription().withKeySchema(Arrays.asList(
-            new KeySchemaElement().withAttributeName("hashKey"),
-            new KeySchemaElement().withAttributeName("rangeKey"))
-    ).withAttributeDefinitions(Arrays.asList(
-            new AttributeDefinition("hashKey", ScalarAttributeType.S),
-            new AttributeDefinition("rangeKey", ScalarAttributeType.N))
-    );
+    TableDescription description = TableDescription.builder()
+        .keySchema(Arrays.asList(
+            KeySchemaElement.builder().attributeName("hashKey").build(),
+            KeySchemaElement.builder().attributeName("rangeKey").build()))
+        .attributeDefinitions(Arrays.asList(
+            AttributeDefinition.builder()
+                .attributeName("hashKey")
+                .attributeType(ScalarAttributeType.S)
+                .build(),
+            AttributeDefinition.builder()
+                .attributeName("rangeKey")
+                .attributeType(ScalarAttributeType.N)
+                .build()))
+        .build();
     return description;
   }
 }

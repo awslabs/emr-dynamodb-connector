@@ -21,9 +21,6 @@ import static org.junit.Assert.assertNull;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-
-import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,6 +39,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class DynamoDBItemWritableTest {
 
@@ -61,12 +60,12 @@ public class DynamoDBItemWritableTest {
     item.write(out);
     outStream.close();
 
-    String data = outStream.toString();
+    final byte[] data = outStream.toByteArray();
 
     item.setItem(null);
     assertNull(item.getItem());
 
-    item.readFields(new DataInputStream(IOUtils.toInputStream(data)));
+    item.readFields(new DataInputStream(new ByteArrayInputStream(data)));
     checkReturnedItem();
   }
 
@@ -100,21 +99,21 @@ public class DynamoDBItemWritableTest {
     assertNotNull(item.getItem());
     Map<String, AttributeValue> returnedData = item.getItem();
     assertEquals(5, returnedData.size());
-    assertEquals("test", returnedData.get("s").getS());
-    assertEquals("1234", returnedData.get("n").getN());
-    assertNull(returnedData.get("n").getS());
-    assertEquals(0, returnedData.get("ss").getSS().size());
-    assertEquals(3, returnedData.get("ns").getNS().size());
-    assertEquals(2, returnedData.get("l").getL().size());
+    assertEquals("test", returnedData.get("s").s());
+    assertEquals("1234", returnedData.get("n").n());
+    assertNull(returnedData.get("n").s());
+    assertEquals(0, returnedData.get("ss").ss().size());
+    assertEquals(3, returnedData.get("ns").ns().size());
+    assertEquals(2, returnedData.get("l").l().size());
 
-    List<String> ns = returnedData.get("ns").getNS();
+    List<String> ns = returnedData.get("ns").ns();
     assertEquals("1.0", ns.get(0));
     assertEquals("1.10", ns.get(1));
     assertEquals("2.0", ns.get(2));
 
-    List<AttributeValue> l = returnedData.get("l").getL();
-    assertEquals("1.0", l.get(0).getS());
-    assertEquals("0", l.get(1).getS());
+    List<AttributeValue> l = returnedData.get("l").l();
+    assertEquals("1.0", l.get(0).s());
+    assertEquals("0", l.get(1).s());
   }
 
   @Test
@@ -137,10 +136,11 @@ public class DynamoDBItemWritableTest {
 
     for (int i = 0; i < loop; i++) {
       Map<String, AttributeValue> map = new HashMap<>();
-      map.put("hash", new AttributeValue().withB(byteBuffers.get(rnd.nextInt(totalByteArrays))));
-      map.put("range", new AttributeValue().withB(byteBuffers.get(rnd.nextInt(totalByteArrays))));
-      map.put("list", new AttributeValue().withBS(byteBuffers.get(rnd.nextInt(totalByteArrays)),
-          byteBuffers.get(rnd.nextInt(totalByteArrays))));
+      map.put("hash", AttributeValue.fromB(SdkBytes.fromByteBuffer(byteBuffers.get(rnd.nextInt(totalByteArrays)))));
+      map.put("range", AttributeValue.fromB(SdkBytes.fromByteBuffer(byteBuffers.get(rnd.nextInt(totalByteArrays)))));
+      map.put("list", AttributeValue.fromBs(Arrays.asList(
+          SdkBytes.fromByteBuffer(byteBuffers.get(rnd.nextInt(totalByteArrays))),
+          SdkBytes.fromByteBuffer(byteBuffers.get(rnd.nextInt(totalByteArrays))))));
 
       Map<String, AttributeValue> dynamoDBItem = gson.fromJson(gson.toJson(map, type), type);
       compare(map, dynamoDBItem);
@@ -156,9 +156,9 @@ public class DynamoDBItemWritableTest {
     item.readFieldsStream(malformedJson);
     Map<String, AttributeValue> attrValueMap = item.getItem();
 
-    assertEquals("seattle", attrValueMap.get("attr1").getS());
+    assertEquals("seattle", attrValueMap.get("attr1").s());
     assertEquals(new HashSet<>(Arrays.asList("123", "456", "789")), new HashSet<>(attrValueMap
-        .get("attr2").getNS()));
+        .get("attr2").ns()));
   }
 
   private void compare(Map<String, AttributeValue> map, Map<String, AttributeValue> map2) {
@@ -171,10 +171,10 @@ public class DynamoDBItemWritableTest {
     AttributeValue lList = map.get("list");
     AttributeValue rList = map.get("list");
 
-    assertArrayEquals(lHash.getB().array(), rHash.getB().array());
-    assertArrayEquals(lRange.getB().array(), rRange.getB().array());
-    assertArrayEquals(lList.getBS().get(0).array(), rList.getBS().get(0).array());
-    assertArrayEquals(lList.getBS().get(1).array(), rList.getBS().get(1).array());
+    assertArrayEquals(lHash.b().asByteArray(), rHash.b().asByteArray());
+    assertArrayEquals(lRange.b().asByteArray(), rRange.b().asByteArray());
+    assertArrayEquals(lList.bs().get(0).asByteArray(), rList.bs().get(0).asByteArray());
+    assertArrayEquals(lList.bs().get(1).asByteArray(), rList.bs().get(1).asByteArray());
   }
 
   private void setTestData() {
@@ -184,15 +184,15 @@ public class DynamoDBItemWritableTest {
     ns.add("1.10");
     ns.add("2.0");
     List<AttributeValue> l = new ArrayList<>();
-    l.add(new AttributeValue("1.0"));
-    l.add(new AttributeValue("0"));
+    l.add(AttributeValue.fromS("1.0"));
+    l.add(AttributeValue.fromS("0"));
 
     Map<String, AttributeValue> sampleData = new HashMap<>();
-    sampleData.put("s", new AttributeValue().withS("test"));
-    sampleData.put("n", new AttributeValue().withN("1234"));
-    sampleData.put("ss", new AttributeValue().withSS(ss));
-    sampleData.put("ns", new AttributeValue().withNS(ns));
-    sampleData.put("l", new AttributeValue().withL(l));
+    sampleData.put("s", AttributeValue.fromS("test"));
+    sampleData.put("n", AttributeValue.fromN("1234"));
+    sampleData.put("ss", AttributeValue.fromSs(ss));
+    sampleData.put("ns", AttributeValue.fromNs(ns));
+    sampleData.put("l", AttributeValue.fromL(l));
 
     item.setItem(sampleData);
   }

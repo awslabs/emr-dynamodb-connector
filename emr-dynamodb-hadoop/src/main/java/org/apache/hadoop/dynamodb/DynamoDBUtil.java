@@ -17,11 +17,6 @@ import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEMS_PER
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_SEGMENT_SPLIT_SIZE;
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.MAX_ITEMS_PER_BATCH;
 
-import com.amazonaws.regions.RegionUtils;
-import com.amazonaws.regions.ServiceAbbreviations;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
-import com.amazonaws.util.EC2MetadataUtils;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -54,6 +49,10 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.regions.internal.util.EC2MetadataUtils;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 
 public final class DynamoDBUtil {
 
@@ -66,13 +65,17 @@ public final class DynamoDBUtil {
     /* We hand serialize/deserialize ByteBuffer objects. */
     gsonBuilder.registerTypeAdapter(ByteBuffer.class, new ByteBufferSerializer());
     gsonBuilder.registerTypeAdapter(ByteBuffer.class, new ByteBufferDeserializer());
+    gsonBuilder.registerTypeAdapter(SdkBytes.class, new SdkBytesSerializer());
+    gsonBuilder.registerTypeAdapter(SdkBytes.class, new SdkBytesDeserializer());
+    gsonBuilder.registerTypeAdapter(AttributeValue.class, new AttributeValueSerializer());
+    gsonBuilder.registerTypeAdapter(AttributeValue.class, new AttributeValueDeserializer());
 
     gson = gsonBuilder.disableHtmlEscaping().create();
   }
 
   public static Double calculateAverageItemSize(TableDescription description) {
-    if (description.getItemCount() != 0) {
-      return ((double) description.getTableSizeBytes()) / ((double) description.getItemCount());
+    if (description.itemCount() != 0) {
+      return ((double) description.tableSizeBytes()) / ((double) description.itemCount());
     }
     return 0.0;
   }
@@ -166,31 +169,31 @@ public final class DynamoDBUtil {
 
   private static int getAttributeSizeBytes(AttributeValue att) throws UnsupportedEncodingException {
     int byteSize = 0;
-    if (att.getN() != null) {
-      byteSize += att.getN().getBytes(CHARACTER_ENCODING).length;
-    } else if (att.getS() != null) {
-      byteSize += att.getS().getBytes(CHARACTER_ENCODING).length;
-    } else if (att.getB() != null) {
-      byteSize += att.getB().array().length;
-    } else if (att.getNS() != null) {
-      for (String number : att.getNS()) {
+    if (att.n() != null) {
+      byteSize += att.n().getBytes(CHARACTER_ENCODING).length;
+    } else if (att.s() != null) {
+      byteSize += att.s().getBytes(CHARACTER_ENCODING).length;
+    } else if (att.b() != null) {
+      byteSize += att.b().asByteArray().length;
+    } else if (att.hasNs()) {
+      for (String number : att.ns()) {
         byteSize += number.getBytes(CHARACTER_ENCODING).length;
       }
-    } else if (att.getSS() != null) {
-      for (String string : att.getSS()) {
+    } else if (att.hasSs()) {
+      for (String string : att.ss()) {
         byteSize += string.getBytes(CHARACTER_ENCODING).length;
       }
-    } else if (att.getBS() != null) {
-      for (ByteBuffer byteBuffer : att.getBS()) {
-        byteSize += byteBuffer.array().length;
+    } else if (att.hasBs()) {
+      for (SdkBytes sdkBytes : att.bs()) {
+        byteSize += sdkBytes.asByteArray().length;
       }
-    } else if (att.getM() != null) {
-      for (Entry<String, AttributeValue> entry : att.getM().entrySet()) {
+    } else if (att.hasM()) {
+      for (Entry<String, AttributeValue> entry : att.m().entrySet()) {
         byteSize += getAttributeSizeBytes(entry.getValue())
             + entry.getKey().getBytes(CHARACTER_ENCODING).length;
       }
-    } else if (att.getL() != null) {
-      for (AttributeValue entry : att.getL()) {
+    } else if (att.hasL()) {
+      for (AttributeValue entry : att.l()) {
         byteSize += getAttributeSizeBytes(entry);
       }
     }
@@ -214,17 +217,7 @@ public final class DynamoDBUtil {
   }
 
   /**
-   * Calculates DynamoDB end-point.
-   *
-   * Algorithm details:
-   * <ol>
-   * <li> Use endpoint in job configuration "dynamodb.endpoint" value if available
-   * <li> Use endpoint from region in job configuration "dynamodb.region" value if available
-   * <li> Use endpoint from region in job configuration "dynamodb.regionid" value if available
-   * <li> Use endpoint from EC2 Metadata of instance if available
-   * <li> If all previous attempts at retrieving endpoint fail, default to us-east-1 endpoint
-   * </ol>
-   *
+   * Get custom DynamoDB end-point from configuration.
    * @param conf   Job Configuration
    * @param region optional preferred region
    * @return end-point for DynamoDb service
@@ -232,27 +225,58 @@ public final class DynamoDBUtil {
   public static String getDynamoDBEndpoint(Configuration conf, String region) {
     String endpoint = getValueFromConf(conf, DynamoDBConstants.ENDPOINT);
     if (Strings.isNullOrEmpty(endpoint)) {
-      if (Strings.isNullOrEmpty(region)) {
-        region = getValueFromConf(conf, DynamoDBConstants.REGION);
-      }
-      if (Strings.isNullOrEmpty(region)) {
-        region = getValueFromConf(conf, DynamoDBConstants.REGION_ID);
-      }
-      if (Strings.isNullOrEmpty(region)) {
-        try {
-          region = EC2MetadataUtils.getEC2InstanceRegion();
-        } catch (Exception e) {
-          log.warn(String.format("Exception when attempting to get AWS region information. Will "
-              + "ignore and default " + "to %s", DynamoDBConstants.DEFAULT_AWS_REGION), e);
-        }
-      }
-      if (Strings.isNullOrEmpty(region)) {
-        region = DynamoDBConstants.DEFAULT_AWS_REGION;
-      }
-      endpoint = RegionUtils.getRegion(region).getServiceEndpoint(ServiceAbbreviations.Dynamodb);
+      log.info(DynamoDBConstants.ENDPOINT + " not found from configuration.");
+    } else {
+      log.info("Using endpoint for DynamoDB: " + endpoint);
     }
-    log.info("Using endpoint for DynamoDB: " + endpoint);
     return endpoint;
+  }
+
+  /**
+   * Calculates DynamoDB region.
+   *
+   * Algorithm details:
+   * <ol>
+   * <li> Use region in job configuration "dynamodb.region" value if available
+   * <li> Use region in job configuration "dynamodb.regionid" value if available
+   * <li> Use endpoint from EC2 Metadata of instance if available
+   * <li> If all previous attempts fail, default to us-east-1 region
+   * </ol>
+   *
+   * @param conf
+   * @param region
+   * @return region for DynamoDB service
+   */
+  public static String getDynamoDBRegion(Configuration conf, String region) {
+    if (!Strings.isNullOrEmpty(region)) {
+      return region;
+    }
+
+    // Return region in job configuration "dynamodb.region" value if available
+    region = getValueFromConf(conf, DynamoDBConstants.REGION);
+    if (!Strings.isNullOrEmpty(region)) {
+      return region;
+    }
+
+    // Return region in job configuration "dynamodb.regionid" value if available
+    region = getValueFromConf(conf, DynamoDBConstants.REGION_ID);
+    if (!Strings.isNullOrEmpty(region)) {
+      return region;
+    }
+
+    // Return region from EC2 Metadata of instance if available
+    try {
+      region = EC2MetadataUtils.getEC2InstanceRegion();
+    } catch (Exception e) {
+      log.warn(String.format("Exception when attempting to get AWS region information. "
+          + "Will ignore and default to %s", DynamoDBConstants.DEFAULT_AWS_REGION), e);
+    }
+    if (!Strings.isNullOrEmpty(region)) {
+      return region;
+    }
+
+    // Default to us-east-1 region if all previous attempts fail
+    return DynamoDBConstants.DEFAULT_AWS_REGION;
   }
 
   public static JobClient createJobClient(JobConf jobConf) {
@@ -333,6 +357,28 @@ public final class DynamoDBUtil {
 
       String base64String = jsonElement.getAsJsonPrimitive().getAsString();
       return DynamoDBUtil.base64StringToByteBuffer(base64String);
+    }
+  }
+
+  private static class SdkBytesSerializer implements JsonSerializer<SdkBytes> {
+
+    @Override
+    public JsonElement serialize(SdkBytes sdkBytes, Type type, JsonSerializationContext
+        context) {
+
+      String base64String = DynamoDBUtil.base64EncodeByteArray(sdkBytes.asByteArray());
+      return new JsonPrimitive(base64String);
+    }
+  }
+
+  private static class SdkBytesDeserializer implements JsonDeserializer<SdkBytes> {
+
+    @Override
+    public SdkBytes deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext
+        context) throws JsonParseException {
+
+      String base64String = jsonElement.getAsJsonPrimitive().getAsString();
+      return SdkBytes.fromByteBuffer(DynamoDBUtil.base64StringToByteBuffer(base64String));
     }
   }
 

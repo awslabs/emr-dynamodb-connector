@@ -13,7 +13,6 @@
 
 package org.apache.hadoop.hive.dynamodb.type;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
@@ -30,6 +29,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class HiveDynamoDBItemType implements DynamoDBItemType, HiveDynamoDBType {
 

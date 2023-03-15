@@ -13,8 +13,8 @@
 
 package org.apache.hadoop.dynamodb;
 
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.dynamodbv2.model.BillingMode;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
 
 /**
  * Contains constants used for the Hadoop to DynamoDB connection. Note that many of these string
@@ -104,7 +104,7 @@ public interface DynamoDBConstants {
   int RATE_CONTROLLER_WINDOW_SIZE_SEC = 5;
 
   String EXPORT_FORMAT_VERSION = "dynamodb.export.format.version";
-  String DEFAULT_AWS_REGION = Regions.US_EAST_1.getName();
+  String DEFAULT_AWS_REGION = Region.US_EAST_1.toString();
 
   int DEFAULT_AVERAGE_ITEM_SIZE_IN_BYTES = 100;
   Long DEFAULT_CAPACITY_FOR_ON_DEMAND = 40000L;

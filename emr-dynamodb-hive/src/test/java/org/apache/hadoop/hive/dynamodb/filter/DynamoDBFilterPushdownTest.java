@@ -1,12 +1,5 @@
 package org.apache.hadoop.hive.dynamodb.filter;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndexDescription;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.LocalSecondaryIndexDescription;
-import com.amazonaws.services.dynamodbv2.model.Projection;
-import com.amazonaws.services.dynamodbv2.model.ProjectionType;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +19,13 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.Condition;
+import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndexDescription;
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.LocalSecondaryIndexDescription;
+import software.amazon.awssdk.services.dynamodb.model.Projection;
+import software.amazon.awssdk.services.dynamodb.model.ProjectionType;
 
 public class DynamoDBFilterPushdownTest {
 
@@ -445,9 +445,15 @@ public class DynamoDBFilterPushdownTest {
 
   private List<KeySchemaElement> createKeySchema(String hashKeyName, String rangeKeyName) {
     List<KeySchemaElement> schema = new ArrayList<>();
-    schema.add(new KeySchemaElement(hashKeyName, HASH_KEY_TYPE));
+    schema.add(KeySchemaElement.builder()
+        .attributeName(hashKeyName)
+        .keyType(HASH_KEY_TYPE)
+        .build());
     if (rangeKeyName != null) {
-      schema.add(new KeySchemaElement(rangeKeyName, RANGE_KEY_TYPE));
+      schema.add(KeySchemaElement.builder()
+          .attributeName(rangeKeyName)
+          .keyType(RANGE_KEY_TYPE)
+          .build());
     }
     return schema;
   }
@@ -477,34 +483,39 @@ public class DynamoDBFilterPushdownTest {
   private GlobalSecondaryIndexDescription createGSI(String indexName, String hashKeyName,
       String rangeKeyName, String projectionType, List<String> nonKeyAttributes) {
     List<KeySchemaElement> schema = createKeySchema(hashKeyName, rangeKeyName);
-    Projection projection = new Projection()
-        .withProjectionType(projectionType)
-        .withNonKeyAttributes(nonKeyAttributes);
-    return new GlobalSecondaryIndexDescription()
-        .withIndexName(indexName)
-        .withKeySchema(schema)
-        .withProjection(projection);
+    Projection projection = Projection.builder()
+        .projectionType(projectionType)
+        .nonKeyAttributes(nonKeyAttributes)
+        .build();
+    return GlobalSecondaryIndexDescription.builder()
+        .indexName(indexName)
+        .keySchema(schema)
+        .projection(projection)
+        .build();
   }
 
   private LocalSecondaryIndexDescription createLSI(String indexName, String hashKeyName,
       String rangeKeyName, String projectionType, List<String> nonKeyAttributes) {
     List<KeySchemaElement> schema = createKeySchema(hashKeyName, rangeKeyName);
-    Projection projection = new Projection()
-        .withProjectionType(projectionType)
-        .withNonKeyAttributes(nonKeyAttributes);
-    return new LocalSecondaryIndexDescription()
-        .withIndexName(indexName)
-        .withKeySchema(schema)
-        .withProjection(projection);
+    Projection projection = Projection.builder()
+        .projectionType(projectionType)
+        .nonKeyAttributes(nonKeyAttributes)
+        .build();
+    return LocalSecondaryIndexDescription.builder()
+        .indexName(indexName)
+        .keySchema(schema)
+        .projection(projection)
+        .build();
   }
 
   private void assertKeyCondition(String columnName, String columnValue,
       DynamoDBQueryFilter filter) {
-    Condition hashKeyCondition = new Condition();
     List<AttributeValue> hashKeyAttributeValueList = new ArrayList<>();
-    hashKeyAttributeValueList.add(new AttributeValue(columnValue));
-    hashKeyCondition.setAttributeValueList(hashKeyAttributeValueList);
-    hashKeyCondition.setComparisonOperator(DynamoDBFilterOperator.EQ.getDynamoDBName());
+    hashKeyAttributeValueList.add(AttributeValue.fromS(columnValue));
+    Condition hashKeyCondition = Condition.builder()
+        .attributeValueList(hashKeyAttributeValueList)
+        .comparisonOperator(DynamoDBFilterOperator.EQ.getDynamoDBName())
+        .build();
     Assert.assertEquals((hashKeyCondition.toString()),
         filter.getKeyConditions().get(columnName).toString());
   }

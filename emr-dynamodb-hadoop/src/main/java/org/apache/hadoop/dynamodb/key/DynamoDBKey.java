@@ -13,7 +13,7 @@
 
 package org.apache.hadoop.dynamodb.key;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public interface DynamoDBKey {
 

@@ -54,8 +54,13 @@
         </dependency>
 
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-dynamodb</artifactId>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>dynamodb</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>apache-client</artifactId>
         </dependency>
 
         <dependency>
@@ -87,6 +92,13 @@
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <configuration>
                     <maxAllowedViolations>0</maxAllowedViolations>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
             </plugin>
         </plugins>

@@ -7,9 +7,6 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ScanResult;
-
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
 import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;
@@ -25,6 +22,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.HashMap;
 import java.util.Map;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ConsumedCapacity;
+import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 
 @RunWith(MockitoJUnitRunner.class)
 public final class ScanRecordReadRequestTest {
@@ -36,8 +36,10 @@ public final class ScanRecordReadRequestTest {
 
   @Test
   public void fetchPageReturnsZeroConsumedCapacityWhenResultsConsumedCapacityIsNull() {
-    RetryResult stubbedResult = new RetryResult<>(new ScanResult().withConsumedCapacity(null)
-        .withItems(new HashMap<String, AttributeValue>()), 0);
+    RetryResult stubbedResult = new RetryResult<>(ScanResponse.builder()
+        .consumedCapacity((ConsumedCapacity) null)
+        .items(new HashMap<String, AttributeValue>())
+        .build(), 0);
     stubScanTableWith(stubbedResult);
 
     when(context.getClient()).thenReturn(client);
@@ -50,7 +52,7 @@ public final class ScanRecordReadRequestTest {
     assertEquals(0.0, pageResults.consumedRcu, 0.0);
   }
 
-  private void stubScanTableWith(RetryResult<ScanResult> scanResultRetryResult) {
+  private void stubScanTableWith(RetryResult<ScanResponse> scanResultRetryResult) {
     when(client.scanTable(
         anyString(),
         any(DynamoDBQueryFilter.class),

@@ -13,11 +13,6 @@
 
 package org.apache.hadoop.hive.dynamodb.filter;
 
-import com.amazonaws.services.dynamodbv2.model.GlobalSecondaryIndexDescription;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.LocalSecondaryIndexDescription;
-import com.amazonaws.services.dynamodbv2.model.Projection;
-import com.amazonaws.services.dynamodbv2.model.ProjectionType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,6 +33,12 @@ import org.apache.hadoop.hive.ql.metadata.HiveStoragePredicateHandler.Decomposed
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
 import org.apache.hadoop.hive.serde.serdeConstants;
+import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndexDescription;
+import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.KeyType;
+import software.amazon.awssdk.services.dynamodb.model.LocalSecondaryIndexDescription;
+import software.amazon.awssdk.services.dynamodb.model.Projection;
+import software.amazon.awssdk.services.dynamodb.model.ProjectionType;
 
 public class DynamoDBFilterPushdown {
 
@@ -256,8 +257,8 @@ public class DynamoDBFilterPushdown {
         indexUseForQuery = getIndexUseForQuery(
             schema,
             globalSecondaryIndexes.stream()
-                .map(index -> new DynamoDBIndexInfo(index.getIndexName(),
-                    index.getKeySchema(), index.getProjection()))
+                .map(index -> new DynamoDBIndexInfo(index.indexName(),
+                    index.keySchema(), index.projection()))
                 .collect(Collectors.toList()),
             hiveDynamoDBMapping,
             filterMap,
@@ -275,8 +276,8 @@ public class DynamoDBFilterPushdown {
         indexUseForQuery = getIndexUseForQuery(
             schema,
             localSecondaryIndexes.stream()
-                .map(index -> new DynamoDBIndexInfo(index.getIndexName(),
-                    index.getKeySchema(), index.getProjection()))
+                .map(index -> new DynamoDBIndexInfo(index.indexName(),
+                    index.keySchema(), index.projection()))
                 .collect(Collectors.toList()),
             hiveDynamoDBMapping,
             filterMap,
@@ -329,19 +330,19 @@ public class DynamoDBFilterPushdown {
   private boolean indexIncludesAllMappedAttributes(List<KeySchemaElement> tableSchema,
       DynamoDBIndexInfo index, Map<String, String> hiveDynamoDBMapping) {
     Projection indexProjection = index.getIndexProjection();
-    if (ProjectionType.ALL.toString().equals(indexProjection.getProjectionType())) {
+    if (ProjectionType.ALL == indexProjection.projectionType()) {
       return true;
     }
 
     Set<String> projectionAttributes = new HashSet<>();
     for (KeySchemaElement keySchemaElement: tableSchema) {
-      projectionAttributes.add(keySchemaElement.getAttributeName());
+      projectionAttributes.add(keySchemaElement.attributeName());
     }
     for (KeySchemaElement keySchemaElement: index.getIndexSchema()) {
-      projectionAttributes.add(keySchemaElement.getAttributeName());
+      projectionAttributes.add(keySchemaElement.attributeName());
     }
-    if (ProjectionType.INCLUDE.toString().equals(indexProjection.getProjectionType())) {
-      projectionAttributes.addAll(indexProjection.getNonKeyAttributes());
+    if (ProjectionType.INCLUDE == indexProjection.projectionType()) {
+      projectionAttributes.addAll(indexProjection.nonKeyAttributes());
     }
 
     log.info("Checking if all mapped attributes " + hiveDynamoDBMapping.values()
@@ -363,8 +364,8 @@ public class DynamoDBFilterPushdown {
 
     boolean hashKeyFilterExists = false;
     if (schema.size() > 0
-        && DYNAMODB_KEY_TYPE_HASH.equals(schema.get(HASH_KEY_INDEX).getKeyType())) {
-      String hashKeyName = schema.get(HASH_KEY_INDEX).getAttributeName();
+        && KeyType.HASH == schema.get(HASH_KEY_INDEX).keyType()) {
+      String hashKeyName = schema.get(HASH_KEY_INDEX).attributeName();
       if (filterMap.containsKey(hashKeyName)) {
         DynamoDBFilter hashKeyFilter = filterMap.get(hashKeyName);
         if (DynamoDBFilterOperator.EQ.equals(hashKeyFilter.getOperator())) {
@@ -375,7 +376,7 @@ public class DynamoDBFilterPushdown {
     }
 
     if (hashKeyFilterExists && schema.size() > 1) {
-      String rangeKeyName = schema.get(RANGE_KEY_INDEX).getAttributeName();
+      String rangeKeyName = schema.get(RANGE_KEY_INDEX).attributeName();
       if (filterMap.containsKey(rangeKeyName)) {
         DynamoDBFilter rangeKeyFilter = filterMap.get(rangeKeyName);
         if (eligibleOperatorsForRange.contains(rangeKeyFilter.getOperator())) {
