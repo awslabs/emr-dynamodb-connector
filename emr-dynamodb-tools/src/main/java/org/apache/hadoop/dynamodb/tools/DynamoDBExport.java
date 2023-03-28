@@ -117,6 +117,11 @@ public class DynamoDBExport extends Configured implements Tool {
           description.provisionedThroughput().readCapacityUnits().toString());
       jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT,
           description.provisionedThroughput().writeCapacityUnits().toString());
+      // Assume auto-scaling enabled for PROVISIONED tables
+      jobConf.set(DynamoDBConstants.READ_THROUGHPUT_AUTOSCALING,
+          DynamoDBConstants.DEFAULT_THROUGHPUT_AUTOSCALING);
+      jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT_AUTOSCALING,
+          DynamoDBConstants.DEFAULT_THROUGHPUT_AUTOSCALING);
     } else {
       // If not specified at the table level, set a hard coded value of 40,000
       jobConf.set(DynamoDBConstants.READ_THROUGHPUT,

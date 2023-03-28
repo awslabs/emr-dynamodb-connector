@@ -100,6 +100,11 @@ public class DynamoDBImport extends Configured implements Tool {
           description.provisionedThroughput().readCapacityUnits().toString());
       jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT,
           description.provisionedThroughput().writeCapacityUnits().toString());
+      // Assume auto-scaling enabled for PROVISIONED tables
+      jobConf.set(DynamoDBConstants.READ_THROUGHPUT_AUTOSCALING,
+          DynamoDBConstants.DEFAULT_THROUGHPUT_AUTOSCALING);
+      jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT_AUTOSCALING,
+          DynamoDBConstants.DEFAULT_THROUGHPUT_AUTOSCALING);
     } else {
       jobConf.set(DynamoDBConstants.READ_THROUGHPUT,
           DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString());
