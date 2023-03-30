@@ -55,17 +55,24 @@ public class ReadIopsCalculator implements IopsCalculator {
   }
 
   public long calculateTargetIops() {
-    double configuredThroughput = Math.floor(Double.parseDouble(
-        jobConf.get(DynamoDBConstants.READ_THROUGHPUT,
-            String.valueOf(getThroughput()))) * throughputPercent);
-    long throughputPerTask = Math.max((long) (configuredThroughput / totalSegments
+    double configuredThroughput;
+    // Always fetch throughput from DDB if auto-scaling is enabled or not specified
+    if (Boolean.parseBoolean(jobConf.get(DynamoDBConstants.READ_THROUGHPUT_AUTOSCALING))
+        || jobConf.get(DynamoDBConstants.READ_THROUGHPUT) == null) {
+      configuredThroughput = getThroughput();
+    } else {
+      configuredThroughput = Double.parseDouble(jobConf.get(DynamoDBConstants.READ_THROUGHPUT));
+    }
+    double calculatedThroughput = Math.floor(configuredThroughput * throughputPercent);
+
+    long throughputPerTask = Math.max((long) (calculatedThroughput / totalSegments
         * localSegments), 1);
 
     log.info("Throughput per task for table " + tableName + " : " + throughputPerTask);
     return throughputPerTask;
   }
 
-  private double getThroughput() {
+  protected double getThroughput() {
     TableDescription tableDescription = dynamoDBClient.describeTable(tableName);
     if (tableDescription.billingModeSummary() == null
         || tableDescription.billingModeSummary().billingMode() == BillingMode.PROVISIONED) {

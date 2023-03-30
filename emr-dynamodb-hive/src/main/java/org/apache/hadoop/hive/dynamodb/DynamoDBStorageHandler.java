@@ -119,8 +119,7 @@ public class DynamoDBStorageHandler
 
   @Override
   public void configureTableJobProperties(TableDesc tableDesc, Map<String, String> jobProperties) {
-    DynamoDBClient client =
-        new DynamoDBClient(conf, tableDesc.getProperties().getProperty(DynamoDBConstants.REGION));
+    DynamoDBClient client = createDynamoDBClient(tableDesc);
 
     try {
       String tableName = HiveDynamoDBUtil.getDynamoDBTableName(tableDesc.getProperties()
@@ -191,7 +190,22 @@ public class DynamoDBStorageHandler
 
       if (description.billingModeSummary() == null
           || description.billingModeSummary().billingMode() == BillingMode.PROVISIONED) {
-        useExplicitThroughputIfRequired(jobProperties, tableDesc);
+        // If not specified at the table level, get initial read/write capacity from DDB
+        jobProperties.put(DynamoDBConstants.READ_THROUGHPUT, tableDesc.getProperties()
+            .getProperty(DynamoDBConstants.READ_THROUGHPUT,
+                description.provisionedThroughput().readCapacityUnits().toString()));
+        jobProperties.put(DynamoDBConstants.WRITE_THROUGHPUT, tableDesc.getProperties()
+            .getProperty(DynamoDBConstants.WRITE_THROUGHPUT,
+                description.provisionedThroughput().writeCapacityUnits().toString()));
+        // Assume auto-scaling enabled for PROVISIONED tables if throughput not specified by user
+        if (tableDesc.getProperties().getProperty(DynamoDBConstants.READ_THROUGHPUT) == null) {
+          jobProperties.put(DynamoDBConstants.READ_THROUGHPUT_AUTOSCALING,
+              DynamoDBConstants.DEFAULT_THROUGHPUT_AUTOSCALING);
+        }
+        if (tableDesc.getProperties().getProperty(DynamoDBConstants.WRITE_THROUGHPUT) == null) {
+          jobProperties.put(DynamoDBConstants.WRITE_THROUGHPUT_AUTOSCALING,
+              DynamoDBConstants.DEFAULT_THROUGHPUT_AUTOSCALING);
+        }
       } else {
         // If not specified at the table level, set default value
         jobProperties.put(DynamoDBConstants.READ_THROUGHPUT, tableDesc.getProperties()
@@ -220,21 +234,6 @@ public class DynamoDBStorageHandler
 
   public void configureInputJobCredentials(TableDesc tableDesc, Map<String, String> secrets) {
     throw new AbstractMethodError("configureInputJobCredentials not supported");
-  }
-
-  private void useExplicitThroughputIfRequired(Map<String, String> jobProperties,
-      TableDesc tableDesc) {
-    String userRequiredReadThroughput =
-        tableDesc.getProperties().getProperty(DynamoDBConstants.READ_THROUGHPUT);
-    if (userRequiredReadThroughput != null) {
-      jobProperties.put(DynamoDBConstants.READ_THROUGHPUT, userRequiredReadThroughput);
-    }
-
-    String userRequiredWriteThroughput =
-        tableDesc.getProperties().getProperty(DynamoDBConstants.WRITE_THROUGHPUT);
-    if (userRequiredWriteThroughput != null) {
-      jobProperties.put(DynamoDBConstants.WRITE_THROUGHPUT, userRequiredWriteThroughput);
-    }
   }
 
   @Override
@@ -375,8 +374,13 @@ public class DynamoDBStorageHandler
     }
   }
 
-  private DynamoDBClient createDynamoDBClient(Table table) {
+  protected DynamoDBClient createDynamoDBClient(Table table) {
     String region = table.getParameters().get(DynamoDBConstants.REGION);
+    return new DynamoDBClient(conf, region);
+  }
+
+  protected DynamoDBClient createDynamoDBClient(TableDesc tableDesc) {
+    String region = tableDesc.getProperties().getProperty(DynamoDBConstants.REGION);
     return new DynamoDBClient(conf, region);
   }
 

@@ -70,10 +70,16 @@ public class WriteIopsCalculator implements IopsCalculator {
   }
 
   public long calculateTargetIops() {
-    double configuredThroughput = Math.floor(Double.parseDouble(
-        jobConf.get(DynamoDBConstants.WRITE_THROUGHPUT, String.valueOf(getThroughput())))
-        * throughputPercent);
-    long throughputPerTask = Math.max((long) (configuredThroughput / maxParallelTasks), 1);
+    double configuredThroughput;
+    // Always fetch throughput from DDB if auto-scaling is enabled
+    if (Boolean.parseBoolean(jobConf.get(DynamoDBConstants.WRITE_THROUGHPUT_AUTOSCALING))
+        || jobConf.get(DynamoDBConstants.WRITE_THROUGHPUT) == null) {
+      configuredThroughput = getThroughput();
+    } else {
+      configuredThroughput = Double.parseDouble(jobConf.get(DynamoDBConstants.WRITE_THROUGHPUT));
+    }
+    double calculatedThroughput = Math.floor(configuredThroughput * throughputPercent);
+    long throughputPerTask = Math.max((long) (calculatedThroughput / maxParallelTasks), 1);
 
     log.info("Throughput per task for table " + tableName + " : " + throughputPerTask);
     return throughputPerTask;
@@ -88,7 +94,7 @@ public class WriteIopsCalculator implements IopsCalculator {
     return totalMapTasks;
   }
 
-  private double getThroughput() {
+  protected double getThroughput() {
     TableDescription tableDescription = dynamoDBClient.describeTable(tableName);
     if (tableDescription.billingModeSummary() == null
             || tableDescription.billingModeSummary().billingMode() == BillingMode.PROVISIONED) {

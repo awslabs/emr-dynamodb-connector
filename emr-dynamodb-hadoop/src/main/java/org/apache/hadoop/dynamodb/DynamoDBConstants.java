@@ -60,11 +60,14 @@ public interface DynamoDBConstants {
   String THROUGHPUT_READ_PERCENT = "dynamodb.throughput.read.percent";
   String READ_THROUGHPUT = "dynamodb.throughput.read";
   String WRITE_THROUGHPUT = "dynamodb.throughput.write";
+  String READ_THROUGHPUT_AUTOSCALING = "dynamodb.throughput.read.autoscaling";
+  String WRITE_THROUGHPUT_AUTOSCALING = "dynamodb.throughput.write.autoscaling";
   String AVG_ITEM_SIZE = "dynamodb.item.average.size";
   String ITEM_COUNT = "dynamodb.item.count";
   String TABLE_SIZE_BYTES = "dynamodb.table.size-bytes";
   String MAX_MAP_TASKS = "dynamodb.max.map.tasks";
   String DEFAULT_THROUGHPUT_PERCENTAGE = "0.5";
+  String DEFAULT_THROUGHPUT_AUTOSCALING = "true";
   String BILLING_MODE_PROVISIONED = BillingMode.PROVISIONED.toString();
 
   String DYNAMODB_MAX_ITEM_SIZE = "dynamodb.max.item.size";

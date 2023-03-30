@@ -14,16 +14,19 @@
 package org.apache.hadoop.dynamodb.write;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.amazon.awssdk.services.dynamodb.model.BillingMode;
 import software.amazon.awssdk.services.dynamodb.model.BillingModeSummary;
@@ -45,39 +48,62 @@ public class WriteIopsCalculatorTest {
 
   private WriteIopsCalculator writeIopsCalculator;
 
-  @Before
-  public void setup() {
+  @Test
+  public void testCalculateTargetIops() {
+    JobConf jobConf = new JobConf();
+    writeIopsCalculator = getWriteIopsCalculator(jobConf);
+
+    long writeIops = writeIopsCalculator.calculateTargetIops();
+    long expectedWriteIops = (long) (WRITE_CAPACITY_UNITS * THROUGHPUT_WRITE_PERCENT / Math.min
+        (MAX_CONCURRENT_MAP_TASKS, TOTAL_MAP_TASKS));
+    assertEquals(expectedWriteIops, writeIops);
+  }
+
+  @Test
+  public void testCalculateIopsAutoscalingEnabled() {
+    JobConf jobConf = new JobConf();
+    jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT, "500");
+    writeIopsCalculator = getWriteIopsCalculator(jobConf);
+
+    WriteIopsCalculator spyIopsCalculator = Mockito.spy(writeIopsCalculator);
+    doReturn((double) 1000).when(spyIopsCalculator).getThroughput();
+    long writeIops = spyIopsCalculator.calculateTargetIops();
+    long expectedWriteIops = (long) (500 * THROUGHPUT_WRITE_PERCENT / Math.min
+        (MAX_CONCURRENT_MAP_TASKS, TOTAL_MAP_TASKS));
+    assertEquals(expectedWriteIops, writeIops);
+    // Autoscaling not enabled, throughput shouldn't be fetched when user specified
+    verify(spyIopsCalculator, times(0)).getThroughput();
+
+    jobConf.set(DynamoDBConstants.WRITE_THROUGHPUT_AUTOSCALING, "true");
+    long writeIops2 = spyIopsCalculator.calculateTargetIops();
+    long expectedWriteIops2 = (long) (1000 * THROUGHPUT_WRITE_PERCENT / Math.min
+        (MAX_CONCURRENT_MAP_TASKS, TOTAL_MAP_TASKS));
+    assertEquals(expectedWriteIops2, writeIops2);
+    // Autoscaling enabled, throughput should be fetched regardless of if user specified
+    verify(spyIopsCalculator, times(1)).getThroughput();
+  }
+
+  private WriteIopsCalculator getWriteIopsCalculator(JobConf jobConf) {
     when(dynamoDBClient.describeTable(TABLE_NAME)).thenReturn(TableDescription.builder()
-        .billingModeSummary(
-            BillingModeSummary.builder()
+        .billingModeSummary(BillingModeSummary.builder()
                 .billingMode(BillingMode.PROVISIONED)
                 .build())
-        .provisionedThroughput(
-            ProvisionedThroughputDescription.builder()
-                .writeCapacityUnits(WRITE_CAPACITY_UNITS)
-                .build())
+        .provisionedThroughput(ProvisionedThroughputDescription.builder()
+                 .writeCapacityUnits(WRITE_CAPACITY_UNITS)
+                 .build())
         .build());
 
-    JobConf jobConf = new JobConf();
     jobConf.setNumMapTasks(TOTAL_MAP_TASKS);
     jobConf.set("mapreduce.task.attempt.id", "attempt_m_1");
-    jobConf.set(DynamoDBConstants.THROUGHPUT_WRITE_PERCENT, String.valueOf
-        (THROUGHPUT_WRITE_PERCENT));
+    jobConf.set(DynamoDBConstants.THROUGHPUT_WRITE_PERCENT,
+        String.valueOf(THROUGHPUT_WRITE_PERCENT));
     when(jobClient.getConf()).thenReturn(jobConf);
 
-    writeIopsCalculator = new WriteIopsCalculator(jobClient, dynamoDBClient, TABLE_NAME) {
+    return new WriteIopsCalculator(jobClient, dynamoDBClient, TABLE_NAME) {
       @Override
       int calculateMaxMapTasks(int totalMapTasks) {
         return MAX_CONCURRENT_MAP_TASKS;
       }
     };
-  }
-
-  @Test
-  public void testCalculateTargetIops() {
-    long writeIops = writeIopsCalculator.calculateTargetIops();
-    long expectedWriteIops = (long) (WRITE_CAPACITY_UNITS * THROUGHPUT_WRITE_PERCENT / Math.min
-        (MAX_CONCURRENT_MAP_TASKS, TOTAL_MAP_TASKS));
-    assertEquals(expectedWriteIops, writeIops);
   }
 }

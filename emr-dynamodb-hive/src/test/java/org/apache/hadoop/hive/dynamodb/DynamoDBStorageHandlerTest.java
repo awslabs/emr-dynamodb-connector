@@ -13,11 +13,14 @@
 
 package org.apache.hadoop.hive.dynamodb;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.dynamodb.DynamoDBClient;
 import org.apache.hadoop.dynamodb.DynamoDBConstants;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,12 +29,25 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+
+import org.mockito.Mockito;
 import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
+import software.amazon.awssdk.services.dynamodb.model.BillingMode;
+import software.amazon.awssdk.services.dynamodb.model.BillingModeSummary;
 import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughputDescription;
 import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
 import software.amazon.awssdk.services.dynamodb.model.TableDescription;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
 
 public class DynamoDBStorageHandlerTest {
 
@@ -42,6 +58,7 @@ public class DynamoDBStorageHandlerTest {
   @Before
   public void setup() {
     storageHandler = new DynamoDBStorageHandler();
+    storageHandler.setConf(new Configuration());
   }
 
   @Test
@@ -309,7 +326,87 @@ public class DynamoDBStorageHandlerTest {
     storageHandler.checkTableSchemaType(description, table);
   }
 
+  @Test
+  public void testReadWriteThroughputConfiguredProvisionedTable() {
+    DynamoDBClient mockDynamoClient = Mockito.mock(DynamoDBClient.class);
+    TableDescription mockDescribeTableResponse =
+        getHashRangeTableByBillingMode(BillingMode.PROVISIONED);
+    doReturn(mockDescribeTableResponse).when(mockDynamoClient).describeTable(any());
+
+    DynamoDBStorageHandler spyDynamoStorageHandler = Mockito.spy(storageHandler);
+    doReturn(mockDynamoClient).when(spyDynamoStorageHandler).createDynamoDBClient((TableDesc) any());
+
+    TableDesc testTableDesc = new TableDesc();
+    Properties properties = new Properties();
+    properties.setProperty(DynamoDBConstants.REGION, "us-east-1");
+    properties.setProperty(DynamoDBConstants.TABLE_NAME, "test-table");
+    testTableDesc.setProperties(properties);
+
+    // User has not specified explicit throughput settings, fetch from dynamo table
+    Map<String, String> jobProperties1 = new HashMap<>();
+    spyDynamoStorageHandler.configureTableJobProperties(testTableDesc, jobProperties1);
+    assertEquals(jobProperties1.get(DynamoDBConstants.READ_THROUGHPUT), "400");
+    assertEquals(jobProperties1.get(DynamoDBConstants.WRITE_THROUGHPUT), "100");
+    // Provisioned tables should be configured to dynamically calculate throughput during tasks
+    assertTrue(Boolean.parseBoolean(jobProperties1.get(DynamoDBConstants.READ_THROUGHPUT_AUTOSCALING)));
+    assertTrue(Boolean.parseBoolean(jobProperties1.get(DynamoDBConstants.WRITE_THROUGHPUT_AUTOSCALING)));
+
+    // User has specified throughput settings, override what is in table
+    properties.setProperty(DynamoDBConstants.READ_THROUGHPUT, "50");
+    properties.setProperty(DynamoDBConstants.WRITE_THROUGHPUT, "50");
+
+    Map<String, String> jobProperties2 = new HashMap<>();
+    spyDynamoStorageHandler.configureTableJobProperties(testTableDesc, jobProperties2);
+    assertEquals(jobProperties2.get(DynamoDBConstants.READ_THROUGHPUT), "50");
+    assertEquals(jobProperties2.get(DynamoDBConstants.WRITE_THROUGHPUT), "50");
+    // Provisioned tables with user specified settings should not dynamically configure throughput
+    assertFalse(Boolean.parseBoolean(jobProperties2.get(DynamoDBConstants.READ_THROUGHPUT_AUTOSCALING)));
+    assertFalse(Boolean.parseBoolean(jobProperties2.get(DynamoDBConstants.WRITE_THROUGHPUT_AUTOSCALING)));
+  }
+
+  @Test
+  public void testReadWriteThroughputConfiguredOnDemandTable() {
+    DynamoDBClient mockDynamoClient = Mockito.mock(DynamoDBClient.class);
+    TableDescription mockDescribeTableResponse =
+        getHashRangeTableByBillingMode(BillingMode.PAY_PER_REQUEST);
+    doReturn(mockDescribeTableResponse).when(mockDynamoClient).describeTable(any());
+
+    DynamoDBStorageHandler spyDynamoStorageHandler = Mockito.spy(storageHandler);
+    doReturn(mockDynamoClient).when(spyDynamoStorageHandler).createDynamoDBClient((TableDesc) any());
+
+    TableDesc testTableDesc = new TableDesc();
+    Properties properties = new Properties();
+    properties.setProperty(DynamoDBConstants.REGION, "us-east-1");
+    properties.setProperty(DynamoDBConstants.TABLE_NAME, "test-table");
+    testTableDesc.setProperties(properties);
+
+    // User has not specified explicit throughput settings, default for on-demand are set
+    Map<String, String> jobProperties1 = new HashMap<>();
+    spyDynamoStorageHandler.configureTableJobProperties(testTableDesc, jobProperties1);
+    assertEquals(jobProperties1.get(DynamoDBConstants.READ_THROUGHPUT), DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString());
+    assertEquals(jobProperties1.get(DynamoDBConstants.WRITE_THROUGHPUT), DynamoDBConstants.DEFAULT_CAPACITY_FOR_ON_DEMAND.toString());
+    // On demand tables should never dynamically configure throughput
+    assertFalse(Boolean.parseBoolean(jobProperties1.get(DynamoDBConstants.READ_THROUGHPUT_AUTOSCALING)));
+    assertFalse(Boolean.parseBoolean(jobProperties1.get(DynamoDBConstants.WRITE_THROUGHPUT_AUTOSCALING)));
+
+    // User has specified throughput settings
+    properties.setProperty(DynamoDBConstants.READ_THROUGHPUT, "50");
+    properties.setProperty(DynamoDBConstants.WRITE_THROUGHPUT, "50");
+
+    Map<String, String> jobProperties2 = new HashMap<>();
+    spyDynamoStorageHandler.configureTableJobProperties(testTableDesc, jobProperties2);
+    assertEquals(jobProperties2.get(DynamoDBConstants.READ_THROUGHPUT), "50");
+    assertEquals(jobProperties2.get(DynamoDBConstants.WRITE_THROUGHPUT), "50");
+    assertFalse(Boolean.parseBoolean(jobProperties2.get(DynamoDBConstants.READ_THROUGHPUT_AUTOSCALING)));
+    assertFalse(Boolean.parseBoolean(jobProperties2.get(DynamoDBConstants.WRITE_THROUGHPUT_AUTOSCALING)));
+  }
+
+
   private TableDescription getHashRangeTable() {
+    return getHashRangeTableByBillingMode(BillingMode.PROVISIONED);
+  }
+
+  private TableDescription getHashRangeTableByBillingMode(BillingMode billingMode) {
     TableDescription description = TableDescription.builder()
         .keySchema(Arrays.asList(
             KeySchemaElement.builder().attributeName("hashKey").build(),
@@ -323,6 +420,15 @@ public class DynamoDBStorageHandlerTest {
                 .attributeName("rangeKey")
                 .attributeType(ScalarAttributeType.N)
                 .build()))
+        .provisionedThroughput(ProvisionedThroughputDescription.builder()
+            .readCapacityUnits(400L)
+            .writeCapacityUnits(100L)
+            .build())
+        .billingModeSummary(BillingModeSummary.builder()
+            .billingMode(billingMode)
+            .build())
+        .itemCount(0L)
+        .tableSizeBytes(0L)
         .build();
     return description;
   }
