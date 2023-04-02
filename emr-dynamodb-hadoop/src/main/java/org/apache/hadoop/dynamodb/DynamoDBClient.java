@@ -111,8 +111,12 @@ public class DynamoDBClient {
 
   // For unit testing only
   public DynamoDBClient() {
-    dynamoDB = null;
-    config = null;
+    this((DynamoDbClient) null, null);
+  }
+
+  public DynamoDBClient(DynamoDbClient amazonDynamoDBClient, Configuration conf) {
+    dynamoDB = amazonDynamoDBClient;
+    config = conf;
     maxBatchSize = DEFAULT_MAX_BATCH_SIZE;
     maxItemByteSize = DEFAULT_MAX_ITEM_SIZE;
   }
@@ -288,6 +292,13 @@ public class DynamoDBClient {
     return keys;
   }
 
+  private static Map<String, AttributeValue> getItemFromRequest(WriteRequest request) {
+    if (request.putRequest() != null) {
+      return request.putRequest().item();
+    }
+    return request.deleteRequest().key();
+  }
+
   /**
    * @param roomNeeded number of bytes that writeBatch MUST make room for
    */
@@ -318,8 +329,7 @@ public class DynamoDBClient {
 
                 int batchSizeBytes = 0;
                 for (WriteRequest request : unprocessedWriteRequests) {
-                  batchSizeBytes += DynamoDBUtil.getItemSizeBytes(
-                      request.putRequest().item());
+                  batchSizeBytes += DynamoDBUtil.getItemSizeBytes(getItemFromRequest(request));
                 }
 
                 long maxItemsPerBatch =
@@ -369,9 +379,9 @@ public class DynamoDBClient {
       String key = entry.getKey();
       List<WriteRequest> requests = entry.getValue();
       for (WriteRequest request : requests) {
-        writeBatchMapSizeBytes += DynamoDBUtil.getItemSizeBytes(request.putRequest().item());
+        writeBatchMapSizeBytes += DynamoDBUtil.getItemSizeBytes(getItemFromRequest(request));
       }
-      writeBatchMap.put(key, requests);
+      writeBatchMap.put(key, new ArrayList<>(requests));
     }
     return retryResult.result;
   }
