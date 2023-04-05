@@ -22,11 +22,11 @@
             <artifactId>hive-exec</artifactId>
             <version>${hive.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.amazon.emr</groupId>
-            <artifactId>hive1-shims</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.amazon.emr</groupId>-->
+<!--            <artifactId>hive1-shims</artifactId>-->
+<!--            <version>${project.parent.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.amazon.emr</groupId>
             <artifactId>hive2-shims</artifactId>
