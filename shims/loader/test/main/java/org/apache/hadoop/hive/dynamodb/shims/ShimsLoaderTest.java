@@ -30,10 +30,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 public class ShimsLoaderTest {
 
-  private static final String HIVE_1_VERSION = "1.0.0";
-
-  private static final String HIVE_1_2_VERSION = "1.2.0";
-
   private static final String HIVE_2_VERSION = "2.1.0";
 
   @Before
@@ -47,28 +43,8 @@ public class ShimsLoaderTest {
   }
 
   @Test
-  public void hive1Dot2ShimsClassSupportsCorrectVersion() {
-    assertTrue(DynamoDbHive1Dot2Shims.supportsVersion(HIVE_1_2_VERSION));
-  }
-
-  @Test
-  public void hive1ShimsClassSupportsCorrectVersion() {
-    assertTrue(DynamoDbHive1Shims.supportsVersion(HIVE_1_VERSION));
-  }
-
-  @Test
   public void returnsCorrectShimsImplementationForHive2() {
     assertGetsCorrectShimsClassForVersion(DynamoDbHive2Shims.class, HIVE_2_VERSION);
-  }
-
-  @Test
-  public void returnsCorrectShimsImplementationForHive1Dot2() {
-    assertGetsCorrectShimsClassForVersion(DynamoDbHive1Dot2Shims.class, HIVE_1_2_VERSION);
-  }
-
-  @Test
-  public void returnsCorrectShimsImplementationForHive1() {
-    assertGetsCorrectShimsClassForVersion(DynamoDbHive1Shims.class, HIVE_1_VERSION);
   }
 
   @Test(expected = RuntimeException.class)
