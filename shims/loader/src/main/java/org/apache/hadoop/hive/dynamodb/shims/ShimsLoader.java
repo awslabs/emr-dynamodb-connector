@@ -35,19 +35,7 @@ public final class ShimsLoader {
    */
   private static DynamoDbHiveShims loadHiveShims() {
     String hiveVersion = HiveVersionInfo.getShortVersion();
-    if (DynamoDbHive1Shims.supportsVersion(hiveVersion)) {
-      try {
-        return DynamoDbHive1Shims.class.newInstance();
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw new RuntimeException("unable to get instance of Hive 1.x shim class");
-      }
-    } else if (DynamoDbHive1Dot2Shims.supportsVersion(hiveVersion)) {
-      try {
-        return DynamoDbHive1Dot2Shims.class.newInstance();
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw new RuntimeException("unable to get instance of Hive 1.2.x shim class");
-      }
-    } else if (DynamoDbHive2Shims.supportsVersion(hiveVersion)) {
+    if (DynamoDbHive2Shims.supportsVersion(hiveVersion)) {
       try {
         return DynamoDbHive2Shims.class.newInstance();
       } catch (InstantiationException | IllegalAccessException e) {
