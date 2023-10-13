@@ -45,6 +45,7 @@
         <maven.source.plugin.version>2.2.1</maven.source.plugin.version>
         <maven.javadoc.plugin.version>2.10.3</maven.javadoc.plugin.version>
         <maven.jar.plugin.version>2.6</maven.jar.plugin.version>
+        <maven.shade.plugin.version>3.5.1</maven.shade.plugin.version>
         <nexus.staging.maven.plugin.version>1.6.7</nexus.staging.maven.plugin.version>
     </properties>
     <modules>
@@ -266,6 +267,46 @@
                             <phase>package</phase>
                             <goals>
                                 <goal>single</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>${maven.shade.plugin.version}</version>
+                    <configuration>
+                        <artifactSet>
+                            <includes>
+                                <include>*:*</include>
+                            </includes>
+                        </artifactSet>
+                        <relocations>
+                            <relocation>
+                                <pattern>software.amazon.awssdk</pattern>
+                                <shadedPattern>org.apache.hadoop.emr.ddb.shaded.software.amazon.awssdk</shadedPattern>
+                            </relocation>
+                        </relocations>
+                        <filters>
+                            <filter>
+                                <artifact>*:*</artifact>
+                                <excludes>
+                                    <exclude>META-INF/license/**</exclude>
+                                    <exclude>META-INF/*</exclude>
+                                    <exclude>META-INF/maven/**</exclude>
+                                    <exclude>LICENSE</exclude>
+                                    <exclude>NOTICE</exclude>
+                                    <exclude>/*.txt</exclude>
+                                    <exclude>build.properties</exclude>
+                                </excludes>
+                            </filter>
+                        </filters>
+                        <shadedArtifactAttached>true</shadedArtifactAttached>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>shade</goal>
                             </goals>
                         </execution>
                     </executions>
