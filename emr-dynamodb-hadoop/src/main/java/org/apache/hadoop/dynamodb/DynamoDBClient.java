@@ -53,6 +53,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.exception.SdkException;
@@ -463,8 +464,10 @@ public class DynamoDBClient {
         providersList.add(
             (AwsCredentialsProvider) ReflectionUtils.newInstance(Class.forName(providerClass), conf)
         );
-      } catch (ClassNotFoundException e) {
-        throw new RuntimeException("Custom AWSCredentialsProvider not found: " + providerClass, e);
+      } catch (Exception e) {
+        providersList.add(
+            (AwsCredentialsProvider) DefaultCredentialsProvider.create()
+        );
       }
     }
 
