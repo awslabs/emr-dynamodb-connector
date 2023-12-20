@@ -464,11 +464,13 @@ public class DynamoDBClient {
         providersList.add(
             (AwsCredentialsProvider) ReflectionUtils.newInstance(Class.forName(providerClass), conf)
         );
-      } catch (Exception e) {
-        providersList.add(
-            (AwsCredentialsProvider) DefaultCredentialsProvider.create()
-        );
+      } catch (ClassNotFoundException e) {
+        throw new RuntimeException("Custom AWSCredentialsProvider not found: " + providerClass, e);
       }
+    } else {
+      providersList.add(
+          (AwsCredentialsProvider) DefaultCredentialsProvider.create()
+      );
     }
 
     // try to fetch credentials from core-site
