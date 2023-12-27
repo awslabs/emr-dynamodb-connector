@@ -467,10 +467,6 @@ public class DynamoDBClient {
       } catch (ClassNotFoundException e) {
         throw new RuntimeException("Custom AWSCredentialsProvider not found: " + providerClass, e);
       }
-    } else {
-      providersList.add(
-          (AwsCredentialsProvider) DefaultCredentialsProvider.create()
-      );
     }
 
     // try to fetch credentials from core-site
@@ -496,6 +492,10 @@ public class DynamoDBClient {
       final AwsCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
       providersList.add(() -> credentials);
     }
+
+    providersList.add(
+        (AwsCredentialsProvider) DefaultCredentialsProvider.create()
+    );
 
     AwsCredentialsProvider[] providerArray = providersList.toArray(
         new AwsCredentialsProvider[providersList.size()]
