@@ -53,6 +53,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.exception.SdkException;
@@ -491,6 +492,10 @@ public class DynamoDBClient {
       final AwsCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
       providersList.add(() -> credentials);
     }
+
+    providersList.add(
+        (AwsCredentialsProvider) DefaultCredentialsProvider.create()
+    );
 
     AwsCredentialsProvider[] providerArray = providersList.toArray(
         new AwsCredentialsProvider[providersList.size()]
