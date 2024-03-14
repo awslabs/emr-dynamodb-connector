@@ -3,7 +3,7 @@
 
 ## Introduction
 You can use this connector to access data in Amazon DynamoDB using Apache Hadoop, Apache Hive, and
-Apache Spark in Amazon EMR (except EMR Serverless, per this [guide][emr-serverless-considerations]). 
+Apache Spark in Amazon EMR (except EMR Serverless, more info [here][emr-serverless-considerations]). 
 You can process data directly in DynamoDB using these frameworks, or join data in DynamoDB with data
 in Amazon S3, Amazon RDS, or other storage layers that can be accessed by Amazon EMR.
 
