@@ -30,6 +30,7 @@ public interface DynamoDBConstants {
   String DEFAULT_ACCESS_KEY_CONF = "fs.s3.awsAccessKeyId";
   String DEFAULT_SECRET_KEY_CONF = "fs.s3.awsSecretAccessKey";
   String CUSTOM_CREDENTIALS_PROVIDER_CONF = "dynamodb.customAWSCredentialsProvider";
+  String CUSTOM_CLIENT_BUILDER_TRANSFORMER = "dynamodb.customClientBuilderTransformer";
 
   // Table constants
   String DYNAMODB_COLUMN_MAPPING = "dynamodb.column.mapping";

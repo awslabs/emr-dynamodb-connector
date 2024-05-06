@@ -31,16 +31,20 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.endpoints.Endpoint;
 import software.amazon.awssdk.http.apache.ProxyConfiguration;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemResponse;
@@ -129,6 +133,28 @@ public class DynamoDBClientTest {
     DynamoDBClient dynamoDBClient = new DynamoDBClient();
     expectedException.expect(ClassCastException.class);
     dynamoDBClient.getAwsCredentialsProvider(conf);
+  }
+
+  @Test
+  public void testCustomDynamoDbClientBuilderTransformer() {
+    final String localDynamoDBEndpoint = "http://localhost:8000";
+    Configuration conf = new Configuration();
+    conf.set(DynamoDBConstants.CUSTOM_CLIENT_BUILDER_TRANSFORMER,
+            MyDynamoDbClientBuilderTransformer.class.getName());
+    conf.set("my.uri", localDynamoDBEndpoint);
+    DynamoDBClient dynamoDBClient = new DynamoDBClient();
+    MyDynamoDbClientBuilderTransformer transformer =
+            (MyDynamoDbClientBuilderTransformer) dynamoDBClient.getDynamoDbClientBuilderTransformer(conf);
+    Assert.assertEquals(localDynamoDBEndpoint, transformer.uri);
+  }
+
+  @Test
+  public void testDynamoDbClientBuilderTransformerNotFound() {
+    Configuration conf = new Configuration();
+    conf.set(DynamoDBConstants.CUSTOM_CLIENT_BUILDER_TRANSFORMER, "org.foo.NonExistentTransformer");
+    DynamoDBClient dynamoDBClient = new DynamoDBClient();
+    expectedException.expectCause(Is.isA(ClassNotFoundException.class));
+    dynamoDBClient.getDynamoDbClientBuilderTransformer(conf);
   }
 
   @Test
@@ -352,4 +378,28 @@ public class DynamoDBClientTest {
     }
   }
 
+  private static class MyDynamoDbClientBuilderTransformer implements DynamoDbClientBuilderTransformer, Configurable {
+
+    private Configuration conf;
+    protected String uri;
+
+    @Override
+    public DynamoDbClientBuilder apply(DynamoDbClientBuilder builder) {
+      return builder.endpointProvider(params -> CompletableFuture.completedFuture(
+              Endpoint.builder().url(URI.create(this.uri)).build()
+      ));
+    }
+
+    @Override
+    public Configuration getConf() {
+      return this.conf;
+    }
+
+    @Override
+    public void setConf(Configuration configuration) {
+      this.conf = configuration;
+      this.uri = conf.get("my.uri");
+    }
+
+  }
 }
