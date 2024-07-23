@@ -1,6 +1,8 @@
 # emr-dynamodb-connector
 **Access data stored in Amazon DynamoDB with Apache Hadoop, Apache Hive, and Apache Spark**
 
+This is a fork from [awslabs/emr-dynamodb-connector](https://github.com/awslabs/emr-dynamodb-connector), including features specific to [ScyllaDB Alternator](https://opensource.docs.scylladb.com/stable/alternator/alternator.html) and to the needs of the [ScyllaDB Migrator](https://migrator.docs.scylladb.com).
+
 ## Introduction
 You can use this connector to access data in Amazon DynamoDB using Apache Hadoop, Apache Hive, and
 Apache Spark in Amazon EMR. You can process data directly in DynamoDB using these frameworks, or
@@ -133,17 +135,17 @@ To depend on the specific components in your projects, add one (or both) of the 
 #### Hadoop InputFormat/OutputFormats & DynamoDBItemWritable
 ```
 <dependency>
-  <groupId>com.amazon.emr</groupId>
+  <groupId>com.scylladb.alternator</groupId>
   <artifactId>emr-dynamodb-hadoop</artifactId>
-  <version>4.2.0</version>
+  <version>5.5.0</version>
 </dependency>
 ```
 #### Hive SerDes & StorageHandler
 ```
 <dependency>
-  <groupId>com.amazon.emr</groupId>
+  <groupId>com.scylladb.alternator</groupId>
   <artifactId>emr-dynamodb-hive</artifactId>
-  <version>4.2.0</version>
+  <version>5.5.0</version>
 </dependency>
 ```
 
@@ -163,6 +165,14 @@ To depend on the specific components in your projects, add one (or both) of the 
 * **Follow the [Google Java Style Guide][google-style-guide]**
 
     Style is enforced at build time using the [Apache Maven Checkstyle Plugin][maven-checkstyle-plugin].
+
+### Branching Model
+
+Our branch `scylla-5.x` is based off commit `07391dd0937bdbb20b86ec79444798df11b0711f`. It contains backwards compatible changes only.
+
+Breaking changes will have to go to a new branch, `scylla-6.x`.
+
+We may occasionally merge the upstream changes to our fork.
 
 [emr-release-guide]: http://docs.aws.amazon.com/ElasticMapReduce/latest/ReleaseGuide/emr-release-components.html
 [dynamodb-dev-guide]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html

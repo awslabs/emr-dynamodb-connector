@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.amazon.emr</groupId>
+        <groupId>com.scylladb.alternator</groupId>
         <artifactId>shims</artifactId>
         <version>5.5.0-SNAPSHOT</version>
         <relativePath>../</relativePath>
@@ -23,17 +23,17 @@
             <version>${hive.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.amazon.emr</groupId>
+            <groupId>com.scylladb.alternator</groupId>
             <artifactId>hive2-shims</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.amazon.emr</groupId>
+            <groupId>com.scylladb.alternator</groupId>
             <artifactId>shims-common</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.amazon.emr</groupId>
+            <groupId>com.scylladb.alternator</groupId>
             <artifactId>hive3-shims</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
