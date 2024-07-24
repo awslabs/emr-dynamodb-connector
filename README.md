@@ -49,6 +49,9 @@ Currently the project builds against Hive 2.3.0, 1.2.1, and 1.0.0. Set this by u
 `hive1.2.version` and `hive2.version` properties in the root Maven `pom.xml`, respectively.
 
 ## How to Build
+
+You need Java 8 and Maven.
+
 After cloning, run `mvn clean install`.
 
 ## Example: Hive StorageHandler
@@ -173,6 +176,19 @@ Our branch `scylla-5.x` is based off commit `07391dd0937bdbb20b86ec79444798df11b
 Breaking changes will have to go to a new branch, `scylla-6.x`.
 
 We may occasionally merge the upstream changes to our fork.
+
+### Release process
+
+1. Create a new GitHub Release. Its associated tag should be the project current version as set in the root `pom.xml` file without the `-SNAPSHOT` suffix.
+2. Write or generate the release notes to document the bug fixes, new features, or breaking changes.
+3. Publish the release.
+4. A GitHub workflow will be automatically triggered. It will publish the artifacts to Sonatype.
+5. Manually bump the release in all the `pom.xml` files by running a command like:
+   ~~~ bash
+   mvn versions:set -DnewVersion=5.6.7-SNAPSHOT
+   ~~~
+   The new release version should be higher than the version you just released, and it should have the `-SNAPSHOT` suffix.
+6. Commit the new version.
 
 [emr-release-guide]: http://docs.aws.amazon.com/ElasticMapReduce/latest/ReleaseGuide/emr-release-components.html
 [dynamodb-dev-guide]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html
