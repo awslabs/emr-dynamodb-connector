@@ -98,13 +98,13 @@ public class HiveDynamoDBInputFormat extends DynamoDBInputFormat {
   }
 
   @Override
-  protected int getNumMappers(int configuredReadThroughput, JobConf conf)
+  protected int getNumMappers(int numSegments, int configuredReadThroughput, JobConf conf)
       throws IOException {
     if (isQuery(conf)) {
       log.info("Defaulting to 1 mapper because there are key conditions");
       return 1;
     } else {
-      return super.getNumMappers(configuredReadThroughput, conf);
+      return super.getNumMappers(numSegments, configuredReadThroughput, conf);
     }
   }
 

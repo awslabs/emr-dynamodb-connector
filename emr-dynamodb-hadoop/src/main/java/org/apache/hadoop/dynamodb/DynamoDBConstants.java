@@ -100,7 +100,7 @@ public interface DynamoDBConstants {
   double BYTES_PER_READ_CAPACITY_UNIT = 4096;
   double BYTES_PER_WRITE_CAPACITY_UNIT = 1024;
 
-  long MAX_BYTES_PER_SEGMENT = 1024L * 1024L * 1024L;
+  long MAX_BYTES_PER_SEGMENT = 100 * 1024L * 1024L; // At most 100 MB per segment
   double MIN_IO_PER_SEGMENT = 100.0;
 
   int PSCAN_SEGMENT_BATCH_SIZE = 50;
