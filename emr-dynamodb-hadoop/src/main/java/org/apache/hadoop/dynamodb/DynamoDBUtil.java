@@ -41,6 +41,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.dynamodb.util.ClusterTopologyNodeCapacityProvider;
+import org.apache.hadoop.dynamodb.util.DynamoDBReflectionUtils;
 import org.apache.hadoop.dynamodb.util.NodeCapacityProvider;
 import org.apache.hadoop.dynamodb.util.RoundRobinYarnContainerAllocator;
 import org.apache.hadoop.dynamodb.util.TaskCalculator;
@@ -49,6 +50,7 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.regions.internal.util.EC2MetadataUtils;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -277,6 +279,25 @@ public final class DynamoDBUtil {
 
     // Default to us-east-1 region if all previous attempts fail
     return DynamoDBConstants.DEFAULT_AWS_REGION;
+  }
+
+  /**
+   *
+   * @param providerClass - class name loaded from conf used as custom credential provider
+   * @return - credential provider loaded via reflection using class name from conf
+   */
+  public static AwsCredentialsProvider loadAwsCredentialsProvider(
+      String providerClass,
+      Configuration conf) {
+    // First try loading class via static create method which is intended aws-java-sdk-v2 behavior
+    if (DynamoDBReflectionUtils.hasFactoryMethod(providerClass, "create")) {
+      log.debug("Provider: " + providerClass + " contains required method for creation - create()");
+      return DynamoDBReflectionUtils.createInstanceFromFactory(providerClass, conf, "create");
+    } else {
+      log.debug("Falling back to default constructor.");
+      // To ensure backwards compatibility, fall-back to default no-arg constructor reflection logic
+      return DynamoDBReflectionUtils.createInstanceOf(providerClass, conf);
+    }
   }
 
   public static JobClient createJobClient(JobConf jobConf) {

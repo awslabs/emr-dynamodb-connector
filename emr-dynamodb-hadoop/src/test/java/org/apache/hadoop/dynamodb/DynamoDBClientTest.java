@@ -97,13 +97,29 @@ public class DynamoDBClientTest {
   }
 
   @Test
-  public void testCustomCredentialsProvider() {
+  public void testCustomCredentialsProviderWithConstructor() {
     final String MY_ACCESS_KEY = "abc";
     final String MY_SECRET_KEY = "xyz";
     Configuration conf = new Configuration();
     conf.set("my.accessKey", MY_ACCESS_KEY);
     conf.set("my.secretKey", MY_SECRET_KEY);
     conf.set(DynamoDBConstants.CUSTOM_CREDENTIALS_PROVIDER_CONF, MyAWSCredentialsProvider.class
+        .getName());
+
+    DynamoDBClient dynamoDBClient = new DynamoDBClient();
+    AwsCredentialsProvider provider = dynamoDBClient.getAwsCredentialsProvider(conf);
+    Assert.assertEquals(MY_ACCESS_KEY, provider.resolveCredentials().accessKeyId());
+    Assert.assertEquals(MY_SECRET_KEY, provider.resolveCredentials().secretAccessKey());
+  }
+
+  @Test
+  public void testCustomCredentialsProviderWithMethod() {
+    final String MY_ACCESS_KEY = "abc";
+    final String MY_SECRET_KEY = "xyz";
+    Configuration conf = new Configuration();
+    conf.set("my.accessKey", MY_ACCESS_KEY);
+    conf.set("my.secretKey", MY_SECRET_KEY);
+    conf.set(DynamoDBConstants.CUSTOM_CREDENTIALS_PROVIDER_CONF, MyFactoryCredentialsProvider.class
         .getName());
 
     DynamoDBClient dynamoDBClient = new DynamoDBClient();
@@ -325,6 +341,7 @@ public class DynamoDBClientTest {
     }
   }
 
+  // Default Constructor-based credential provider
   private static class MyAWSCredentialsProvider implements AwsCredentialsProvider, Configurable {
     private Configuration conf;
     private String accessKey;
@@ -352,4 +369,31 @@ public class DynamoDBClientTest {
     }
   }
 
+  // Method-based constructor credential provider
+  private static class MyFactoryCredentialsProvider implements AwsCredentialsProvider, Configurable {
+    private Configuration conf;
+    private String accessKey;
+    private String secretKey;
+
+    public static MyFactoryCredentialsProvider create() {
+      return new MyFactoryCredentialsProvider();
+    }
+
+    @Override
+    public AwsCredentials resolveCredentials() {
+      return AwsBasicCredentials.create(accessKey, secretKey);
+    }
+
+    @Override
+    public Configuration getConf() {
+      return this.conf;
+    }
+
+    @Override
+    public void setConf(Configuration configuration) {
+      this.conf = configuration;
+      accessKey = conf.get("my.accessKey");
+      secretKey = conf.get("my.secretKey");
+    }
+  }
 }
