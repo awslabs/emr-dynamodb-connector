@@ -239,7 +239,7 @@ public class DynamoDBClient {
       writeBatchList = writeBatchMap.get(tableName);
     }
 
-    log.info("BatchWriteItem deletionMode " + deletionMode);
+    log.debug("BatchWriteItem deletionMode " + deletionMode);
 
     if (deletionMode) {
       writeBatchList.add(WriteRequest.builder()
