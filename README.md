@@ -3,6 +3,12 @@
 
 This is a fork from [awslabs/emr-dynamodb-connector](https://github.com/awslabs/emr-dynamodb-connector), including features specific to [ScyllaDB Alternator](https://opensource.docs.scylladb.com/stable/alternator/alternator.html) and to the needs of the [ScyllaDB Migrator](https://migrator.docs.scylladb.com).
 
+## Changes compared to the original library
+
+- Add `DynamoDBConstants.CUSTOM_CLIENT_BUILDER_TRANSFORMER` that allows users to pass in the Hadoop job configuration the name of a class that implements `DynamoDbClientBuilderTransformer` to customize the underlying DynamoDB client.
+
+The complete changelog can be viewed here: [master...scylla-5.x](https://github.com/awslabs/emr-dynamodb-connector/compare/master...scylladb:emr-dynamodb-connector:scylla-5.x).
+
 ## Introduction
 You can use this connector to access data in Amazon DynamoDB using Apache Hadoop, Apache Hive, and
 Apache Spark in Amazon EMR. You can process data directly in DynamoDB using these frameworks, or

@@ -411,14 +411,17 @@ public class DynamoDBClient {
       dynamoDbClientBuilder.endpointOverride(URI.create(customEndpoint));
     }
 
-    return dynamoDbClientBuilder.httpClient(ApacheHttpClient.builder()
+    dynamoDbClientBuilder.httpClient(ApacheHttpClient.builder()
             .proxyConfiguration(applyProxyConfiguration(conf))
             .build())
         .credentialsProvider(getAwsCredentialsProvider(conf))
         .overrideConfiguration(ClientOverrideConfiguration.builder()
             .retryPolicy(builder -> builder.numRetries(1))
-            .build())
-        .build();
+            .build());
+
+    final DynamoDbClientBuilderTransformer builderTransformer =
+            getDynamoDbClientBuilderTransformer(conf);
+    return builderTransformer.apply(dynamoDbClientBuilder).build();
   }
 
   @VisibleForTesting
@@ -501,6 +504,22 @@ public class DynamoDBClient {
         .reuseLastProviderEnabled(true)
         .build();
     return providerChain;
+  }
+
+  protected DynamoDbClientBuilderTransformer getDynamoDbClientBuilderTransformer(
+          Configuration conf) {
+    final String transformerClass = conf.get(DynamoDBConstants.CUSTOM_CLIENT_BUILDER_TRANSFORMER);
+    if (Strings.isNullOrEmpty(transformerClass)) {
+      return DynamoDbClientBuilderTransformer.identity();
+    } else {
+      try {
+        return (DynamoDbClientBuilderTransformer) ReflectionUtils.newInstance(
+                Class.forName(transformerClass), conf);
+      } catch (ClassNotFoundException e) {
+        throw new RuntimeException("Custom DynamoDbClientBuilderTransformer not found: "
+                + transformerClass, e);
+      }
+    }
   }
 
   private URI buildProxyEndpoint(String proxyHost, int proxyPort) {
