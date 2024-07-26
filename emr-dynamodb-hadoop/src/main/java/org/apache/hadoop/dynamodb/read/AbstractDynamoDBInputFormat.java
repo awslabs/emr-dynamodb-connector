@@ -67,7 +67,7 @@ public abstract class AbstractDynamoDBInputFormat<K, V> implements InputFormat<K
     long tableSizeBytes = conf.getLong(DynamoDBConstants.TABLE_SIZE_BYTES, 1);
     int numSegments = getNumSegments(configuredReadThroughput, (int)
         maxWriteThroughputAllocated, tableSizeBytes, conf);
-    int numMappers = getNumMappers(configuredReadThroughput, conf);
+    int numMappers = getNumMappers(numSegments, configuredReadThroughput, conf);
 
     log.info("Using " + numSegments + " segments across " + numMappers + " mappers");
 
@@ -110,8 +110,8 @@ public abstract class AbstractDynamoDBInputFormat<K, V> implements InputFormat<K
         .MIN_IO_PER_SEGMENT);
     log.info("Would use " + numSegmentsForThroughput + " segments for throughput");
 
-    // Take the larger
-    numSegments = Math.max(numSegmentsForSize, numSegmentsForThroughput);
+    // Take the smallest
+    numSegments = Math.min(numSegmentsForSize, numSegmentsForThroughput);
 
     // Fit to bounds
     numSegments = Math.min(numSegments, DynamoDBConstants.MAX_SCAN_SEGMENTS);
@@ -121,18 +121,16 @@ public abstract class AbstractDynamoDBInputFormat<K, V> implements InputFormat<K
     return numSegments;
   }
 
-  protected int getNumMappers(int configuredReadThroughput, JobConf conf)
+  protected int getNumMappers(int numSegments, int configuredReadThroughput, JobConf conf)
       throws IOException {
-    final int maxClusterMapTasks = getMaxClusterMapTasks(conf);
-
-    log.info("Max number of cluster map tasks: " + maxClusterMapTasks);
+    log.info("Number of segments: " + numSegments);
     log.info("Configured read throughput: " + configuredReadThroughput);
 
-    int numMappers = maxClusterMapTasks;
+    int numMappers = numSegments;
 
     // Don't use an excessive number of mappers for a small scan job
     int maxMapTasksForThroughput = configuredReadThroughput / MIN_READ_THROUGHPUT_PER_MAP;
-    if (maxMapTasksForThroughput < maxClusterMapTasks) {
+    if (maxMapTasksForThroughput < numMappers) {
       numMappers = maxMapTasksForThroughput;
     }
 
