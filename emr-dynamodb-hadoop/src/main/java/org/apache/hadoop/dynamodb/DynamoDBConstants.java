@@ -95,6 +95,7 @@ public interface DynamoDBConstants {
   double READ_EVENTUALLY_TO_STRONGLY_CONSISTENT_FACTOR = 2;
 
   String SCAN_SEGMENTS = "dynamodb.scan.segments";
+  String EXCLUDED_SCAN_SEGMENTS = "dynamodb.scan.segments.exclude";
   int MAX_SCAN_SEGMENTS = 1000000;
   int MIN_SCAN_SEGMENTS = 1;
   double BYTES_PER_READ_CAPACITY_UNIT = 4096;

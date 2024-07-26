@@ -21,34 +21,38 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 public class DynamoDBSplitGeneratorTest {
 
   DynamoDBSplitGenerator splitGenerator = new DynamoDBSplitGenerator();
 
   @Test
   public void testGenerateEvenSplits() {
-    InputSplit[] splits = splitGenerator.generateSplits(1, 1, getTestConf());
+    InputSplit[] splits = splitGenerator.generateSplits(1, generateSegments(1), getTestConf());
     verifySplits(splits, 1, 1);
 
-    splits = splitGenerator.generateSplits(1000, 1000, getTestConf());
+    splits = splitGenerator.generateSplits(1000, generateSegments(1000), getTestConf());
     verifySplits(splits, 1000, 1000);
   }
 
   @Test
   public void testGenerateFewerSegmentsThanMappers() {
-    InputSplit[] splits = splitGenerator.generateSplits(10, 1, getTestConf());
+    InputSplit[] splits = splitGenerator.generateSplits(10, generateSegments(1), getTestConf());
     verifySplits(splits, 1, 1);
   }
 
   @Test
   public void testGenerateMoreSegmentsThanMappersEvenly() {
-    InputSplit[] splits = splitGenerator.generateSplits(10, 20, getTestConf());
+    InputSplit[] splits = splitGenerator.generateSplits(10, generateSegments(20), getTestConf());
     verifySplits(splits, 20, 10);
   }
 
   @Test
   public void testGenerateMoreSegmentsThanMappersUnevenly() {
-    InputSplit[] splits = splitGenerator.generateSplits(10, 27, getTestConf());
+    InputSplit[] splits = splitGenerator.generateSplits(10, generateSegments(27), getTestConf());
     verifySplits(splits, 27, 10);
   }
 
@@ -83,6 +87,10 @@ public class DynamoDBSplitGeneratorTest {
     for (int i = 0; i < segments.length; i++) {
       assertTrue(segments[i]);
     }
+  }
+
+  private List<Integer> generateSegments(int totalSegments) {
+    return IntStream.range(0, totalSegments).boxed().collect(Collectors.toList());
   }
 
 }

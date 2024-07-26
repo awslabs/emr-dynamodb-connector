@@ -14,6 +14,12 @@
 package org.apache.hadoop.dynamodb.read;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.dynamodb.DynamoDBClient;
@@ -71,7 +77,18 @@ public abstract class AbstractDynamoDBInputFormat<K, V> implements InputFormat<K
 
     log.info("Using " + numSegments + " segments across " + numMappers + " mappers");
 
-    return getSplitGenerator().generateSplits(numMappers, numSegments, conf);
+    Set<Integer> excludedSegments =
+        Arrays.stream(conf.getInts(DynamoDBConstants.EXCLUDED_SCAN_SEGMENTS))
+            .boxed()
+            .collect(Collectors.toSet());
+
+    List<Integer> segments =
+        IntStream.range(0, numSegments)
+            .boxed()
+            .filter(i -> !excludedSegments.contains(i))
+            .collect(Collectors.toList());
+
+    return getSplitGenerator().generateSplits(numMappers, segments, conf);
   }
 
   protected DynamoDBRecordReaderContext buildDynamoDBRecordReaderContext(InputSplit split,

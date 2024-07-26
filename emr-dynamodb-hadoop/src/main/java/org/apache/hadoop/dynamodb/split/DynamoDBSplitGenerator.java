@@ -27,10 +27,11 @@ public class DynamoDBSplitGenerator {
 
   private static final Log log = LogFactory.getLog(DynamoDBSplitGenerator.class);
 
-  public InputSplit[] generateSplits(int maxClusterMapTasks, int numSegments, JobConf conf) {
-    log.info("Generating " + numSegments + " segments for " + maxClusterMapTasks + " max mappers");
+  public InputSplit[] generateSplits(int maxClusterMapTasks, List<Integer> segments, JobConf conf) {
+    int totalSegments = segments.size();
+    log.info("Generating " + totalSegments + " segments for " + maxClusterMapTasks + " max mappers");
 
-    int numMappers = Math.min(maxClusterMapTasks, numSegments);
+    int numMappers = Math.min(maxClusterMapTasks, totalSegments);
     List<List<Integer>> segmentsPerSplit = new ArrayList<List<Integer>>(numMappers);
     for (int i = 0; i < numMappers; i++) {
       segmentsPerSplit.add(new ArrayList<Integer>());
@@ -38,7 +39,7 @@ public class DynamoDBSplitGenerator {
 
     // Round-robin which split gets which segment id
     int mapper = 0;
-    for (int i = 0; i < numSegments; i++) {
+    for (Integer i : segments) {
       segmentsPerSplit.get(mapper).add(i);
       mapper = (mapper + 1) % numMappers;
     }
@@ -53,7 +54,7 @@ public class DynamoDBSplitGenerator {
       log.info("Assigning " + segmentsPerSplit.get(i).size() + " segments to mapper " + i + ": "
           + segmentsPerSplit.get(i));
       splits[i] = createDynamoDBSplit(getInputPath(conf), approxItemCountPerSplit, i,
-          segmentsPerSplit.get(i), numSegments, estimateLength);
+          segmentsPerSplit.get(i), totalSegments, estimateLength);
     }
 
     return splits;
