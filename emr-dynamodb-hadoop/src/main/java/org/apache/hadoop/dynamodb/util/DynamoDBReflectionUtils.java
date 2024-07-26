@@ -1,3 +1,16 @@
+/**
+ * Copyright 2012-2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file
+ * except in compliance with the License. A copy of the License is located at
+ *
+ *     http://aws.amazon.com/apache2.0/
+ *
+ * or in the "LICENSE.TXT" file accompanying this file. This file is distributed on an "AS IS"
+ * BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under the License.
+ */
+
 package org.apache.hadoop.dynamodb.util;
 
 import java.lang.reflect.Constructor;
@@ -19,16 +32,35 @@ public class DynamoDBReflectionUtils {
 
   // Default no-arg constructor reflection logic
   public static <T> T createInstanceOf(String className, Configuration conf) {
-    return createInstance(className, conf, null, null);
+    return createInstanceOfWithParams(className, conf, null, null);
   }
 
   // constructor with-args reflection logic
+  @SuppressWarnings("unchecked")
   public static <T> T createInstanceOfWithParams(
       String className,
       Configuration conf,
       Class<?>[] paramTypes,
       Object[] params) {
-    return createInstance(className, conf, paramTypes, params);
+    try {
+      Class<?> clazz = getClass(className);
+      Constructor<T> ctor = paramTypes == null
+          ? (Constructor<T>) clazz.getDeclaredConstructor()
+          : (Constructor<T>) clazz.getDeclaredConstructor(paramTypes);
+      ctor.setAccessible(true);
+      T instance = ctor.newInstance(params);
+      log.info("Successfully loaded class: " + className);
+      ReflectionUtils.setConf(instance, conf);
+      log.debug("Configured instance to use conf");
+      return instance;
+
+    } catch (NoSuchMethodException | InvocationTargetException e) {
+      throw new RuntimeException("Unable to find constructor of class: " + className, e);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException("Class being loaded is not accessible: " + className, e);
+    } catch (InstantiationException e) {
+      throw new RuntimeException("Unable to instantiate class: " + className, e);
+    }
   }
 
   // checks if class has method available in it
@@ -71,34 +103,6 @@ public class DynamoDBReflectionUtils {
       return Class.forName(className, true, getContextOrDefaultClassLoader());
     } catch (ClassNotFoundException e) {
       throw new RuntimeException("Unable to locate class to load via reflection: " + className, e);
-    }
-  }
-
-  // constructor-based reflection logic
-  @SuppressWarnings("unchecked")
-  private static <T> T createInstance(
-      String className,
-      Configuration conf,
-      Class<?>[] paramTypes,
-      Object[] params) {
-    try {
-      Class<?> clazz = getClass(className);
-      Constructor<T> ctor = paramTypes == null
-          ? (Constructor<T>) clazz.getDeclaredConstructor()
-          : (Constructor<T>) clazz.getDeclaredConstructor(paramTypes);
-      ctor.setAccessible(true);
-      T instance = ctor.newInstance(params);
-      log.info("Successfully loaded class: " + className);
-      ReflectionUtils.setConf(instance, conf);
-      log.debug("Configured instance to use conf");
-      return instance;
-
-    } catch (NoSuchMethodException | InvocationTargetException e) {
-      throw new RuntimeException("Unable to find constructor of class: " + className, e);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException("Class being loaded is not accessible: " + className, e);
-    } catch (InstantiationException e) {
-      throw new RuntimeException("Unable to instantiate class: " + className, e);
     }
   }
 

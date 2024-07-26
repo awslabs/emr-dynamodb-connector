@@ -283,19 +283,26 @@ public final class DynamoDBUtil {
 
   /**
    *
+   * Utility method to load an aws credentials provider from config via reflection. There are two
+   * strategies followed:
+   *   1. Load credential provider via its 'create' method.
+   *      This is the intended credential provider construction mechanism with aws-java-sdk-v2
+   *      For more information, visit {@link <a href="https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/migration-client-credentials.html">Credential Provider Changes</a>}.
+   *   2. If 'create' method is not found, fallback to default no-arg constructor.
+   *      This is kept to ensure utility method maintains backwards compatibility with what it
+   *      used to support.
+   *
    * @param providerClass - class name loaded from conf used as custom credential provider
    * @return - credential provider loaded via reflection using class name from conf
    */
   public static AwsCredentialsProvider loadAwsCredentialsProvider(
       String providerClass,
       Configuration conf) {
-    // First try loading class via static create method which is intended aws-java-sdk-v2 behavior
     if (DynamoDBReflectionUtils.hasFactoryMethod(providerClass, "create")) {
       log.debug("Provider: " + providerClass + " contains required method for creation - create()");
       return DynamoDBReflectionUtils.createInstanceFromFactory(providerClass, conf, "create");
     } else {
       log.debug("Falling back to default constructor.");
-      // To ensure backwards compatibility, fall-back to default no-arg constructor reflection logic
       return DynamoDBReflectionUtils.createInstanceOf(providerClass, conf);
     }
   }
