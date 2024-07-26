@@ -40,13 +40,13 @@
         <checkstyle.plugin.version>3.1.1</checkstyle.plugin.version>
         <checkstyle.configuration>google_checks.xml</checkstyle.configuration>
         <checkstyle.ignore.rules>AbbreviationAsWordInName,javadoc</checkstyle.ignore.rules>
-        <maven.compiler.plugin.version>3.3</maven.compiler.plugin.version>
-        <maven.gpg.plugin.version>1.5</maven.gpg.plugin.version>
-        <maven.source.plugin.version>2.2.1</maven.source.plugin.version>
-        <maven.javadoc.plugin.version>2.10.3</maven.javadoc.plugin.version>
+        <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+        <maven.gpg.plugin.version>3.2.4</maven.gpg.plugin.version>
+        <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
+        <maven.javadoc.plugin.version>3.6.3</maven.javadoc.plugin.version>
         <maven.jar.plugin.version>2.6</maven.jar.plugin.version>
-        <maven.shade.plugin.version>3.5.1</maven.shade.plugin.version>
-        <nexus.staging.maven.plugin.version>1.6.7</nexus.staging.maven.plugin.version>
+        <maven.shade.plugin.version>3.6.0</maven.shade.plugin.version>
+        <nexus.staging.maven.plugin.version>1.6.13</nexus.staging.maven.plugin.version>
     </properties>
     <modules>
         <module>emr-dynamodb-hadoop</module>
