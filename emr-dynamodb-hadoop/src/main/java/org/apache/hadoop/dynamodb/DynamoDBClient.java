@@ -459,13 +459,7 @@ public class DynamoDBClient {
     // initialized
     String providerClass = conf.get(DynamoDBConstants.CUSTOM_CREDENTIALS_PROVIDER_CONF);
     if (!Strings.isNullOrEmpty(providerClass)) {
-      try {
-        providersList.add(
-            (AwsCredentialsProvider) ReflectionUtils.newInstance(Class.forName(providerClass), conf)
-        );
-      } catch (ClassNotFoundException e) {
-        throw new RuntimeException("Custom AWSCredentialsProvider not found: " + providerClass, e);
-      }
+      providersList.add(DynamoDBUtil.loadAwsCredentialsProvider(providerClass, conf));
     }
 
     // try to fetch credentials from core-site
