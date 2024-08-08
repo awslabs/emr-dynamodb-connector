@@ -31,14 +31,13 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.AwsCredentials;
-import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+
+import software.amazon.awssdk.auth.credentials.*;
 import software.amazon.awssdk.http.apache.ProxyConfiguration;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -164,6 +163,24 @@ public class DynamoDBClientTest {
     Assert.assertEquals(DYNAMODB_SECRET_KEY, sessionCredentials.secretAccessKey());
     Assert.assertEquals(DYNAMODB_SESSION_KEY, sessionCredentials.sessionToken());
 
+  }
+
+  @Test
+  public void testDefaultCredentialProvider() {
+    DynamoDBClient dynamoDBClient = new DynamoDBClient();
+    AwsCredentialsProvider provider = dynamoDBClient.getAwsCredentialsProvider(conf);
+    Assert.assertTrue(provider instanceof AwsCredentialsProviderChain);
+    AwsCredentialsProviderChain providerChain = (AwsCredentialsProviderChain) provider;
+    try {
+      Field providersField = AwsCredentialsProviderChain.class.getDeclaredField("credentialsProviders");
+      providersField.setAccessible(true);
+      @SuppressWarnings("unchecked")
+      List<AwsCredentialsProvider> providers = (List<AwsCredentialsProvider>) providersField.get(providerChain);
+      Assert.assertEquals(1, providers.size());
+      Assert.assertTrue(providers.get(0) instanceof DefaultCredentialsProvider);
+    } catch (Exception e) {
+      Assert.fail("Unexpected error thrown: " + e.getMessage());
+    }
   }
 
   @Test
