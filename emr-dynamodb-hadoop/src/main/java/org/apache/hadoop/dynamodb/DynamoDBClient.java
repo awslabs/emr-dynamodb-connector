@@ -46,14 +46,13 @@ import org.apache.hadoop.dynamodb.DynamoDBFibonacciRetryer.RetryResult;
 import org.apache.hadoop.dynamodb.filter.DynamoDBIndexInfo;
 import org.apache.hadoop.dynamodb.filter.DynamoDBQueryFilter;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.util.ReflectionUtils;
 import org.joda.time.Duration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
-import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
@@ -476,7 +475,8 @@ public class DynamoDBClient {
     }
 
     if (Strings.isNullOrEmpty(accessKey) || Strings.isNullOrEmpty(secretKey)) {
-      providersList.add(InstanceProfileCredentialsProvider.create());
+      log.debug("Custom credential provider not found, loading default provider from sdk");
+      providersList.add(DefaultCredentialsProvider.create());
     } else if (!Strings.isNullOrEmpty(sessionKey)) {
       final AwsCredentials credentials =
           AwsSessionCredentials.create(accessKey, secretKey, sessionKey);
