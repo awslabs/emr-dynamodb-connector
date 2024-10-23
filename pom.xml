@@ -280,12 +280,6 @@
                                 <include>*:*</include>
                             </includes>
                         </artifactSet>
-                        <relocations>
-                            <relocation>
-                                <pattern>software.amazon.awssdk</pattern>
-                                <shadedPattern>org.apache.hadoop.emr.ddb.shaded.software.amazon.awssdk</shadedPattern>
-                            </relocation>
-                        </relocations>
                         <filters>
                             <filter>
                                 <artifact>*:*</artifact>
