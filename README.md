@@ -3,12 +3,14 @@
 
 ## Introduction
 You can use this connector to access data in Amazon DynamoDB using Apache Hadoop, Apache Hive, and
-Apache Spark in Amazon EMR (except EMR Serverless, more on this [here][emr-serverless-considerations]). 
+Apache Spark in Amazon EMR. 
 You can process data directly in DynamoDB using these frameworks, or join data in DynamoDB with data
 in Amazon S3, Amazon RDS, or other storage layers that can be accessed by Amazon EMR.
 
 - [Using Apache Hive in Amazon EMR with Amazon DynamoDB][emr-dynamodb-hive-docs]
 - [Accessing data in Amazon DynamoDB with Apache Spark][dynamodb-spark-blog-post]
+- [Connecting to DynamoDB with Amazon EMR Serverless][amazon-emr-serverless-user-guide]
+  
 
 Currently, the connector supports the following data types:
 
@@ -166,6 +168,7 @@ To depend on the specific components in your projects, add one (or both) of the 
 
 [emr-release-guide]: http://docs.aws.amazon.com/ElasticMapReduce/latest/ReleaseGuide/emr-release-components.html
 [dynamodb-dev-guide]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html
+[amazon-emr-serverless-user-guide]: https://docs.aws.amazon.com/emr/latest/EMR-Serverless-UserGuide/using-ddb-connector.html
 [hive-commands-emr-dev-guide]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/EMR_Hive_Commands.html
 [set-up-hive-table]: http://docs.aws.amazon.com/ElasticMapReduce/latest/ReleaseGuide/EMR_Interactive_Hive.html
 [hive-dynamodb-data-types]: http://docs.aws.amazon.com/ElasticMapReduce/latest/ReleaseGuide/EMR_Interactive_Hive.html#EMR_Hive_Properties
@@ -178,4 +181,3 @@ To depend on the specific components in your projects, add one (or both) of the 
 [import-tool-source]: emr-dynamodb-tools/src/main/java/org/apache/hadoop/dynamodb/tools/DynamoDBImport.java
 [google-style-guide]: https://google.github.io/styleguide/javaguide.html
 [maven-checkstyle-plugin]: https://maven.apache.org/plugins/maven-checkstyle-plugin/index.html
-[emr-serverless-considerations]: https://docs.aws.amazon.com/emr/latest/EMR-Serverless-UserGuide/considerations.html#:~:text=EMR%20Serverless%20doesn%27t%20support%20the%20existing%20emr%2Ddynamodb%2Dconnector
