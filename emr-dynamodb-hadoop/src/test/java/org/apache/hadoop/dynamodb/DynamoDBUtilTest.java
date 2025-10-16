@@ -16,32 +16,26 @@ package org.apache.hadoop.dynamodb;
 import static org.apache.hadoop.dynamodb.DynamoDBConstants.DEFAULT_MAX_ITEMS_PER_BATCH;
 import static org.apache.hadoop.dynamodb.DynamoDBUtil.getBoundedBatchLimit;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mockStatic;
 
 import com.google.common.collect.Lists;
-
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.mockito.MockedStatic;
+import org.mockito.junit.MockitoJUnitRunner;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.regions.internal.util.EC2MetadataUtils;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({EC2MetadataUtils.class})
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RunWith(MockitoJUnitRunner.class)
 public class DynamoDBUtilTest {
 
   final String TEST_ENDPOINT = "http://emr.test-dynamodb.endpoint";
@@ -61,7 +55,6 @@ public class DynamoDBUtilTest {
 
   @Before
   public void setUp() {
-    PowerMockito.mockStatic(EC2MetadataUtils.class);
     conf.clear();
   }
 
@@ -168,21 +161,26 @@ public class DynamoDBUtilTest {
   @Test
   public void getsRegionFromEc2Instance() {
     final String EC2_INSTANCE_REGION = "ec2-instance-region";
-    when(EC2MetadataUtils.getEC2InstanceRegion()).thenReturn(EC2_INSTANCE_REGION);
-    assertEquals(EC2_INSTANCE_REGION, DynamoDBUtil.getDynamoDBRegion(conf, null));
-    PowerMockito.verifyStatic();
-    EC2MetadataUtils.getEC2InstanceRegion();
+    try (MockedStatic<EC2MetadataUtils> mocked = mockStatic(EC2MetadataUtils.class)) {
+      mocked.when(EC2MetadataUtils::getEC2InstanceRegion).thenReturn(EC2_INSTANCE_REGION);
+      assertEquals(EC2_INSTANCE_REGION, DynamoDBUtil.getDynamoDBRegion(conf, null));
+      mocked.verify(EC2MetadataUtils::getEC2InstanceRegion);
+
+    }
   }
 
   @Test
   public void getsRegionFromDefaultAwsRegion() {
-    when(EC2MetadataUtils.getEC2InstanceRegion())
-        .thenThrow(SdkException.builder()
-            .message("Unable to get region from EC2 instance data")
-            .build());
+    try (MockedStatic<EC2MetadataUtils> mocked = mockStatic(EC2MetadataUtils.class)) {
+      mocked
+          .when(EC2MetadataUtils::getEC2InstanceRegion)
+          .thenThrow(SdkException.builder()
+              .message("Unable to get region from EC2 instance data")
+              .build());
 
-    assertEquals(DynamoDBConstants.DEFAULT_AWS_REGION, DynamoDBUtil.getDynamoDBRegion(conf, null));
-    PowerMockito.verifyStatic();
+      assertEquals(DynamoDBConstants.DEFAULT_AWS_REGION, DynamoDBUtil.getDynamoDBRegion(conf, null));
+      mocked.verify(EC2MetadataUtils::getEC2InstanceRegion);
+    }
   }
 
 
